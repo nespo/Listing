@@ -1,0 +1,116 @@
+.container {
+    display: flex;
+    flex-wrap: nowrap;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+}
+
+.with-sidebar .sidebar {
+    width: 25%;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 8px;
+}
+
+.with-sidebar .with-sidebar-content {
+    width: 75%;
+    padding: 20px;
+    box-sizing: border-box;
+    margin-left: 20px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.sidebar p {
+    font-size: 1em;
+    color: #666;
+}
+
+.dashboard-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dashboard-menu li {
+    margin-bottom: 15px;
+}
+
+.dashboard-menu a,
+.dashboard-menu button {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #6c757d;
+    font-size: 1em;
+    padding: 10px;
+    border-radius: 6px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dashboard-menu a:hover,
+.dashboard-menu button:hover {
+    background-color: #e2e6ea;
+    color: #343a40;
+}
+
+.dashboard-menu .active {
+    background-color: #6f42c1;
+    color: #ffffff;
+}
+
+.dashboard-menu .active:hover {
+    background-color: #5936a0;
+    color: #ffffff;
+}
+
+.dashboard-menu a .icon,
+.dashboard-menu button .icon {
+    margin-right: 10px;
+}
+
+.dashboard-menu button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+
+
+@media (max-width: 768px) {
+    .with-sidebar {
+        flex-direction: column;
+    }
+
+    .with-sidebar .sidebar,
+    .with-sidebar .with-sidebar-content {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    .with-sidebar .sidebar {
+        display: none; /* Hide the sidebar on mobile */
+    }
+
+    .mobile-sidebar {
+        display: block; /* Show the mobile sidebar */
+    }
+}
+
+

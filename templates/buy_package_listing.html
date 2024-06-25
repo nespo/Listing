@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Buy Packages or Listings{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'package/styles.css' %}">
+{% endblock %}
+{% block content %}
+<h2>Buy Packages or Listings</h2>
+<div class="package-container">
+    <div class="package-details">
+        {% if user.seller.package %}
+        <div class="current-package card active-card">
+            <h3>Current Package: {{ user.seller.package.name }}</h3>
+            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ user.seller.package.normal_post_limit }} (Used: {{ user.seller.normal_post_count }})</p>
+            <p><i class="fas fa-star"></i> Featured Posts: {{ user.seller.package.featured_post_limit }} (Used: {{ user.seller.featured_post_count }})</p>
+            <p><i class="fas fa-calendar-alt"></i> Expiry Date: {{ user.seller.membership_expiry }}</p>
+            <p><i class="fas fa-cube"></i> Package Type: {{ user.seller.package.get_duration_unit_display }}</p>
+            <p><i class="fas fa-sync-alt"></i> Auto-Renewal: {{ user.seller.is_auto_renew|yesno:"Enabled,Disabled" }}</p>
+            {% if user.seller.is_auto_renew %}
+            <form method="post" action="{% url 'cancel_auto_renew' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning">Cancel Auto-Renewal</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if user.seller.new_package %}
+        <div class="upcoming-package card">
+            <h3>Upcoming Package: {{ user.seller.new_package.name }}</h3>
+            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ user.seller.new_package.normal_post_limit }}</p>
+            <p><i class="fas fa-star"></i> Featured Posts: {{ user.seller.new_package.featured_post_limit }}</p>
+            <p><i class="fas fa-dollar-sign"></i> Price: ${{ user.seller.new_package.price }}</p>
+            <p><i class="fas fa-cube"></i> Package Type: {{ user.seller.new_package.get_duration_unit_display }}</p>
+            <p><i class="fas fa-calendar-alt"></i> Starts on: {{ user.seller.membership_expiry|date:"Y-m-d" }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="individual-listings card">
+        <h3>Current Individual Listings</h3>
+        <p><i class="fas fa-thumbtack"></i> Normal Listings: {{ user.seller.individual_normal_posts }}</p>
+        <p><i class="fas fa-star"></i> Featured Listings: {{ user.seller.individual_featured_posts }}</p>
+    </div>
+</div>
+
+<div class="available-packages card">
+    {% if not user.seller.package or not user.seller.new_package %}
+    <h3>Available Packages</h3>
+    <form method="post" id="unique-package-form">
+        {% csrf_token %}
+        <div class="packages-grid">
+            {% for package in packages %}
+            {% if not user.seller.package or user.seller.package.id != package.id %}
+            <div class="package-option card">
+                <h4>{{ package.name }}</h4>
+                <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
+                <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
+                <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                <p><i class="fas fa-cube"></i> Package Type: {{ package.get_duration_unit_display }}</p>
+                {% if user.seller.package %}
+                    {% if package.normal_post_limit > user.seller.package.normal_post_limit or package.featured_post_limit > user.seller.package.featured_post_limit %}
+                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Upgrade</button>
+                    {% elif package.normal_post_limit < user.seller.package.normal_post_limit or package.featured_post_limit < user.seller.package.featured_post_limit %}
+                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Downgrade</button>
+                    {% else %}
+                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
+                    {% endif %}
+                {% else %}
+                    <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<div class="individual-listings-purchase card">
+    <h3>Buy Individual Listings</h3>
+    <form method="post" id="unique-individual-listing-form">
+        {% csrf_token %}
+        <div class="listing-options-grid">
+            <div class="listing-option card">
+                <label for="unique-individual-normal-posts">Normal Listings: </label>
+                <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="100" value="0">
+                <span id="unique-normal-listings-count">0</span>
+                <p>Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span> each</p>
+            </div>
+            <div class="listing-option card">
+                <label for="unique-individual-featured-posts">Featured Listings: </label>
+                <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="100" value="0">
+                <span id="unique-featured-listings-count">0</span>
+                <p>Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span> each</p>
+            </div>
+        </div>
+        <button type="button" id="unique-buy-listings-button" class="listings-button">Buy Individual Listings</button>
+    </form>
+</div>
+
+<!-- Modal Popup for Payment -->
+<div id="unique-payment-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="closex">&times;</span>
+        <h2 id="unique-modal-title"></h2>
+        <p id="unique-modal-description"></p>
+        <div id="unique-card-element" style="display: none;"></div>
+        <div id="unique-card-errors" role="alert"></div>
+        <button id="unique-stripe-button">Submit Payment</button>
+    </div>
+</div>
+
+<!-- Modal Popup for Messages -->
+<div id="unique-message-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-message">&times;</span>
+        <h2 id="unique-message-title"></h2>
+        <p id="unique-message-content"></p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM fully loaded and parsed');
+
+    var stripe = Stripe('{{ stripe_key }}');
+    var elements = stripe.elements();
+    var card = elements.create('card', {
+        style: {
+            base: {
+                color: '#32325d',
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                fontSmoothing: 'antialiased',
+                fontSize: '16px',
+                '::placeholder': {
+                    color: '#aab7c4'
+                }
+            },
+            invalid: {
+                color: '#fa755a',
+                iconColor: '#fa755a'
+            }
+        }
+    });
+
+    var savedPaymentMethod = '{{ user.seller.stripe_payment_method_id|default_if_none:"" }}';
+    var hasSavedPaymentMethod = savedPaymentMethod !== '';
+    console.log('Saved payment method found:', hasSavedPaymentMethod);
+
+    var cardElement = document.getElementById('unique-card-element');
+
+    if (!hasSavedPaymentMethod) {
+        console.log('No saved payment method found');
+        cardElement.style.display = 'block';
+        card.mount('#unique-card-element');
+        console.log('Card element mounted');
+    } else {
+        console.log('Saved payment method found');
+    }
+
+    var paymentModal = document.getElementById('unique-payment-modal');
+    var messageModal = document.getElementById('unique-message-modal');
+    var closePaymentModal = document.getElementsByClassName('closex')[0];
+    var closeMessageModal = document.getElementsByClassName('close-message')[0];
+    var stripeButton = document.getElementById('unique-stripe-button');
+
+    var form; // Declare a variable to hold the form element
+    var packageId; // Declare a variable to hold the package ID
+
+    function openModal(modal, title, description) {
+        console.log(`Opening modal: ${modal}`);
+        if (modal === 'unique-payment-modal') {
+            document.getElementById('unique-modal-title').textContent = title;
+            document.getElementById('unique-modal-description').textContent = description;
+
+            if (!hasSavedPaymentMethod) {
+                console.log('Displaying card element in modal');
+                cardElement.style.display = 'block';
+                card.mount('#unique-card-element'); // Ensure the card element is mounted when needed
+            } else {
+                cardElement.style.display = 'none';
+            }
+
+            paymentModal.style.display = 'block';
+        } else {
+            document.getElementById('unique-message-title').textContent = title;
+            document.getElementById('unique-message-content').textContent = description;
+            messageModal.style.display = 'block';
+        }
+    }
+
+    function closeModal(modal) {
+        console.log(`Closing modal: ${modal}`);
+        if (modal === 'unique-payment-modal') {
+            paymentModal.style.display = 'none';
+        } else {
+            messageModal.style.display = 'none';
+        }
+    }
+
+    closePaymentModal.onclick = function () {
+        closeModal('unique-payment-modal');
+    }
+
+    closeMessageModal.onclick = function () {
+        closeModal('unique-message-modal');
+    }
+
+    window.onclick = function (event) {
+        if (event.target == paymentModal) {
+            closeModal('unique-payment-modal');
+        }
+        if (event.target == messageModal) {
+            closeModal('unique-message-modal');
+        }
+    }
+
+    function handlePayment(event, amount, description) {
+        event.preventDefault();
+        console.log('Handling payment');
+
+        if (hasSavedPaymentMethod) {
+            console.log('Using saved payment method');
+            form.submit();
+            return;
+        }
+
+        stripe.createToken(card).then(function (result) {
+            if (result.error) {
+                console.error('Stripe token creation error:', result.error.message);
+                var errorElement = document.getElementById('unique-card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                console.log('Stripe token created successfully');
+                if (!form) {
+                    openModal('unique-message-modal', 'Error', 'Form not found.');
+                    return;
+                }
+                var hiddenInput = document.createElement('input');
+                hiddenInput.setAttribute('type', 'hidden');
+                hiddenInput.setAttribute('name', 'stripeToken');
+                hiddenInput.setAttribute('value', result.token.id);
+                form.appendChild(hiddenInput);
+
+                var amountInput = document.createElement('input');
+                amountInput.setAttribute('type', 'hidden');
+                amountInput.setAttribute('name', 'amount');
+                amountInput.setAttribute('value', amount);
+                form.appendChild(amountInput);
+
+                var descriptionInput = document.createElement('input');
+                descriptionInput.setAttribute('type', 'hidden');
+                descriptionInput.setAttribute('name', 'description');
+                descriptionInput.setAttribute('value', description);
+                form.appendChild(descriptionInput);
+
+                if (form.id === 'unique-package-form') {
+                    var packageIdInput = document.createElement('input');
+                    packageIdInput.setAttribute('type', 'hidden');
+                    packageIdInput.setAttribute('name', 'package_id');
+                    packageIdInput.setAttribute('value', packageId);
+                    form.appendChild(packageIdInput);
+                }
+
+                form.submit();
+            }
+        });
+    }
+
+    document.querySelectorAll('.package-button').forEach(button => {
+        button.addEventListener('click', function (event) {
+            packageId = event.target.getAttribute('data-package-id');
+            var packagePrice = parseFloat(event.target.getAttribute('data-package-price'));
+            console.log(`Selected package ID: ${packageId}, price: ${packagePrice}`);
+            if (isNaN(packagePrice) || packagePrice <= 0) {
+                openModal('unique-message-modal', 'Error', 'Invalid package price.');
+                return;
+            }
+            form = document.getElementById('unique-package-form'); // Set the form variable to the package form
+            openModal('unique-payment-modal', 'Buy Package', 'You are about to purchase a package for $' + packagePrice);
+            stripeButton.onclick = function (e) {
+                handlePayment(e, packagePrice, 'Purchase Package ID: ' + packageId);
+            };
+        });
+    });
+
+    var normalPostsSlider = document.getElementById('unique-individual-normal-posts');
+    var normalPostsCount = document.getElementById('unique-normal-listings-count');
+    normalPostsSlider.addEventListener('input', function () {
+        normalPostsCount.textContent = normalPostsSlider.value;
+    });
+
+    var featuredPostsSlider = document.getElementById('unique-individual-featured-posts');
+    var featuredPostsCount = document.getElementById('unique-featured-listings-count');
+    featuredPostsSlider.addEventListener('input', function () {
+        featuredPostsCount.textContent = featuredPostsSlider.value;
+    });
+
+    document.getElementById('unique-buy-listings-button').addEventListener('click', function (event) {
+        var normalListings = parseInt(normalPostsSlider.value, 10);
+        var featuredListings = parseInt(featuredPostsSlider.value, 10);
+        console.log(`Normal Listings: ${normalListings}, Featured Listings: ${featuredListings}`);
+        if (isNaN(normalListings) || isNaN(featuredListings) || normalListings < 0 || featuredListings < 0) {
+            openModal('unique-message-modal', 'Error', 'Please enter a valid number of listings.');
+            return;
+        }
+        var normalListingPrice = parseFloat(document.getElementById('unique-normal-listing-price').textContent);
+        var featuredListingPrice = parseFloat(document.getElementById('unique-featured-listing-price').textContent);
+        if (isNaN(normalListingPrice) || isNaN(featuredListingPrice)) {
+            openModal('unique-message-modal', 'Error', 'Invalid listing price.');
+            return;
+        }
+        var totalAmount = (normalListings * normalListingPrice) + (featuredListings * featuredListingPrice);
+        console.log(`Total Amount: ${totalAmount}`);
+        if (totalAmount <= 0) {
+            openModal('unique-message-modal', 'Error', 'Total amount must be greater than zero.');
+            return;
+        }
+        form = document.getElementById('unique-individual-listing-form'); // Set the form variable to the individual listing form
+        openModal('unique-payment-modal', 'Buy Individual Listings', 'You are about to purchase individual listings for $' + totalAmount.toFixed(2));
+        stripeButton.onclick = function (e) {
+            handlePayment(e, totalAmount, 'Purchase Individual Listings');
+        };
+    });
+});
+</script>
+{% endblock %}

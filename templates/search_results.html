@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Result{% endblock %}
+
+{% block content %}
+<h1>Search Results</h1>
+<ul>
+    {% for listing in listings %}
+        <li>{{ listing.title }} - {{ listing.location }} - {{ listing.price }}</li>
+    {% empty %}
+        <li>No results found</li>
+    {% endfor %}
+</ul>
+{% endblock %}

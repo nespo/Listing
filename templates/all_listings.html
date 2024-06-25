@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>All Listings</h2>
+  <ul>
+    {% for listing in listings %}
+      <li>
+        <a href="{% url 'listing_detail' listing.pk %}">{{ listing.title }}</a>
+        <p>{{ listing.description }}</p>
+        <p>Price: {{ listing.price }}</p>
+        <p>Contact: {{ listing.contact_email }}</p>
+        <p>Views: {{ listing.views }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

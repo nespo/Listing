@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Detail{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<h1>Listings for Category: {{ category.name }}</h1>
+    <p>{{ category.description }}</p>
+    <ul>
+        {% for listing in listings %}
+            <li>
+                <a href="{% url 'listing_detail' listing.id %}">{{ listing.title }}</a>
+                <p>{{ listing.description }}</p>
+                <p>Price: {{ listing.price }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}

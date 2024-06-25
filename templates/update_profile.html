@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" type="text/css" href="{% static 'profile/styles.css' %}">
+{% endblock %}
+
+{% block title %}Update Profile{% endblock %}
+{% block content %}
+<div class="profile-update-container">
+    <h2>Update Profile</h2>
+    <form method="post" class="profile-update-form" id="profile-update-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="profile-update-form-group">
+            <label for="id_company_name">Company Name</label>
+            {{ form.company_name }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_company_address">Company Address</label>
+            {{ form.company_address }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_company_phone_number">Company Phone Number</label>
+            {{ form.company_phone_number }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_first_name">First Name</label>
+            {{ form.first_name }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_last_name">Last Name</label>
+            {{ form.last_name }}
+        </div>
+        <button type="button" class="profile-update-btn" id="update-profile-btn">Update Profile</button>
+    </form>
+</div>
+
+<div id="profile-update-success-modal" class="profile-update-modal">
+    <div class="profile-update-modal-content">
+        <span class="profile-update-modal-close" id="success-modal-close">&times;</span>
+        <h2 id="modal-title"></h2>
+        <p id="modal-message"></p>
+    </div>
+</div>
+
+<div id="password-confirmation-modal" class="profile-update-modal">
+    <div class="profile-update-modal-content">
+        <span class="profile-update-modal-close">&times;</span>
+        <h2>Confirm Password</h2>
+        <form method="post" id="password-confirmation-form">
+            {% csrf_token %}
+            <div class="profile-update-form-group">
+                <label for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="profile-update-form-control" required>
+            </div>
+            <button type="submit" class="profile-update-btn">Confirm</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    var successModal = document.getElementById("profile-update-success-modal");
+    var passwordModal = document.getElementById("password-confirmation-modal");
+    var closeBtns = document.getElementsByClassName("profile-update-modal-close");
+    var modalTitle = document.getElementById("modal-title");
+    var modalMessage = document.getElementById("modal-message");
+
+    // Close modal on close button click
+    for (var i = 0; i < closeBtns.length; i++) {
+        closeBtns[i].onclick = function() {
+            this.parentElement.parentElement.style.display = "none";
+            if (this.parentElement.parentElement == successModal && modalTitle.textContent !== "No Changes Detected") {
+                window.location.href = "{% url 'update_profile' %}";
+            }
+        }
+    }
+
+    // Close modal on window click
+    window.onclick = function(event) {
+        if (event.target == successModal || event.target == passwordModal) {
+            event.target.style.display = "none";
+            if (event.target == successModal && modalTitle.textContent !== "No Changes Detected") {
+                window.location.href = "{% url 'update_profile' %}";
+            }
+        }
+    }
+
+    // Show password confirmation modal before updating profile
+    document.getElementById('update-profile-btn').onclick = function() {
+        passwordModal.style.display = "block";
+    }
+
+    // Handle password confirmation form submission
+    document.getElementById('password-confirmation-form').onsubmit = function(event) {
+        event.preventDefault();
+        var password = document.getElementById('id_password').value;
+        var formData = new FormData(document.getElementById('profile-update-form'));
+        formData.append('password', password);
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url "update_profile" %}', true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    modalTitle.textContent = "Profile Updated";
+                    modalMessage.textContent = response.message;
+                    passwordModal.style.display = "none";
+                    successModal.style.display = "block";
+                } else {
+                    if (response.errors) {
+                        var errors = response.errors;
+                        for (var field in errors) {
+                            var errorElement = document.getElementById('id_' + field).nextElementSibling;
+                            if (errorElement) {
+                                errorElement.textContent = errors[field];
+                            }
+                        }
+                    } else {
+                        modalTitle.textContent = response.message;
+                        modalMessage.textContent = "";
+                        passwordModal.style.display = "none";
+                        successModal.style.display = "block";
+                    }
+                }
+            } else {
+                console.error('An error occurred. Status:', xhr.status, 'Response:', xhr.responseText);
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('An error occurred during the request.');
+        };
+
+        xhr.send(formData);
+    };
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Your Listings</h2>
+  <ul>
+    {% for listing in listings %}
+      <li>
+        <a href="{% url 'listing_detail' listing.pk %}">{{ listing.title }}</a> - 
+        <a href="{% url 'edit_listing' listing.pk %}">Edit</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

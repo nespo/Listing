@@ -1,0 +1,314 @@
+h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #333;
+    font-size: 2.5rem;
+}
+
+/* Container and card styles */
+.package-container,
+.individual-listings,
+.available-packages,
+.individual-listings-purchase {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+}
+
+.package-details{
+    margin: 20px;
+}
+
+.card {
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.active-card {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Typography styles */
+.package-details h3,
+.individual-listings h3,
+.available-packages h3,
+.individual-listings-purchase h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.package-details p,
+.individual-listings p,
+.available-packages p,
+.individual-listings-purchase p {
+    color: #666;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.package-details p i,
+.individual-listings p i,
+.available-packages p i,
+.individual-listings-purchase p i {
+    margin-right: 10px;
+    color: #4CAF50;
+}
+
+/* Packages grid styles */
+.available-packages .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.package-option {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.package-option:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.package-option h4 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.package-option p {
+    color: #666;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.package-option p i {
+    margin-right: 10px;
+    color: #4CAF50;
+}
+
+/* Button styles */
+button.package-button,
+button#unique-buy-listings-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    margin: 20px 0 10px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button.package-button:hover,
+button#unique-buy-listings-button:hover {
+    background-color: #45a049;
+    transform: translateY(-5px);
+}
+
+button#unique-buy-listings-button {
+    width: 100%;
+}
+
+button#unique-buy-listings-button:hover {
+    background-color: #007B9E;
+}
+
+/* Individual listings purchase styles */
+.individual-listings-purchase .listing-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.individual-listings div {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+#unique-individual-normal-posts,
+#unique-individual-featured-posts {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.listing-option {
+    margin-bottom: 20px;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+.closex,
+.close-message {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.closex:hover,
+.closex:focus,
+.close-message:hover,
+.close-message:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#unique-card-element {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#unique-card-errors {
+    color: #e74c3c;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+button#unique-stripe-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+button#unique-stripe-button:hover {
+    background-color: #45a049;
+    transform: translateY(-5px);
+}
+
+/* Media queries for responsive design */
+@media screen and (max-width: 768px) {
+    h2 {
+        font-size: 2rem;
+        margin: 20px;
+    }
+
+    .package-container,
+    .available-packages,
+    .individual-listings,
+    .individual-listings-purchase {
+        padding: 10px;
+        margin: 0 10px;
+    }
+
+    .available-packages .packages-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .package-option,
+    .individual-listings div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .modal-content p {
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    h2 {
+        font-size: 1.8rem;
+    }
+
+    .package-details h3,
+    .individual-listings h3,
+    .available-packages h3,
+    .individual-listings-purchase h3 {
+        font-size: 1.5rem;
+    }
+
+    .package-details p,
+    .individual-listings p,
+    .available-packages p,
+    .individual-listings-purchase p,
+    .package-option h4 {
+        font-size: 0.9rem;
+    }
+
+    button.package-button,
+    button#unique-buy-listings-button,
+    button#unique-stripe-button {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+    }
+}

@@ -1,17 +1,442 @@
+/* Universal Styles */
 body {
     font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    padding-top: 90px;
 }
 
-header, footer {
-    background-color: #f8f8f8;
-    padding: 10px;
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Scoped CSS for this page */
+#home-page header {
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+#home-page .navbar {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Align items vertically */
+    padding: 0 20px;
+}
+
+#home-page .logo {
+    flex: 1;
     text-align: center;
 }
 
-nav {
-    margin: 20px 0;
+#home-page .logo img {
+    height: 50px;
 }
 
-main {
-    margin: 20px;
+#home-page .menu {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#home-page .menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+#home-page .menu ul li {
+    display: inline;
+}
+
+#home-page .menu ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 8px 16px;
+    transition: background-color 0.3s ease;
+}
+
+#home-page .menu ul li a:hover {
+    background-color: #e2e6ea;
+    border-radius: 4px;
+}
+
+#home-page .account-icon {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center; /* Align items vertically */
+}
+
+#home-page .account-icon img {
+    height: 30px;
+    cursor: pointer;
+}
+
+#home-page .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 150px;
+    margin-top: 132px;
+}
+
+#home-page .dropdown-content a,
+#home-page .logout-button {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s ease;
+}
+
+#home-page .dropdown-content a:hover,
+#home-page .logout-button:hover {
+    background-color: #f1f1f1;
+}
+
+#home-page .hamburger {
+    display: none;
+    cursor: pointer;
+    align-items: center; /* Align items vertically */
+}
+
+#home-page .hamburger img {
+    height: 30px;
+}
+
+#home-page .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 90px;
+    left: -100%;
+    width: 70%;
+    max-width: 300px;
+    height: calc(100% - 90px);
+    background-color: white;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    padding-top: 20px;
+}
+
+#home-page .mobile-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#home-page .mobile-menu ul li {
+    padding: 10px 20px;
+}
+
+#home-page .mobile-menu ul li a {
+    text-decoration: none;
+    color: #333;
+    display: block;
+    align-items: center;
+    display: flex;
+}
+
+#home-page .mobile-menu ul li a .icon {
+    margin-right: 10px;
+}
+
+#home-page .popup {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#home-page .popup-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: auto;
+}
+
+#home-page .close {
+    color: #aaa;
+    float: right;
+    font-size: 20px; /* Reduce the size of the close icon */
+    font-weight: bold;
+}
+
+#home-page .close:hover,
+#home-page .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#home-page label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#home-page .logout-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    padding: 12px 16px;
+    display: block;
+    transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    #home-page .menu {
+        display: none;
+    }
+
+    #home-page .hamburger {
+        display: flex; /* Use flex to align items */
+    }
+
+    #home-page .navbar {
+        justify-content: space-between;
+        position: relative;
+    }
+
+    #home-page .logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #home-page .logo img {
+        height: 40px; /* Adjust logo size for mobile */
+    }
+
+    #home-page .account-icon {
+        margin-top: 0;
+    }
+
+    #home-page .mobile-menu {
+        display: block;
+    }
+
+    #home-page .mobile-menu ul {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+
+/* Scoped CSS for login/signup/reset/message popups */
+#home-page #login-popup .popup-content,
+#home-page #signup-popup .popup-content,
+#home-page #reset-popup .popup-content,
+#home-page #messages-popup .popup-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: auto;
+}
+
+#home-page #login-popup .close,
+#home-page #signup-popup .close,
+#home-page #reset-popup .close,
+#home-page #messages-popup .close {
+    color: #aaa;
+    float: right;
+    font-size: 20px; /* Adjusted to match above */
+    font-weight: bold;
+}
+
+#home-page #login-popup .close:hover,
+#home-page #signup-popup .close:hover,
+#home-page #reset-popup .close:hover,
+#home-page #messages-popup .close:hover,
+#home-page #login-popup .close:focus,
+#home-page #signup-popup .close:focus,
+#home-page #reset-popup .close:focus,
+#home-page #messages-popup .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#home-page #login-popup label,
+#home-page #signup-popup label,
+#home-page #reset-popup label,
+#home-page #messages-popup label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#home-page #login-popup input[type="text"],
+#home-page #signup-popup input[type="text"],
+#home-page #reset-popup input[type="text"],
+#home-page #messages-popup input[type="text"],
+#home-page #login-popup input[type="email"],
+#home-page #signup-popup input[type="email"],
+#home-page #reset-popup input[type="email"],
+#home-page #messages-popup input[type="email"],
+#home-page #login-popup input[type="password"],
+#home-page #signup-popup input[type="password"],
+#home-page #reset-popup input[type="password"],
+#home-page #messages-popup input[type="password"],
+#home-page #login-popup textarea,
+#home-page #signup-popup textarea,
+#home-page #reset-popup textarea,
+#home-page #messages-popup textarea,
+#home-page #login-popup select,
+#home-page #signup-popup select,
+#home-page #reset-popup select,
+#home-page #messages-popup select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#home-page #login-popup button,
+#home-page #signup-popup button,
+#home-page #reset-popup button,
+#home-page #messages-popup button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+#home-page #login-popup button:hover,
+#home-page #signup-popup button:hover,
+#home-page #reset-popup button:hover,
+#home-page #messages-popup button:hover {
+    background-color: #45a049;
+}
+
+#home-page #login-popup .form-group,
+#home-page #signup-popup .form-group,
+#home-page #reset-popup .form-group,
+#home-page #messages-popup .form-group {
+    margin-bottom: 15px;
+}
+
+#home-page #login-popup .popup-links,
+#home-page #signup-popup .popup-links,
+#home-page #reset-popup .popup-links,
+#home-page #messages-popup .popup-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#home-page #login-popup .popup-links a,
+#home-page #signup-popup .popup-links a,
+#home-page #reset-popup .popup-links a,
+#home-page #messages-popup .popup-links a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+#home-page #login-popup .popup-links a:hover,
+#home-page #signup-popup .popup-links a:hover,
+#home-page #reset-popup .popup-links a:hover,
+#home-page #messages-popup .popup-links a:hover {
+    text-decoration: underline;
+}
+
+#home-page .messages-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#home-page .message {
+    background-color: #f9edbe;
+    color: #222;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#home-page .message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+#home-page .message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+#home-page .message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+#home-page .message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+#home-page .message .closebtn {
+    margin-left: 15px;
+    color: #aaa;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#home-page .message .closebtn:hover {
+    color: black;
 }

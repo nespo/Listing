@@ -1,0 +1,45 @@
+{% block title %}Buy Individual Listing{% endblock %}
+{% block content %}
+    <h2>Buy Individual Listing</h2>
+    <form method="post" id="payment-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div id="card-element">
+            <!-- A Stripe Element will be inserted here. -->
+        </div>
+        <button type="submit">Buy Listing</button>
+    </form>
+    <script>
+        var stripe = Stripe('{{ stripe_key }}');
+        var elements = stripe.elements();
+        var card = elements.create('card');
+        card.mount('#card-element');
+
+        var form = document.getElementById('payment-form');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            stripe.createToken(card).then(function(result) {
+                if (result.error) {
+                    // Inform the user if there was an error.
+                    var errorElement = document.getElementById('card-errors');
+                    errorElement.textContent = result.error.message;
+                } else {
+                    // Send the token to your server.
+                    stripeTokenHandler(result.token);
+                }
+            });
+        });
+
+        function stripeTokenHandler(token) {
+            var form = document.getElementById('payment-form');
+            var hiddenInput = document.createElement('input');
+            hiddenInput.setAttribute('type', 'hidden');
+            hiddenInput.setAttribute('name', 'stripeToken');
+            hiddenInput.setAttribute('value', token.id);
+            form.appendChild(hiddenInput);
+
+            form.submit();
+        }
+    </script>
+{% endblock %}
