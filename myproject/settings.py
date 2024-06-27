@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from django.contrib.messages import constants as messages
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,17 +141,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp-relay.brevo.com'  
-EMAIL_PORT = 587
+EMAIL_BACKEND = config('EMAIL_BACKEND')
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '79gvoice@gmail.com'
-EMAIL_HOST_PASSWORD = 'fAXKP4DZtHyx9WqG'
-DEFAULT_FROM_EMAIL = 'email@greenenergyconnection.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 
-STRIPE_SECRET_KEY = 'sk_test_51PQvMnAgGvfEBaSzoMPphRWLqIGUBVns0jIvFTP7qNldQolbZ7NlCmdpZwSkcXYUza3aCPcOvKFEJU3Gf5K7CsPk00xy9MnD0Q'
-STRIPE_PUBLISHABLE_KEY = 'pk_test_51PQvMnAgGvfEBaSzed22kIr9L2tYfm8rRYevwYDP1e2wNvycwajLAwsRJWqHk9FIcEmi0RyUArzoGDcarYW9NNGf00HDP0e9E7'
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY')
 
 
 LOGIN_URL = '/accounts/login/'
