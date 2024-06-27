@@ -149,16 +149,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = os.getenv('EMAIL_PORT')  # Default to 0 if not set
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
-
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = 'sk_test_51PQvMnAgGvfEBaSzoMPphRWLqIGUBVns0jIvFTP7qNldQolbZ7NlCmdpZwSkcXYUza3aCPcOvKFEJU3Gf5K7CsPk00xy9MnD0Q'
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51PQvMnAgGvfEBaSzed22kIr9L2tYfm8rRYevwYDP1e2wNvycwajLAwsRJWqHk9FIcEmi0RyUArzoGDcarYW9NNGf00HDP0e9E7'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp-relay.brevo.com'  
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '79gvoice@gmail.com'
+EMAIL_HOST_PASSWORD = 'fAXKP4DZtHyx9WqG'
+DEFAULT_FROM_EMAIL = 'email@greenenergyconnection.com'
 
 
 LOGIN_URL = '/accounts/login/'
@@ -167,21 +166,3 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs/coderalnaim.pythonanywhere.com.error.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
