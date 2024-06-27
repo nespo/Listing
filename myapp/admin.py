@@ -7,6 +7,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django import forms
 from .models import Category, Package, Seller, Listing, ListingImage, Transaction, ListingPrice, SiteSettings, FooterMenuItem, FooterWidget, FooterWidgetLink
+import logging
+logger = logging.getLogger(__name__)
 
 class FooterWidgetLinkInline(admin.TabularInline):
     model = FooterWidgetLink
@@ -90,6 +92,7 @@ class SellerAdmin(admin.ModelAdmin):
     def approve_seller(self, request, queryset):
         queryset.update(is_approved=True)
         for seller in queryset:
+            logger.info(f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}')
             send_mail(
                 'Account Approved',
                 'Your account has been approved by admin.',
