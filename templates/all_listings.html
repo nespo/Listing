@@ -1,15 +1,173 @@
 {% extends "base.html" %}
+{% load static %}
+{% block title %}Search Listing{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'alllisting/styles.css' %}">
+{% endblock %}
 {% block content %}
-  <h2>All Listings</h2>
-  <ul>
-    {% for listing in listings %}
-      <li>
-        <a href="{% url 'listing_detail' listing.pk %}">{{ listing.title }}</a>
-        <p>{{ listing.description }}</p>
-        <p>Price: {{ listing.price }}</p>
-        <p>Contact: {{ listing.contact_email }}</p>
-        <p>Views: {{ listing.views }}</p>
-      </li>
-    {% endfor %}
-  </ul>
+<h2 style="text-align: center;">Use The Search Option To See Listings</h2>
+<div class="search-filters">
+    <input type="text" id="location" placeholder="Location">
+    <select id="category">
+        <option value="">Project Type</option>
+        {% for category in categories %}
+            <option value="{{ category.name }}">{{ category.name }}</option>
+        {% endfor %}
+    </select>
+    <input type="number" id="min_price" placeholder="Min Price">
+    <input type="number" id="max_price" placeholder="Max Price">
+    <select id="sort_by">
+        <option value="">Sort By</option>
+        <option value="date_newest">Date (Newest)</option>
+        <option value="date_oldest">Date (Oldest)</option>
+        <option value="price_low_to_high">Price (Low to High)</option>
+        <option value="price_high_to_low">Price (High to Low)</option>
+        <option value="update_time">Update Time</option>
+    </select>
+</div>
+
+<div class="container">
+    <div class="map-section">
+        <!-- Leaflet Map will be embedded here -->
+        <div id="map" style="height: 100%; width: 100%;"></div>
+    </div>
+    <div class="listings-section" id="listings">
+        {% include 'partials/listings.html' %}
+    </div>
+</div>
+
+<!-- Include jQuery and jQuery UI library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    var map;
+    var markers = [];
+    var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
+
+    function initMap() {
+        map = L.map('map').setView([51.505, -0.09], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        updateMarkers(listingsData);
+    }
+
+    function updateMarkers(listings) {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+
+        listings.forEach(listing => {
+            var marker = L.marker([listing.latitude, listing.longitude]).addTo(map)
+                .bindPopup(listing.project_name);
+            markers.push(marker);
+
+            marker.on('click', function() {
+                scrollToListing(listing.id);
+            });
+        });
+    }
+
+    function scrollToListing(id) {
+        var listingElement = document.getElementById('listing-' + id);
+        if (listingElement) {
+            // Remove highlight class from any previously highlighted listing
+            $('.listing-box').removeClass('highlighted');
+
+            // Scroll to the listing and highlight it
+            listingElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+            listingElement.classList.add('highlighted');
+        }
+    }
+
+    function fetchListings() {
+        var location = $('#location').val();
+        var category = $('#category').val();
+        var min_price = $('#min_price').val();
+        var max_price = $('#max_price').val();
+        var sort_by = $('#sort_by').val();
+
+        $.ajax({
+            url: '{% url "all_listings" %}',
+            data: {
+                'location': location,
+                'categories[]': category,
+                'min_price': min_price,
+                'max_price': max_price,
+                'sort_by': sort_by
+            },
+            success: function(response) {
+                $('#listings').html(response.html);
+                updateMarkers(response.listings);
+            },
+            error: function(xhr, status, error) {
+                console.log("AJAX request failed:");
+                console.log("Status:", status);
+                console.log("Error:", error);
+            }
+        });
+    }
+
+    function setFieldValuesFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const location = urlParams.get('location');
+        const categories = urlParams.getAll('categories[]');
+        const min_price = urlParams.get('price_min');
+        const max_price = urlParams.get('price_max');
+        const sort_by = urlParams.get('sort_by');
+
+        if (location) {
+            $('#location').val(location);
+        }
+        if (categories.length > 0 && categories[0] !== "") {
+            $('#category').val(categories).trigger('change');
+        } else if (window.location.search.includes('categories[]')) {
+            $('#category option:eq(1)').prop('selected', true).trigger('change');
+        }
+        if (min_price) {
+            $('#min_price').val(min_price);
+        }
+        if (max_price) {
+            $('#max_price').val(max_price);
+        }
+        if (sort_by) {
+            $('#sort_by').val(sort_by);
+        }
+
+        fetchListings();
+    }
+
+    $('#location, #category, #min_price, #max_price, #sort_by').on('input change', fetchListings);
+
+    $.ajax({
+        url: '{% url "state_autocomplete" %}',
+        success: function(data) {
+            $('#location').autocomplete({
+                source: data,
+                minLength: 0,
+                select: function(event, ui) {
+                    $('#location').val(ui.item.value);
+                    fetchListings();
+                }
+            }).focus(function() {
+                $(this).autocomplete("search", "");
+            });
+        }
+    });
+
+    initMap();
+    setFieldValuesFromUrl();
+});
+</script>
+
+<script id="listings-data" type="application/json">
+    {{ listings_data|safe }}
+</script>
+
 {% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ sellet.user.get_full_name }} -  All Messages{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'profile/messageall.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="messages-containerx">
+    <h2>Messages</h2>
+    {% if page_obj.object_list %}
+      <ul>
+        {% for message in page_obj.object_list %}
+          <li class="message-item">
+            <a href="{% url 'message_detail' message.id %}">
+              <strong>{{ message.first_name }} {{ message.last_name }}</strong> ({{ message.email }} - {{ message.phone }})
+            </a>
+            <br>
+            <em>Sent at: {{ message.sent_at }}</em>
+            <br><br>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% else %}
+          <span class="disabled">&laquo; first</span>
+          <span class="disabled">previous</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="current">{{ num }}</span>
+          {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+            <a href="?page={{ num }}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% else %}
+          <span class="disabled">next</span>
+          <span class="disabled">last &raquo;</span>
+        {% endif %}
+      </div>
+
+    {% else %}
+      <p class="no-messages">No messages found.</p>
+    {% endif %}
+  </div>
+{% endblock %}

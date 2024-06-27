@@ -1,11 +1,142 @@
 {% extends "base.html" %}
-
+{% load form_filters %}
+{% load static %}
 {% block title %}Create Listing{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
+{% endblock %}
 {% block content %}
+<div class="listing-create-container">
     <h2>Create Listing</h2>
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="listing-create-form">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Create Listing</button>
+        {{ form.non_field_errors }}
+
+        {% for field_name in field_order %}
+            {% with form|get_field:field_name as field %}
+                <div class="listing-create-form-group {% if field_name in 'lease_term lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endwith %}
+        {% endfor %}
+        
+        <h3>Listing Images</h3>
+        <div class="listing-create-form-group">
+            <label for="id_images">Upload Images</label>
+            <input type="file" id="id_images" name="images" multiple>
+            <small class="form-text text-muted">You can select multiple images or drag and drop them here.</small>
+        </div>
+
+        <button type="submit" class="listing-create-btn">Create Listing</button>
     </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    /*tinymce.init({
+        selector: 'textarea',
+        plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+        toolbar_mode: 'floating',
+        height: 300
+    });*/
+    tinymce.init({
+        selector: 'textarea',
+        plugins: 'lists link',
+        menubar: false,
+        toolbar: 'bold italic underline | bullist numlist | link',
+        height: 300,
+        branding: false,
+        forced_root_block: false,
+        force_p_newlines: false,
+        force_br_newlines: true,
+        content_css: false,
+        content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+        valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
+        invalid_elements: 'script,iframe,object,embed'
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to toggle lease fields
+        function toggleLeaseFields() {
+            var leaseFields = document.querySelectorAll('.lease-field');
+            var propertyType = document.getElementById('id_property_type').value;
+            leaseFields.forEach(function (fieldElement) {
+                if (propertyType === 'lease') {
+                    fieldElement.style.display = 'block';
+                } else {
+                    fieldElement.style.display = 'none';
+                }
+            });
+        }
+
+        // Attach change event listener to property type field
+        document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
+
+        // Initial call to toggle fields based on the initial value
+        toggleLeaseFields();
+
+        // Fetch cities based on selected state
+        document.getElementById('id_project_state').addEventListener('change', function () {
+            var url = "{% url 'load_cities' %}";
+            var stateId = this.value;
+            fetch(url + '?state=' + stateId)
+                .then(response => response.json())
+                .then(data => {
+                    var citySelect = document.getElementById('id_project_city');
+                    citySelect.innerHTML = '<option value="">Select a city</option>';
+                    data.forEach(function (city) {
+                        var option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching cities:', error));
+        });
+
+        // Show or hide battery storage field based on selected categories
+        document.getElementById('id_categories').addEventListener('change', function () {
+            var batteryField = document.querySelector('.battery_storage');
+            if (batteryField) {
+                if (Array.from(this.selectedOptions).map(option => option.value).includes('BESS')) {
+                    batteryField.style.display = 'block';
+                } else {
+                    batteryField.style.display = 'none';
+                }
+            }
+        });
+
+        // Initialize cities if a state is already selected
+        var stateSelect = document.getElementById('id_project_state');
+        var citySelect = document.getElementById('id_project_city');
+        var selectedState = stateSelect.value;
+        if (selectedState) {
+            var url = "{% url 'load_cities' %}";
+            fetch(url + '?state=' + selectedState)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.innerHTML = '<option value="">Select a city</option>';
+                    data.forEach(function (city) {
+                        var option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+
+                    var selectedCity = "{{ form.instance.project_city.id }}";
+                    if (selectedCity) {
+                        citySelect.value = selectedCity;
+                    }
+                })
+                .catch(error => console.error('Error fetching initial cities:', error));
+        }
+    });
+</script>
 {% endblock %}

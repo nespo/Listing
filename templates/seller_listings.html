@@ -1,11 +1,56 @@
 {% extends "base.html" %}
+{% block title %}Your Listings{% endblock %}
 {% block content %}
+  <style>
+    .listing-link {
+      text-decoration: none;
+      color: #000;
+    }
+
+    .listing-buttons {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+    .listing-buttons a {
+      background-color: #64C2DB;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-left: 10px;
+    }
+    .listing-buttons a:hover {
+      background-color: #4fa6bd;
+    }
+    .listing-item {
+      position: relative;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .views-count {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #eee;
+      color: #333;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.9em;
+    }
+  </style>
+
   <h2>Your Listings</h2>
   <ul>
     {% for listing in listings %}
-      <li>
-        <a href="{% url 'listing_detail' listing.pk %}">{{ listing.title }}</a> - 
-        <a href="{% url 'edit_listing' listing.pk %}">Edit</a>
+      <li class="listing-item">
+        <div class="views-count">{{ listing.views }} views</div>
+        <a href="{% url 'listing_detail' listing.slug %}" class="listing-link">{{ listing.project_name }}</a>
+        <div class="listing-buttons">
+          <a href="{% url 'edit_listing' listing.slug %}">Edit</a>
+          <a href="{% url 'listing_detail' listing.slug %}">View</a>
+        </div>
       </li>
     {% endfor %}
   </ul>

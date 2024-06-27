@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" href="{{ site_settings.site_favicon.url }}">
     <meta name="description" content="{{ site_settings.site_description }}">
+    <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     {% for key, value in site_settings.meta_data.items %}
     <meta name="{{ key }}" content="{{ value }}">
     {% endfor %}
@@ -192,8 +193,8 @@
     </div>
     {% endif %}
 
-    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password' %}container with-sidebar{% endif %}">
-        {% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password'%}
+    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail' %}container with-sidebar{% endif %}">
+        {% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail'%}
         <aside class="sidebar">
             <h2>Dashboard</h2>
             <p>Welcome, {{ request.user.username }}!</p>
@@ -205,6 +206,7 @@
                 <li><a href="{% url 'all_listings' %}" class="{% if request.resolver_match.url_name == 'all_listings' %}active{% endif %}"><span class="icon"><i class="fas fa-th-list"></i></span>View all listings</a></li>
                 <li><a href="{% url 'update_profile' %}" class="{% if request.resolver_match.url_name == 'update_profile' %}active{% endif %}"><span class="icon"><i class="fas fa-user-edit"></i></span>Update your profile</a></li>
                 <li><a href="{% url 'change_password' %}" class="{% if request.resolver_match.url_name == 'change_password' %}active{% endif %}"><span class="icon"><i class="fas fa-key"></i></span>Change your password</a></li>
+                <li><a href="{% url 'seller_messages' %}" class="{% if request.resolver_match.url_name == 'seller_messages' %}active{% endif %}"><span class="icon"><i class="fas fa-envelope"></i></span>View your messages</a></li>
                 <li>
                     <form method="POST" action="{% url 'logout' %}">
                         {% csrf_token %}
@@ -214,11 +216,11 @@
             </ul>
         </aside>
         {% endif %}
-        <main class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password' %} with-sidebar-content{% endif %}">
+        <main class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages' %} with-sidebar-content{% endif %}">
             {% block content %}
             {% endblock %}
         </main>
-    </div>
+    </div>    
 
     <footer class="site-footer">
         <div class="footer-content">

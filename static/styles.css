@@ -15,6 +15,10 @@ html, body {
     flex-direction: column;
 }
 
+h1, h2, h3, h4, h5, h6{
+    color: #04436c !important;
+}
+
 /* Scoped CSS for this page */
 #home-page header {
     background-color: #f8f9fa;
@@ -66,7 +70,7 @@ html, body {
 
 #home-page .menu ul li a {
     text-decoration: none;
-    color: #333;
+    color: #04436C;
     font-weight: bold;
     padding: 8px 16px;
     transition: background-color 0.3s ease;
@@ -154,7 +158,7 @@ html, body {
 
 #home-page .mobile-menu ul li a {
     text-decoration: none;
-    color: #333;
+    color: #04436C;
     display: block;
     align-items: center;
     display: flex;
@@ -342,7 +346,7 @@ html, body {
 #home-page #signup-popup button,
 #home-page #reset-popup button,
 #home-page #messages-popup button {
-    background-color: #4CAF50;
+    background-color: #64C2DB;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -379,7 +383,7 @@ html, body {
 #home-page #signup-popup .popup-links a,
 #home-page #reset-popup .popup-links a,
 #home-page #messages-popup .popup-links a {
-    color: #007BFF;
+    color: #64C2DB;
     text-decoration: none;
 }
 

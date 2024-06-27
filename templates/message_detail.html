@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <style>
+    main {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .message-detail-container {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+
+    .message-detail-container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .message-detail-container p {
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .message-detail-container p strong {
+      color: #333;
+    }
+
+    .message-detail-container a {
+      text-decoration: none;
+      color: #64C2DB;
+      font-weight: bold;
+    }
+
+    .message-detail-container a:hover {
+      text-decoration: underline;
+    }
+
+    .back-to-messages {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #64C2DB;
+    }
+
+    @media (max-width: 768px) {
+      .message-detail-container {
+        padding: 20px;
+        border-radius: 8px;
+      }
+      main {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.0);
+      }
+    }
+  </style>
+
+  <main>
+    <div class="message-detail-container">
+      <h2>Message from {{ message.first_name }} {{ message.last_name }}</h2>
+      <p><strong>Email:</strong> {{ message.email }}</p>
+      <p><strong>Phone:</strong> {{ message.phone }}</p>
+      <p><strong>Company:</strong> {{ message.company }}</p>
+      <p><strong>Message:</strong> {{ message.message }}</p>
+      <p><strong>Sent at:</strong> {{ message.sent_at }}</p>
+      {% if listing_url %}
+        <p><strong>Listing:</strong> <a href="{{ listing_url }}">{{ message.listing.project_name }}</a></p>
+      {% endif %}
+      <br>
+      <a class="back-to-messages" href="{% url 'seller_messages' %}">Back to Messages</a>
+    </div>
+  </main>
+{% endblock %}

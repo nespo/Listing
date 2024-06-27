@@ -1,10 +1,215 @@
 {% extends "base.html" %}
-{% block title %}{{ listing.title }}{% endblock %}
+{% load static %}
+{% block title %}{{ listing.project_name }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'listing/listing_detail.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css" />
+{% endblock %}
 {% block content %}
-    <h2>{{ listing.title }}</h2>
-    <p>{{ listing.description }}</p>
-    <p>Price: {{ listing.price }}</p>
-    <p>Location: {{ listing.location }}</p>
-    <p>Views: {{ listing.views }}</p>
-    <a href="{% url 'contact_seller' listing.id %}">Contact Seller</a>
+<div class="listing-sticky-header">
+    <div class="listing-title-box">
+        <h2>{{ listing.project_name }}</h2>
+        <p><i class="fas fa-flag"></i> {{ listing.project_state.name }} | <i class="fas fa-city"></i> {{ listing.project_city.name }}</p>
+    </div>
+</div>
+<div class="listing-gallery-container">
+    <div class="listing-gallery-detail">
+        {% for image in listing.images.all %}
+            <div class="listing-gallery-item">
+                <a href="{{ image.image.url }}" class="listing-popup-link"><img src="{{ image.image.url }}" alt="Image for {{ listing.project_name }}"></a>
+            </div>
+        {% endfor %}
+    </div>
+    {% if listing.views %}
+        <div class="listing-views"><i class="fas fa-eye"></i> {{ listing.views }} Views</div>
+    {% endif %}
+</div>
+<div class="listing-content-detail">
+    <div class="listing-details-detail">
+        <div class="listing-description-box">
+            <div class="listing-description-header">
+                <h3>Description</h3>
+                <p class="listing-created-date"><i class="fas fa-calendar-alt"></i> 
+                    {% if listing.updated_at %}
+                        Updated on: {{ listing.updated_at|date:"M d, Y" }}
+                    {% else %}
+                        Created on: {{ listing.created_at|date:"M d, Y" }}
+                    {% endif %}
+                </p>
+            </div>
+            <p>{{ listing.project_description|safe }}</p>
+        </div>
+        <div class="listing-row-detail">
+            <div class="listing-column">
+                <h2>Project Information:</h2>
+                {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
+                {% if listing.project_cod_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project COD Date:</strong> {{ listing.project_cod_date }}</p>{% endif %}
+                {% if listing.project_pto_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project PTO Date:</strong> {{ listing.project_pto_date }}</p>{% endif %}
+                {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size }}</p>{% endif %}
+                {% if listing.battery_storage %}<p><i class="fas fa-battery-full"></i> <strong>Battery Storage (mWh):</strong> {{ listing.battery_storage }}</p>{% endif %}
+                {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income }}</p>{% endif %}
+                {% if listing.epc_name %}<p><i class="fas fa-tools"></i> <strong>EPC Name:</strong> {{ listing.epc_name }}</p>{% endif %}
+                {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> {{ listing.current_annual_om_cost }}</p>{% endif %}
+                {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate }}</p>{% endif %}
+                {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> {{ listing.sales_price }}</p>{% endif %}
+                {% if listing.status %}<p><i class="fas fa-info-circle"></i> <strong>Listing Status:</strong> {{ listing.get_status_display }}</p>{% endif %}
+                {% if listing.seller %}<p><i class="fas fa-user"></i> <strong>Seller's Name:</strong> {{ listing.seller.first_name }} {{ listing.seller.last_name }}</p>{% endif %}
+                {% if listing.contractor_name %}<p><i class="fas fa-hard-hat"></i> <strong>Contractor Name:</strong> {{ listing.contractor_name }}</p>{% endif %}
+            </div>
+        
+            <div class="listing-column">
+                <h2>Property Details:</h2>
+                {% if listing.project_address %}<p><i class="fas fa-map-marker-alt"></i> <strong>Project Address:</strong> {{ listing.project_address }}</p>{% endif %}
+                {% if listing.project_city %}<p><i class="fas fa-city"></i> <strong>Project City:</strong> {{ listing.project_city.name }}</p>{% endif %}
+                {% if listing.project_state %}<p><i class="fas fa-flag"></i> <strong>Project State:</strong> {{ listing.project_state.name }}</p>{% endif %}
+                {% if listing.latitude and listing.longitude %}<p><i class="fas fa-map-pin"></i> <strong>Project GPS Coordinate:</strong> {{ listing.latitude }}, {{ listing.longitude }}</p>{% endif %}
+                {% if listing.lot_size %}<p><i class="fas fa-tree"></i> <strong>Lot Size (acres):</strong> {{ listing.lot_size }}</p>{% endif %}
+                {% if listing.get_property_type_display %}<p><i class="fas fa-home"></i> <strong>Property Type:</strong> {{ listing.get_property_type_display }}</p>{% endif %}
+                {% if listing.lease_term %}<p><i class="fas fa-file-contract"></i> <strong>Lease Term:</strong> {{ listing.lease_term|safe }}</p>{% endif %}
+                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre }}</p>{% endif %}
+                {% if listing.lease_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>Lease Escalation Rate:</strong> {{ listing.lease_escalation_rate }}</p>{% endif %}
+                {% if listing.get_project_status_display %}<p><i class="fas fa-info-circle"></i> <strong>Project Status:</strong> {{ listing.get_project_status_display }}</p>{% endif %}
+            </div>
+        </div>
+        <div class="listing-row-detail">
+            <div class="listing-column">
+                <h2>ITC/PTC Information:</h2>
+                {% if listing.tax_credit_type %}<p><i class="fas fa-file-invoice-dollar"></i> <strong>Tax Credit Type:</strong> {{ listing.get_tax_credit_type_display }}</p>{% endif %}
+                {% if listing.total_tax_credit_percentage %}<p><i class="fas fa-percentage"></i> <strong>Total Tax Credit Percentage:</strong> {{ listing.total_tax_credit_percentage }}</p>{% endif %}
+                {% if listing.remarks %}<p><i class="fas fa-comments"></i> <strong>Remarks:</strong> {{ listing.remarks|safe }}</p>{% endif %}
+            </div>
+        
+            <div class="listing-column">
+                <h2>Other:</h2>
+                {% if listing.buyer_protections %}<p><i class="fas fa-shield-alt"></i> <strong>Buyer's Protections:</strong> {{ listing.buyer_protections|safe }}</p>{% endif %}
+            </div>
+        </div>        
+    </div>
+    <div class="listing-seller-detail">
+        <div class="listing-seller-info">
+            {% if seller.profile_image %}
+                <img src="{{ seller.profile_image.url }}" alt="{{ seller.user.username }}" class="listing-seller-profile-image">
+            {% else %}
+                <img src="{% static 'default-profile.png' %}" alt="Default Profile" class="listing-seller-profile-image">
+            {% endif %}
+            <div class="listing-seller-contact-info">
+                <h3><a href="{% url 'seller_profile' seller_id=seller.id %}">{{ seller.first_name }} {{ seller.last_name }}</a></h3>
+                <p><i class="fas fa-map-marker-alt"></i> {{ seller.company_address }}</p>
+                <a href="tel:{{ seller.company_phone_number }}" class="listing-call-button"><i class="fas fa-phone"></i> Call</a>
+                <button class="listing-message-button"><i class="fas fa-envelope"></i> Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="listing-map-section">
+    <h3><i class="fas fa-map-marked-alt"></i> Location</h3>
+    <iframe src="https://maps.google.com/maps?q={{ listing.latitude }},{{ listing.longitude }}&hl=es;z=14&output=embed"></iframe>
+</div>
+
+<div id="listing-message-form-modal" class="listing-message-form-modal">
+    <div class="listing-message-form-content">
+        <span class="listing-message-form-close">&times;</span>
+        <h2>Contact {{ seller.company_name }}</h2>
+        <form id="listing-message-form" method="post">
+            {% csrf_token %}
+            <div class="listing-form-group">
+                {{ form.first_name.label_tag }}{{ form.first_name }}
+            </div>
+            <div class="listing-form-group">
+                {{ form.last_name.label_tag }}{{ form.last_name }}
+            </div>
+            <div class="listing-form-group">
+                {{ form.email.label_tag }}{{ form.email }}
+            </div>
+            <div class="listing-form-group">
+                {{ form.phone.label_tag }}{{ form.phone }}
+            </div>
+            <div class="listing-form-group">
+                {{ form.company.label_tag }}{{ form.company }}
+            </div>
+            <div class="listing-form-group">
+                {{ form.message.label_tag }}{{ form.message }}
+            </div>
+            <button type="submit" class="listing-submit-button">Send Message</button>
+        </form>
+    </div>
+</div>
+
+<div class="listing-mobile-sticky-seller">
+    <div class="listing-seller-info">
+        <span>{{ seller.company_name }}</span>
+        <div class="listing-seller-icons">
+            <a href="tel:{{ seller.company_phone_number }}" class="listing-call-icon"><i class="fas fa-phone-alt"></i></a>
+            <button class="listing-message-icon"><i class="fas fa-comment-dots"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.listing-gallery-detail').slick({
+            dots: true,
+            infinite: true,
+            speed: 500,
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            adaptiveHeight: true,
+            responsive: [
+                {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: 1,
+                        slidesToScroll: 1
+                    }
+                }
+            ]
+        });
+
+        $('.listing-popup-link').magnificPopup({
+            type: 'image',
+            gallery: {
+                enabled: true
+            },
+            image: {
+                verticalFit: true
+            }
+        });
+
+        $('.listing-message-button, .listing-message-icon').on('click', function(){
+            $('#listing-message-form-modal').fadeIn();
+        });
+
+        $('.listing-message-form-close').on('click', function(){
+            $('#listing-message-form-modal').fadeOut();
+        });
+
+        $('#listing-message-form').on('submit', function(event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                url: "{% url 'submit_message' listing.slug %}",
+                type: "POST",
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('<div class="listing-success-popup">' + response.message + '</div>').appendTo('body').fadeIn().delay(3000).fadeOut();
+                        $('#listing-message-form-modal').fadeOut();
+                    } else {
+                        alert('An error occurred: ' + response.message);
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -1,4 +1,170 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Dashboard</h2>
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+    .top-right, .left-side {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .top-right {
+        justify-content: flex-end;
+    }
+    .message-icon {
+        font-size: 24px;
+        position: relative;
+        color: #64C2DB;
+    }
+    .message-count {
+        background: #ff0000;
+        color: #fff;
+        border-radius: 50%;
+        padding: 2px 6px;
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 12px;
+    }
+    .left-side {
+        margin-top: 20px;
+    }
+    .graph-container {
+        margin-top: 40px;
+    }
+    .remove-payment-method-btn {
+        background-color: #64C2DB;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 20px;
+    }
+    .remove-payment-method-btn:hover {
+        background-color: #4fa6bd;
+    }
+    .confirm-container {
+        display: none;
+        margin-top: 20px;
+    }
+    .confirm-btn, .cancel-btn {
+        background-color: #64C2DB;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+    }
+    .confirm-btn:hover, .cancel-btn:hover {
+        background-color: #4fa6bd;
+    }
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #64C2DB;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-left: 10px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="top-right">
+      <a href="{% url 'seller_messages' %}">
+        <div class="message-icon">
+            <i class="fa fa-envelope"></i>
+            <span class="message-count">{{ messages_count }}</span>
+        </div>
+      </a>    
+    </div>
+    <div class="left-side">
+        <p><b>Package Expire:</b> {{ package_status }}</p>
+    </div>
+    <h2>Your Listing Views</h2>
+    <div class="graph-container">
+        <canvas id="viewsChart"></canvas>
+    </div>
+    {% if has_payment_method %}
+    <button class="remove-payment-method-btn" id="removePaymentMethodBtn">Remove Saved Payment Method</button>
+    <div class="confirm-container" id="confirmContainer">
+        <p>Are you sure you want to remove the saved payment method?</p>
+        <button class="confirm-btn" id="confirmBtn">Confirm</button>
+        <button class="cancel-btn" id="cancelBtn">Cancel</button>
+    </div>
+    {% endif %}
+    <div class="spinner" id="spinner" style="display: none;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('viewsChart').getContext('2d');
+        const viewsData = {{ views_data|safe }};
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: viewsData.dates,
+                datasets: [{
+                    label: 'Views',
+                    data: viewsData.views,
+                    borderColor: '#64C2DB',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+
+        const removeBtn = document.getElementById('removePaymentMethodBtn');
+        const confirmContainer = document.getElementById('confirmContainer');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const spinner = document.getElementById('spinner');
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                confirmContainer.style.display = 'block';
+            });
+
+            cancelBtn.addEventListener('click', function() {
+                confirmContainer.style.display = 'none';
+            });
+
+            confirmBtn.addEventListener('click', function() {
+                spinner.style.display = 'inline-block';
+                fetch("{% url 'remove_payment_method' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    spinner.style.display = 'none';
+                    console.error('Error:', error);
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

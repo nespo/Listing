@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django.core.mail import send_mail
 from django.conf import settings
 from django import forms
-from .models import Category, Package, Seller, Listing, Transaction, ListingPrice, SiteSettings, FooterMenuItem, FooterWidget, FooterWidgetLink
+from .models import Category, Package, Seller, Listing, ListingImage, Transaction, ListingPrice, SiteSettings, FooterMenuItem, FooterWidget, FooterWidgetLink
 
 class FooterWidgetLinkInline(admin.TabularInline):
     model = FooterWidgetLink
@@ -64,6 +64,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
+    search_fields = ('name', 'description')
 
 class PackageForm(forms.ModelForm):
     class Meta:
@@ -137,11 +138,20 @@ class SellerAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+class ListingImageInline(admin.TabularInline):
+    model = ListingImage
+    extra = 1
+
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'seller', 'category', 'price', 'status', 'views', 'created_at')
-    list_filter = ('status', 'category')
-    search_fields = ('title', 'description', 'location')
+    list_display = ('project_name', 'seller', 'get_categories', 'sales_price', 'status', 'views', 'created_at')
+    list_filter = ('status', 'categories')
+    search_fields = ('project_name', 'project_description', 'project_address')
+    inlines = [ListingImageInline]
+
+    def get_categories(self, obj):
+        return ", ".join([category.name for category in obj.categories.all()])
+    get_categories.short_description = 'Categories'
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):

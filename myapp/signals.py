@@ -5,17 +5,20 @@ from .models import Seller, Package, Reminder
 
 @receiver(post_save, sender=Seller)
 def handle_package_change(sender, instance, created, **kwargs):
-    if not created and instance.package:
+    if not created:
         current_datetime = timezone.now()
-        # Apply new package if the current package has expired
-        if instance.new_package and instance.membership_expiry and current_datetime >= instance.membership_expiry:
-            instance.apply_new_package()
-        # Renew package if auto-renew is enabled and the package has expired
-        elif instance.is_auto_renew and instance.package and instance.membership_expiry and current_datetime >= instance.membership_expiry:
-            try:
-                instance.renew_package()
-            except Exception as e:
-                print(f"Error in renewing package: {e}")
+        expiry_datetime = instance.get_aware_datetime(instance.membership_expiry)
+        if expiry_datetime and expiry_datetime <= current_datetime:
+            if instance.new_package:
+                instance.apply_new_package()
+            elif not instance.is_auto_renew:
+                instance.package = None
+                instance.normal_post_count = 0
+                instance.featured_post_count = 0
+                instance.membership_expiry = None
+                instance.is_auto_renew = False
+                instance.canceled_at = current_datetime
+                instance.save()
 
 @receiver(post_save, sender=Package)
 def create_reminder(sender, instance, **kwargs):

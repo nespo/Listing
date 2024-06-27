@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ seller.first_name }} {{ seller.last_name }} - Profile details{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'profile/seller.css' %}">
+{% endblock %}
+{% block content %}
+<div class="bd-profile-main">
+    <div class="bd-content bd-contact bd-desktop">
+        <div class="bd-profile-info">
+            {% if seller.profile_image %}
+                <img class="bd-content-photo" src="{{ seller.profile_image.url }}" alt="{{ seller.user.get_full_name }}" loading="lazy">
+            {% else %}
+                <img class="bd-content-photo" src="https://via.placeholder.com/150" alt="{{ seller.user.get_full_name }}" loading="lazy">
+            {% endif %}
+            <div class="bd-contact-info">
+                <h1 class="bd-content-highlight">
+                    <span>{{ seller.user.get_full_name }}</span>
+                </h1>
+                <h2 class="bd-content-title">
+                    <span>{{ seller.company_name }}</span>
+                </h2>
+                <div class="bd-content-location">
+                    <span>{{ seller.company_address }}</span>
+                </div>
+                <div class="bd-header-modules-desktop">
+                    <div class="bd-header-modules-desktop-message bd-module">
+                        <strong>
+                            <a id="bd-send-message-id" class="ln-icon-message-curved listing-message-button" href="javascript:void(0);" data-seller-id="{{ seller.id }}"><span>Send a Message</span></a>
+                        </strong>
+                    </div>
+                    <div class="bd-header-modules-desktop-swap-for-devices">
+                        <div class="bd-header-modules-desktop-phone bd-module">
+                            <p class="bd-header-modules-desktop-all-phones">
+                                <strong>Phone</strong> <span>{{ seller.company_phone_number }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bd-content">
+        <div id="broker-profile-tabs" class="lnc-tab-container" data-hideinactivetabs="False">
+            <div id="about" class="lnc-tab lnc-tab-active" data-contentcontainerid="about-section">
+                <a href="#about-section" title="About Broker Section" class="lnc-tab-link">About Me</a>
+            </div>
+            <div id="listings" class="lnc-tab" data-contentcontainerid="listings-section">
+                <a href="#listings-section" title="Broker Listings Section" class="lnc-tab-link">Listings</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="about-section">
+        <div id="bdBioCard" class="bd-content lnc-card">
+            <div class="bd-heading">Bio</div>
+            <div id="bdBio" class="bd-bio">
+                <span>{{ seller.bio|safe }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="listings-section">
+        <div id="broker-listings" class="bd-content bd-listings lnc-card">
+            {% for listing in listings %}
+                <div class="listing-item">
+                    <a href="{% url 'listing_detail' listing.slug %}">
+                        {% if listing.thumbnail_image %}
+                            <img src="{{ listing.thumbnail_image.url }}" alt="{{ listing.project_name }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/150" alt="{{ listing.project_name }}">
+                        {% endif %}
+                        <h3>{{ listing.project_name }}</h3>
+                        <p class="date-link-seller">
+                            {% if listing.updated_at %}
+                                Updated: {{ listing.updated_at|date:"F j, Y" }}
+                            {% else %}
+                                Created: {{ listing.created_at|date:"F j, Y" }}
+                            {% endif %}
+                        </p>
+                    </a>
+                    <button class="listing-message-button" data-slug="{{ listing.slug }}">Send a Message</button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if listings.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ listings.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ listings.number }} of {{ listings.paginator.num_pages }}.
+                </span>
+
+                {% if listings.has_next %}
+                    <a href="?page={{ listings.next_page_number }}">next</a>
+                    <a href="?page={{ listings.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div id="listing-message-form-modal" class="listing-message-form-modal">
+        <div class="listing-message-form-content">
+            <span class="listing-message-form-close">&times;</span>
+            <h2>Contact {{ seller.company_name }}</h2>
+            <form id="listing-message-form" method="post">
+                {% csrf_token %}
+                <div class="listing-form-group">
+                    {{ form.first_name.label_tag }}{{ form.first_name }}
+                </div>
+                <div class="listing-form-group">
+                    {{ form.last_name.label_tag }}{{ form.last_name }}
+                </div>
+                <div class="listing-form-group">
+                    {{ form.email.label_tag }}{{ form.email }}
+                </div>
+                <div class="listing-form-group">
+                    {{ form.phone.label_tag }}{{ form.phone }}
+                </div>
+                <div class="listing-form-group">
+                    {{ form.company.label_tag }}{{ form.company }}
+                </div>
+                <div class="listing-form-group">
+                    {{ form.message.label_tag }}{{ form.message }}
+                </div>
+                <input type="hidden" name="slug" id="listing-slug" value="">
+                <input type="hidden" name="seller_id" id="seller-id" value="{{ seller.id }}">
+                <button type="submit" class="listing-submit-button">Send Message</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function(){
+        const tabs = document.querySelectorAll('.lnc-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('lnc-tab-active'));
+                this.classList.add('lnc-tab-active');
+            });
+        });
+
+        $('.listing-message-button').on('click', function(){
+            var slug = $(this).data('slug');
+            var sellerId = $(this).data('seller-id');
+            $('#listing-slug').val(slug || '');
+            $('#seller-id').val(sellerId || '{{ seller.id }}');
+            $('#listing-message-form-modal').fadeIn();
+        });
+
+        $('.listing-message-form-close').on('click', function(){
+            $('#listing-message-form-modal').fadeOut();
+        });
+
+        $('#listing-message-form').on('submit', function(event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+            var slug = $('#listing-slug').val();
+            var url = slug ? "/listing/" + slug + "/submit_message/" : "/seller/submit_message/";
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('<div class="listing-success-popup">' + response.message + '</div>').appendTo('body').fadeIn().delay(3000).fadeOut();
+                        $('#listing-message-form-modal').fadeOut();
+                    } else {
+                        alert('An error occurred: ' + response.message);
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

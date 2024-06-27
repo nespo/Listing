@@ -1,0 +1,418 @@
+[
+  {
+    "model": "myapp.state",
+    "pk": 1,
+    "fields": {
+      "name": "New York",
+      "code": "NY"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 2,
+    "fields": {
+      "name": "California",
+      "code": "CA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 3,
+    "fields": {
+      "name": "Illinois",
+      "code": "IL"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 4,
+    "fields": {
+      "name": "Florida",
+      "code": "FL"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 5,
+    "fields": {
+      "name": "Texas",
+      "code": "TX"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 6,
+    "fields": {
+      "name": "Pennsylvania",
+      "code": "PA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 7,
+    "fields": {
+      "name": "Georgia",
+      "code": "GA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 8,
+    "fields": {
+      "name": "District of Columbia",
+      "code": "DC"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 9,
+    "fields": {
+      "name": "Massachusetts",
+      "code": "MA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 10,
+    "fields": {
+      "name": "Arizona",
+      "code": "AZ"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 11,
+    "fields": {
+      "name": "Michigan",
+      "code": "MI"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 12,
+    "fields": {
+      "name": "Washington",
+      "code": "WA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 13,
+    "fields": {
+      "name": "Minnesota",
+      "code": "MN"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 14,
+    "fields": {
+      "name": "Colorado",
+      "code": "CO"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 15,
+    "fields": {
+      "name": "Nevada",
+      "code": "NV"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 16,
+    "fields": {
+      "name": "Maryland",
+      "code": "MD"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 17,
+    "fields": {
+      "name": "Missouri",
+      "code": "MO"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 18,
+    "fields": {
+      "name": "Oregon",
+      "code": "OR"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 19,
+    "fields": {
+      "name": "Puerto Rico",
+      "code": "PR"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 20,
+    "fields": {
+      "name": "Indiana",
+      "code": "IN"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 21,
+    "fields": {
+      "name": "Ohio",
+      "code": "OH"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 22,
+    "fields": {
+      "name": "Virginia",
+      "code": "VA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 23,
+    "fields": {
+      "name": "North Carolina",
+      "code": "NC"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 24,
+    "fields": {
+      "name": "Wisconsin",
+      "code": "WI"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 25,
+    "fields": {
+      "name": "Rhode Island",
+      "code": "RI"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 26,
+    "fields": {
+      "name": "Tennessee",
+      "code": "TN"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 27,
+    "fields": {
+      "name": "Utah",
+      "code": "UT"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 28,
+    "fields": {
+      "name": "Oklahoma",
+      "code": "OK"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 29,
+    "fields": {
+      "name": "Connecticut",
+      "code": "CT"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 30,
+    "fields": {
+      "name": "Kentucky",
+      "code": "KY"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 31,
+    "fields": {
+      "name": "Louisiana",
+      "code": "LA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 32,
+    "fields": {
+      "name": "Nebraska",
+      "code": "NE"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 33,
+    "fields": {
+      "name": "Alabama",
+      "code": "AL"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 34,
+    "fields": {
+      "name": "New Mexico",
+      "code": "NM"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 35,
+    "fields": {
+      "name": "South Carolina",
+      "code": "SC"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 36,
+    "fields": {
+      "name": "Iowa",
+      "code": "IA"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 37,
+    "fields": {
+      "name": "Kansas",
+      "code": "KS"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 38,
+    "fields": {
+      "name": "Arkansas",
+      "code": "AR"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 39,
+    "fields": {
+      "name": "Idaho",
+      "code": "ID"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 40,
+    "fields": {
+      "name": "New Jersey",
+      "code": "NJ"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 41,
+    "fields": {
+      "name": "Hawaii",
+      "code": "HI"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 42,
+    "fields": {
+      "name": "Mississippi",
+      "code": "MS"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 43,
+    "fields": {
+      "name": "Alaska",
+      "code": "AK"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 44,
+    "fields": {
+      "name": "New Hampshire",
+      "code": "NH"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 45,
+    "fields": {
+      "name": "North Dakota",
+      "code": "ND"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 46,
+    "fields": {
+      "name": "Maine",
+      "code": "ME"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 47,
+    "fields": {
+      "name": "South Dakota",
+      "code": "SD"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 48,
+    "fields": {
+      "name": "West Virginia",
+      "code": "WV"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 49,
+    "fields": {
+      "name": "Montana",
+      "code": "MT"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 50,
+    "fields": {
+      "name": "Delaware",
+      "code": "DE"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 51,
+    "fields": {
+      "name": "Vermont",
+      "code": "VT"
+    }
+  },
+  {
+    "model": "myapp.state",
+    "pk": 52,
+    "fields": {
+      "name": "Wyoming",
+      "code": "WY"
+    }
+  }
+]

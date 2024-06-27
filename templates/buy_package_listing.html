@@ -5,14 +5,14 @@
 <link rel="stylesheet" type="text/css" href="{% static 'package/styles.css' %}">
 {% endblock %}
 {% block content %}
-<h2>Buy Packages or Listings</h2>
+<h2 class="Header-Text-Package-Buying">Buy Packages or Listings</h2>
 <div class="package-container">
     <div class="package-details">
         {% if user.seller.package %}
         <div class="current-package card active-card">
             <h3>Current Package: {{ user.seller.package.name }}</h3>
-            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ user.seller.package.normal_post_limit }} (Used: {{ user.seller.normal_post_count }})</p>
-            <p><i class="fas fa-star"></i> Featured Posts: {{ user.seller.package.featured_post_limit }} (Used: {{ user.seller.featured_post_count }})</p>
+            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ current_normal_posts_used }}/{{ user.seller.package.normal_post_limit }} used</p>
+            <p><i class="fas fa-star"></i> Featured Posts: {{ current_featured_posts_used }}/{{ user.seller.package.featured_post_limit }} used</p>
             <p><i class="fas fa-calendar-alt"></i> Expiry Date: {{ user.seller.membership_expiry }}</p>
             <p><i class="fas fa-cube"></i> Package Type: {{ user.seller.package.get_duration_unit_display }}</p>
             <p><i class="fas fa-sync-alt"></i> Auto-Renewal: {{ user.seller.is_auto_renew|yesno:"Enabled,Disabled" }}</p>
@@ -43,6 +43,7 @@
     </div>
 </div>
 
+{% if not user.seller.is_auto_renew %}
 <div class="available-packages card">
     {% if not user.seller.package or not user.seller.new_package %}
     <h3>Available Packages</h3>
@@ -50,31 +51,34 @@
         {% csrf_token %}
         <div class="packages-grid">
             {% for package in packages %}
-            {% if not user.seller.package or user.seller.package.id != package.id %}
-            <div class="package-option card">
-                <h4>{{ package.name }}</h4>
-                <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
-                <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
-                <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
-                <p><i class="fas fa-cube"></i> Package Type: {{ package.get_duration_unit_display }}</p>
-                {% if user.seller.package %}
-                    {% if package.normal_post_limit > user.seller.package.normal_post_limit or package.featured_post_limit > user.seller.package.featured_post_limit %}
+                {% if not user.seller.package or user.seller.package.id != package.id %}
+                <div class="package-option card">
+                    <h4>{{ package.name }}</h4>
+                    <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
+                    <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
+                    <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                    <p><i class="fas fa-cube"></i> Package Type: {{ package.get_duration_unit_display }}</p>
+
+                    {% if user.seller.package %}
+                        {% if package.normal_post_limit > user.seller.package.normal_post_limit or package.featured_post_limit > user.seller.package.featured_post_limit %}
                         <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Upgrade</button>
-                    {% elif package.normal_post_limit < user.seller.package.normal_post_limit or package.featured_post_limit < user.seller.package.featured_post_limit %}
+                        {% elif package.normal_post_limit < user.seller.package.normal_post_limit or package.featured_post_limit < user.seller.package.featured_post_limit %}
                         <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Downgrade</button>
-                    {% else %}
+                        {% else %}
                         <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
-                    {% endif %}
-                {% else %}
+                        {% endif %}
+                    {% else %}
                     <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
+                    {% endif %}
+                </div>
                 {% endif %}
-            </div>
-            {% endif %}
             {% endfor %}
         </div>
     </form>
     {% endif %}
 </div>
+{% endif %}
+
 
 <div class="individual-listings-purchase card">
     <h3>Buy Individual Listings</h3>
@@ -83,15 +87,17 @@
         <div class="listing-options-grid">
             <div class="listing-option card">
                 <label for="unique-individual-normal-posts">Normal Listings: </label>
-                <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="100" value="0">
+                <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="100"
+                    value="0">
                 <span id="unique-normal-listings-count">0</span>
-                <p>Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span> each</p>
+                <p>Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span>/Listing</p>
             </div>
             <div class="listing-option card">
                 <label for="unique-individual-featured-posts">Featured Listings: </label>
-                <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="100" value="0">
+                <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="100"
+                    value="0">
                 <span id="unique-featured-listings-count">0</span>
-                <p>Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span> each</p>
+                <p>Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span>/Listing</p>
             </div>
         </div>
         <button type="button" id="unique-buy-listings-button" class="listings-button">Buy Individual Listings</button>
@@ -219,17 +225,55 @@
         }
     }
 
+    function showLoadingSpinner() {
+        var loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'loading-spinner';
+        stripeButton.appendChild(loadingSpinner);
+        stripeButton.disabled = true;
+    }
+
+    function hideLoadingSpinner() {
+        var loadingSpinner = document.querySelector('.loading-spinner');
+        if (loadingSpinner) {
+            stripeButton.removeChild(loadingSpinner);
+        }
+        stripeButton.disabled = false;
+    }
+
     function handlePayment(event, amount, description) {
         event.preventDefault();
         console.log('Handling payment');
 
+        showLoadingSpinner();
+
         if (hasSavedPaymentMethod) {
             console.log('Using saved payment method');
+            var hiddenAmountInput = document.createElement('input');
+            hiddenAmountInput.setAttribute('type', 'hidden');
+            hiddenAmountInput.setAttribute('name', 'amount');
+            hiddenAmountInput.setAttribute('value', amount);
+            form.appendChild(hiddenAmountInput);
+
+            var hiddenDescriptionInput = document.createElement('input');
+            hiddenDescriptionInput.setAttribute('type', 'hidden');
+            hiddenDescriptionInput.setAttribute('name', 'description');
+            hiddenDescriptionInput.setAttribute('value', description);
+            form.appendChild(hiddenDescriptionInput);
+
+            if (form.id === 'unique-package-form') {
+                var hiddenPackageIdInput = document.createElement('input');
+                hiddenPackageIdInput.setAttribute('type', 'hidden');
+                hiddenPackageIdInput.setAttribute('name', 'package_id');
+                hiddenPackageIdInput.setAttribute('value', packageId);
+                form.appendChild(hiddenPackageIdInput);
+            }
+
             form.submit();
             return;
         }
 
         stripe.createToken(card).then(function (result) {
+            hideLoadingSpinner();
             if (result.error) {
                 console.error('Stripe token creation error:', result.error.message);
                 var errorElement = document.getElementById('unique-card-errors');

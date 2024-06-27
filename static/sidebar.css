@@ -31,7 +31,7 @@
 .sidebar h2 {
     margin-top: 0;
     font-size: 1.5em;
-    color: #333;
+    color: #04436C;
 }
 
 .sidebar p {
@@ -68,12 +68,12 @@
 }
 
 .dashboard-menu .active {
-    background-color: #6f42c1;
+    background-color: #64C2DB;
     color: #ffffff;
 }
 
 .dashboard-menu .active:hover {
-    background-color: #5936a0;
+    background-color: #4fa6bd;
     color: #ffffff;
 }
 

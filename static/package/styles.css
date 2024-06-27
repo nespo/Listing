@@ -1,7 +1,7 @@
-h2 {
+.Header-Text-Package-Buying {
     text-align: center;
     margin-bottom: 40px;
-    color: #333;
+    color: #04436C;
     font-size: 2.5rem;
 }
 
@@ -18,7 +18,7 @@ h2 {
     margin: 20px;
 }
 
-.package-details{
+.package-details {
     margin: 20px;
 }
 
@@ -40,7 +40,7 @@ h2 {
 .individual-listings h3,
 .available-packages h3,
 .individual-listings-purchase h3 {
-    color: #333;
+    color: #04436C;
     margin-bottom: 20px;
     font-size: 1.8rem;
 }
@@ -61,7 +61,7 @@ h2 {
 .available-packages p i,
 .individual-listings-purchase p i {
     margin-right: 10px;
-    color: #4CAF50;
+    color: #64C2DB;
 }
 
 /* Packages grid styles */
@@ -90,7 +90,7 @@ h2 {
 }
 
 .package-option h4 {
-    color: #333;
+    color: #04436C;
     margin-bottom: 10px;
     font-size: 1.5rem;
 }
@@ -105,13 +105,13 @@ h2 {
 
 .package-option p i {
     margin-right: 10px;
-    color: #4CAF50;
+    color: #64C2DB;
 }
 
 /* Button styles */
 button.package-button,
 button#unique-buy-listings-button {
-    background-color: #4CAF50;
+    background-color: #64C2DB;
     color: white;
     padding: 12px 24px;
     margin: 20px 0 10px;
@@ -125,7 +125,7 @@ button#unique-buy-listings-button {
 
 button.package-button:hover,
 button#unique-buy-listings-button:hover {
-    background-color: #45a049;
+    background-color: #55b0c5;
     transform: translateY(-5px);
 }
 
@@ -134,7 +134,26 @@ button#unique-buy-listings-button {
 }
 
 button#unique-buy-listings-button:hover {
-    background-color: #007B9E;
+    background-color: #4fa6bd;
+}
+
+/* Cancel button styles */
+button.btn-warning {
+    background-color: #55b0c5;
+    color: white;
+    padding: 12px 24px;
+    margin: 20px 0;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button.btn-warning:hover {
+    background-color: #4fa6bd;
+    transform: translateY(-5px);
 }
 
 /* Individual listings purchase styles */
@@ -154,6 +173,7 @@ button#unique-buy-listings-button:hover {
 #unique-individual-featured-posts {
     width: 100%;
     margin: 10px 0;
+    accent-color: #64C2DB;
 }
 
 .listing-option {
@@ -183,10 +203,11 @@ button#unique-buy-listings-button:hover {
     max-width: 500px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
 }
 
 .modal-content h2 {
-    color: #333;
+    color: #04436C;
     margin-bottom: 20px;
     font-size: 1.8rem;
 }
@@ -195,6 +216,7 @@ button#unique-buy-listings-button:hover {
     color: #666;
     margin-bottom: 20px;
     font-size: 1rem;
+    line-height: 1.5;
 }
 
 .closex,
@@ -228,7 +250,7 @@ button#unique-buy-listings-button:hover {
 }
 
 button#unique-stripe-button {
-    background-color: #4CAF50;
+    background-color: #64C2DB;
     color: white;
     padding: 12px 24px;
     margin-top: 10px;
@@ -242,13 +264,34 @@ button#unique-stripe-button {
 }
 
 button#unique-stripe-button:hover {
-    background-color: #45a049;
+    background-color: #4fa6bd;
     transform: translateY(-5px);
+}
+
+/* Loading spinner styles */
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border-left-color: #64C2DB;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Media queries for responsive design */
 @media screen and (max-width: 768px) {
-    h2 {
+    .Header-Text-Package-Buying {
         font-size: 2rem;
         margin: 20px;
     }
@@ -286,7 +329,7 @@ button#unique-stripe-button:hover {
 }
 
 @media screen and (max-width: 480px) {
-    h2 {
+    .Header-Text-Package-Buying {
         font-size: 1.8rem;
     }
 
@@ -294,7 +337,7 @@ button#unique-stripe-button:hover {
     .individual-listings h3,
     .available-packages h3,
     .individual-listings-purchase h3 {
-        font-size: 1.5rem;
+        font-size: 1rem;
     }
 
     .package-details p,
@@ -307,8 +350,45 @@ button#unique-stripe-button:hover {
 
     button.package-button,
     button#unique-buy-listings-button,
-    button#unique-stripe-button {
+    button#unique-stripe-button,
+    button.btn-warning {
         font-size: 0.9rem;
         padding: 10px 20px;
+    }
+
+    /* Mobile specific styles */
+    .package-container,
+    .individual-listings,
+    .available-packages,
+    .individual-listings-purchase {
+        padding: 10px;
+        margin: 10px;
+        box-shadow: none;
+    }
+
+    .package-option {
+        padding: 10px;
+        box-shadow: none;
+    }
+
+    .card {
+        padding: 15px;
+        box-shadow: none;
+    }
+
+    .listing-options-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .listing-option {
+        width: 76%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #unique-individual-normal-posts,
+    #unique-individual-featured-posts {
+        width: calc(100% - 40px);
+        margin: 5px 0;
     }
 }

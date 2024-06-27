@@ -2,18 +2,30 @@
 {% load static %}
 {% block extra_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'profile/styles.css' %}">
+<script src="{% static 'tinymce/tinymce.min.js' %}"></script>
 {% endblock %}
 
 {% block title %}Update Profile{% endblock %}
 {% block content %}
 <div class="profile-update-container">
     <h2>Update Profile</h2>
-    <form method="post" class="profile-update-form" id="profile-update-form">
+    <form method="post" enctype="multipart/form-data" class="profile-update-form" id="profile-update-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
         <div class="profile-update-form-group">
+            <label for="id_profile_image">Profile Image</label>
+            {% if form.instance.profile_image %}
+                <img src="{{ form.instance.profile_image.url }}" alt="Profile Image" class="profile-image-preview">
+            {% endif %}
+            {{ form.profile_image }}
+        </div>
+        <div class="profile-update-form-group">
             <label for="id_company_name">Company Name</label>
             {{ form.company_name }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_about">About</label>
+            {{ form.about }}
         </div>
         <div class="profile-update-form-group">
             <label for="id_company_address">Company Address</label>
@@ -30,6 +42,10 @@
         <div class="profile-update-form-group">
             <label for="id_last_name">Last Name</label>
             {{ form.last_name }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_bio">Bio</label>
+            {{ form.bio }}
         </div>
         <button type="button" class="profile-update-btn" id="update-profile-btn">Update Profile</button>
     </form>
@@ -62,87 +78,125 @@
 
 {% block extra_js %}
 <script>
+    tinymce.init({
+        selector: 'textarea',
+        plugins: 'lists link',
+        menubar: false,
+        toolbar: 'bold italic underline | bullist numlist | link',
+        height: 300,
+        branding: false,
+        forced_root_block: false,
+        force_p_newlines: false,
+        force_br_newlines: true,
+        content_css: false,
+        content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+        valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
+        invalid_elements: 'script,iframe,object,embed'
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
-    var successModal = document.getElementById("profile-update-success-modal");
-    var passwordModal = document.getElementById("password-confirmation-modal");
-    var closeBtns = document.getElementsByClassName("profile-update-modal-close");
-    var modalTitle = document.getElementById("modal-title");
-    var modalMessage = document.getElementById("modal-message");
+        var successModal = document.getElementById("profile-update-success-modal");
+        var passwordModal = document.getElementById("password-confirmation-modal");
+        var closeBtns = document.getElementsByClassName("profile-update-modal-close");
+        var modalTitle = document.getElementById("modal-title");
+        var modalMessage = document.getElementById("modal-message");
 
-    // Close modal on close button click
-    for (var i = 0; i < closeBtns.length; i++) {
-        closeBtns[i].onclick = function() {
-            this.parentElement.parentElement.style.display = "none";
-            if (this.parentElement.parentElement == successModal && modalTitle.textContent !== "No Changes Detected") {
-                window.location.href = "{% url 'update_profile' %}";
+        // Function to add z-index CSS
+        function addZIndexCSS() {
+            var style = document.createElement('style');
+            style.id = 'tinymce-zindex-style';
+            style.innerHTML = `
+                .tox:not(.tox-tinymce-inline) .tox-editor-header:not(.tox-editor-dock-transition) {
+                    z-index: 1 !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Function to remove z-index CSS
+        function removeZIndexCSS() {
+            var style = document.getElementById('tinymce-zindex-style');
+            if (style) {
+                style.remove();
             }
         }
-    }
 
-    // Close modal on window click
-    window.onclick = function(event) {
-        if (event.target == successModal || event.target == passwordModal) {
-            event.target.style.display = "none";
-            if (event.target == successModal && modalTitle.textContent !== "No Changes Detected") {
-                window.location.href = "{% url 'update_profile' %}";
+        // Close modal on close button click
+        for (var i = 0; i < closeBtns.length; i++) {
+            closeBtns[i].onclick = function() {
+                this.parentElement.parentElement.style.display = "none";
+                removeZIndexCSS(); // Remove z-index CSS when modal is closed
+                if (this.parentElement.parentElement == successModal && modalTitle.textContent !== "No Changes Detected") {
+                    window.location.href = "{% url 'update_profile' %}";
+                }
             }
         }
-    }
 
-    // Show password confirmation modal before updating profile
-    document.getElementById('update-profile-btn').onclick = function() {
-        passwordModal.style.display = "block";
-    }
+        // Close modal on window click
+        window.onclick = function(event) {
+            if (event.target == successModal || event.target == passwordModal) {
+                event.target.style.display = "none";
+                removeZIndexCSS(); // Remove z-index CSS when modal is closed
+                if (event.target == successModal && modalTitle.textContent !== "No Changes Detected") {
+                    window.location.href = "{% url 'update_profile' %}";
+                }
+            }
+        }
 
-    // Handle password confirmation form submission
-    document.getElementById('password-confirmation-form').onsubmit = function(event) {
-        event.preventDefault();
-        var password = document.getElementById('id_password').value;
-        var formData = new FormData(document.getElementById('profile-update-form'));
-        formData.append('password', password);
-        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        // Show password confirmation modal before updating profile
+        document.getElementById('update-profile-btn').onclick = function() {
+            passwordModal.style.display = "block";
+            addZIndexCSS(); // Add z-index CSS when modal is opened
+        }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '{% url "update_profile" %}', true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        // Handle password confirmation form submission
+        document.getElementById('password-confirmation-form').onsubmit = function(event) {
+            event.preventDefault();
+            var password = document.getElementById('id_password').value;
+            var formData = new FormData(document.getElementById('profile-update-form'));
+            formData.append('password', password);
+            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 400) {
-                var response = JSON.parse(xhr.responseText);
-                if (response.success) {
-                    modalTitle.textContent = "Profile Updated";
-                    modalMessage.textContent = response.message;
-                    passwordModal.style.display = "none";
-                    successModal.style.display = "block";
-                } else {
-                    if (response.errors) {
-                        var errors = response.errors;
-                        for (var field in errors) {
-                            var errorElement = document.getElementById('id_' + field).nextElementSibling;
-                            if (errorElement) {
-                                errorElement.textContent = errors[field];
-                            }
-                        }
-                    } else {
-                        modalTitle.textContent = response.message;
-                        modalMessage.textContent = "";
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '{% url "update_profile" %}', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        modalTitle.textContent = "Profile Updated";
+                        modalMessage.textContent = response.message;
                         passwordModal.style.display = "none";
                         successModal.style.display = "block";
+                    } else {
+                        if (response.errors) {
+                            var errors = response.errors;
+                            for (var field in errors) {
+                                var errorElement = document.getElementById('id_' + field).nextElementSibling;
+                                if (errorElement) {
+                                    errorElement.textContent = errors[field];
+                                }
+                            }
+                        } else {
+                            modalTitle.textContent = response.message;
+                            modalMessage.textContent = "";
+                            passwordModal.style.display = "none";
+                            successModal.style.display = "block";
+                        }
                     }
+                } else {
+                    console.error('An error occurred. Status:', xhr.status, 'Response:', xhr.responseText);
                 }
-            } else {
-                console.error('An error occurred. Status:', xhr.status, 'Response:', xhr.responseText);
-            }
+            };
+
+            xhr.onerror = function() {
+                console.error('An error occurred during the request.');
+            };
+
+            xhr.send(formData);
         };
-
-        xhr.onerror = function() {
-            console.error('An error occurred during the request.');
-        };
-
-        xhr.send(formData);
-    };
-});
-
+    });
 </script>
 {% endblock %}

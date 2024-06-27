@@ -1,10 +1,159 @@
 {% extends "base.html" %}
 {% block title %}Transaction History{% endblock %}
 {% block content %}
-    <h2>Transaction History</h2>
-    <ul>
-        {% for transaction in transactions %}
-            <li>{{ transaction.amount }} - {{ transaction.transaction_date }} - {{ transaction.description }}</li>
-        {% endfor %}
-    </ul>
+    <style>
+        /* Add this to your main CSS file or within a <style> tag in your base template */
+/* Add this to your main CSS file or within a <style> tag in your base template */
+
+    .transaction-container {
+    padding: 20px;
+    margin: auto;
+    max-width: 1000px;
+}
+
+.transaction-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+.transaction-table-container {
+    overflow-x: auto;
+}
+
+.transaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.transaction-table th, .transaction-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.transaction-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.transaction-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.transaction-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.transaction-table td {
+    color: #555;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination .step-links a {
+    margin: 0 5px;
+    padding: 5px 10px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    color: #333;
+    border-radius: 3px;
+}
+
+.pagination .step-links a:hover {
+    background-color: #f1f1f1;
+}
+
+.pagination .step-links .current {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background-color: #64C2DB;
+    color: #fff;
+    border-radius: 3px;
+}
+
+@media screen and (max-width: 600px) {
+    .transaction-table thead {
+        display: none;
+    }
+
+    .transaction-table, .transaction-table tbody, .transaction-table tr, .transaction-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .transaction-table tr {
+        margin-bottom: 15px;
+    }
+
+    .transaction-table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    .transaction-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: bold;
+        text-align: left;
+    }
+}
+
+    </style>
+    <div class="transaction-container">
+        <h2 class="transaction-header">Transaction History</h2>
+        <div class="transaction-table-container">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Auto-Renewal</th>
+                        <th>Payment Method Saved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in page_obj %}
+                    <tr>
+                        <td>{{ transaction.transaction_date|date:"Y-m-d H:i" }}</td>
+                        <td>${{ transaction.amount }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td>{{ transaction.transaction_type }}</td>
+                        <td>{{ transaction.auto_renew|yesno:"Yes,No" }}</td>
+                        <td>{{ transaction.payment_method_saved|yesno:"Yes,No" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
 {% endblock %}

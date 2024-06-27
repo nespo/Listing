@@ -1,0 +1,201 @@
+/* General styles for the container */
+.container {
+    display: flex;
+}
+
+/* Styles for the map section */
+.map-section {
+    width: 85%;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles for the listings section */
+.listings-section {
+    width: 40%;
+    overflow-y: auto;
+    height: 100vh;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    /*box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;*/
+}
+
+/* Styles for the search filters */
+.search-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles for individual filter elements */
+.search-filters input,
+.search-filters select {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles for the category filter to handle multiple selection */
+.search-filters select#category {
+    flex: 2;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: auto;
+}
+
+/* Styles for the listing boxes */
+.listing-box {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+    position: relative;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Styles for the featured label */
+.featured {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: gold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Styles for the listing thumbnail image */
+.listing-thumbnail-image {
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 8px; /* Ensure all corners are rounded */
+}
+
+.listing-thumbnail-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px; /* Ensure all corners are rounded */
+    object-fit: cover;
+    display: block;
+}
+
+/* Ensure the listing image does not cross the main section */
+.listing-thumbnail-image a {
+    display: block;
+    overflow: hidden;
+    border-radius: 8px; /* Ensure all corners are rounded */
+}
+
+/* Styles for the listing text content */
+.listing-box h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.listing-box p {
+    margin: 5px 0;
+    color: #666;
+}
+
+/* Styles for the price and view details button at the bottom */
+.listing-box .listing-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.listing-box p.price {
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.listing-box .view-details-btn {
+    background-color: #64C2DB;
+    color: #fff;
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.listing-box .view-details-btn:hover {
+    background-color: #4fa6bd;
+}
+
+/* Ensure image size consistency */
+.listing-thumbnail-image img {
+    max-height: 200px;
+}
+
+/* Add this to the CSS */
+.listing-box.highlighted {
+    border: 2px solid #64C2DB;
+}
+
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .map-section {
+        width: 100%;
+        height: 300px;
+    }
+
+    .listings-section {
+        width: 100%;
+        height: auto;
+        padding: 0;
+        box-shadow: none;
+        background-color: transparent;
+    }
+
+    .listing-box {
+        /*margin: 10px auto;*/
+        margin-top: 10px !important;
+        margin-right: 20px !important;
+        width: 90%;
+        border-radius: 8px; /* Ensure all corners are rounded */
+    }
+
+    .search-filters {
+        flex-direction: column;
+    }
+
+    .search-filters select,
+    .search-filters select#category {
+        width: 100%;
+    }
+
+    .search-filters input{
+        width: 92%;
+    }
+}
+
+@media (max-width: 932px) {
+    .search-filters input{
+        width: 93%;
+    }
+}

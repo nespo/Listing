@@ -10,7 +10,7 @@
 
 .profile-update-container h2 {
     text-align: center;
-    color: #333;
+    color: #04436C;
     margin-bottom: 20px;
 }
 
@@ -45,7 +45,7 @@
 }
 
 .profile-update-btn {
-    background: #007bff;
+    background: #64C2DB;
     color: #fff;
     border: none;
     cursor: pointer;
@@ -57,7 +57,7 @@
 }
 
 .profile-update-btn:hover {
-    background: #0056b3;
+    background: #4fa6bd;
 }
 
 .profile-update-modal {
@@ -117,6 +117,28 @@
     background: #f9f9f9;
     font-size: 16px;
     box-sizing: border-box;
+}
+
+.profile-image-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.profile-update-form input[type="file"] {
+    padding: 10px;
+    border: 2px dashed #64C2DB;
+    background: #f1f8fc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.profile-update-form input[type="file"]:hover {
+    border-color: #4fa6bd;
 }
 
 /* Mobile optimization */

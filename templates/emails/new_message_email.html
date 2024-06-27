@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Message Received</title>
+</head>
+<body>
+    <h1>New Message Received</h1>
+    <p>Dear {{ seller.first_name }},</p>
+    <p>You have received a new message from {{ message.first_name }} {{ message.last_name }}.</p>
+    <p><strong>Email:</strong> {{ message.email }}</p>
+    <p><strong>Phone:</strong> {{ message.phone }}</p>
+    <p><strong>Message:</strong></p>
+    <p>{{ message.message }}</p>
+    <p>Thank you!</p>
+</body>
+</html>
