@@ -12,10 +12,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -144,14 +146,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-STRIPE_SECRET_KEY = 'sk_test_51PQvMnAgGvfEBaSzoMPphRWLqIGUBVns0jIvFTP7qNldQolbZ7NlCmdpZwSkcXYUza3aCPcOvKFEJU3Gf5K7CsPk00xy9MnD0Q'
-STRIPE_PUBLISHABLE_KEY = 'pk_test_51PQvMnAgGvfEBaSzed22kIr9L2tYfm8rRYevwYDP1e2wNvycwajLAwsRJWqHk9FIcEmi0RyUArzoGDcarYW9NNGf00HDP0e9E7'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp-relay.brevo.com'  
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '79gvoice@gmail.com'
-EMAIL_HOST_PASSWORD = 'fAXKP4DZtHyx9WqG'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'email@greenenergyconnection.com'
 
 
