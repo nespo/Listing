@@ -91,23 +91,29 @@ class SellerAdmin(admin.ModelAdmin):
     def approve_seller(self, request, queryset):
         queryset.update(is_approved=True)
         for seller in queryset:
-            send_mail(
-                'Account Approved',
-                'Your account has been approved by admin.',
-                settings.DEFAULT_FROM_EMAIL,
-                [seller.user.email],
-            )
+            try:
+                send_mail(
+                    'Account Approved',
+                    'Your account has been approved by admin.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [seller.user.email],
+                )
+            except:
+                continue
     approve_seller.short_description = "Approve selected sellers"
 
     def disapprove_seller(self, request, queryset):
         queryset.update(is_approved=False)
         for seller in queryset:
-            send_mail(
-                'Account Disapproved',
-                'Your account has been disapproved by admin.',
-                settings.DEFAULT_FROM_EMAIL,
-                [seller.user.email],
-            )
+            try:
+                send_mail(
+                    'Account Disapproved',
+                    'Your account has been disapproved by admin.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [seller.user.email],
+                )
+            except:
+                continue
     disapprove_seller.short_description = "Disapprove selected sellers"
 
     def send_reset_password_link(self, obj):
@@ -118,12 +124,15 @@ class SellerAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if 'send_reset_password_link' in request.POST:
             user = obj.user
-            send_mail(
-                subject="Password Reset Request",
-                message="You can reset your password by clicking the link below:",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email]
-            )
+            try:
+                send_mail(
+                    subject="Password Reset Request",
+                    message="You can reset your password by clicking the link below:",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email]
+                )
+            except:
+                pass
 
         # Check if the package was changed
         if change and 'package' in form.changed_data:

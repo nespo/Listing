@@ -315,15 +315,18 @@ def create_listing(request):
             )'''
 
             # Send email notification
-            send_custom_email(
-                subject='Listing Created',
-                template_name='emails/listing_created_email.html',
-                context={'user': {
-                            'first_name': seller.first_name,
-                            },
-                         'listing': listing},
-                recipient_list=[request.user.email]
-            )
+            try:
+                send_custom_email(
+                    subject='Listing Created',
+                    template_name='emails/listing_created_email.html',
+                    context={'user': {
+                                'first_name': seller.first_name,
+                                },
+                            'listing': listing},
+                    recipient_list=[request.user.email]
+                )
+            except:
+                pass
             messages.success(request, 'Listing created successfully')
             return redirect('dashboard')
         else:
@@ -395,15 +398,18 @@ def edit_listing(request, slug):
             )'''
 
             # Send email notification
-            send_custom_email(
-                subject='Listing Updated',
-                template_name='emails/listing_updated_email.html',
-                context={'user': {
-                             'first_name': seller.first_name,
-                            },
-                         'listing': updated_listing},
-                recipient_list=[request.user.email]
-            )
+            try:
+                send_custom_email(
+                    subject='Listing Updated',
+                    template_name='emails/listing_updated_email.html',
+                    context={'user': {
+                                'first_name': seller.first_name,
+                                },
+                            'listing': updated_listing},
+                    recipient_list=[request.user.email]
+                )
+            except:
+                pass
 
             messages.success(request, 'Listing updated successfully')
             return redirect('listing_detail', updated_listing.slug)
@@ -537,20 +543,23 @@ def buy_package_listing(request):
             invoice_pdf = generate_invoice_pdf(invoice_context)
 
             # Send email notification with invoice attachment
-            send_custom_email(
-                subject='Package Purchased',
-                template_name='emails/package_purchase_email.html',
-                context={
-                    'user': {
-                            'first_name': seller.first_name,
-                        },
-                    'package': package,
-                    'membership_expiry': seller.membership_expiry,
-                    'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
-                },
-                recipient_list=[request.user.email],
-                attachment=invoice_pdf
-            )
+            try:
+                send_custom_email(
+                    subject='Package Purchased',
+                    template_name='emails/package_purchase_email.html',
+                    context={
+                        'user': {
+                                'first_name': seller.first_name,
+                            },
+                        'package': package,
+                        'membership_expiry': seller.membership_expiry,
+                        'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
+                    },
+                    recipient_list=[request.user.email],
+                    attachment=invoice_pdf
+                )
+            except:
+                pass
 
         elif normal_listings > 0 or featured_listings > 0:
             if normal_listings > 0:
@@ -589,12 +598,15 @@ def buy_package_listing(request):
             print(context)
     
             # Send email notification without attachment
-            send_custom_email(
-                subject='Listings Purchased',
-                template_name='emails/listings_purchase_email.html',
-                context=context,
-                recipient_list=[request.user.email]
-            )
+            try:
+                send_custom_email(
+                    subject='Listings Purchased',
+                    template_name='emails/listings_purchase_email.html',
+                    context=context,
+                    recipient_list=[request.user.email]
+                )
+            except:
+                pass
 
         messages.success(request, 'Purchase successful')
         return redirect('dashboard')
@@ -652,12 +664,15 @@ def submit_message(request):
             message.save()
 
             # Send email notification
-            send_custom_email(
-                subject='New Message Received',
-                template_name='emails/new_message_email.html',
-                context={'seller': seller.user, 'message': message},
-                recipient_list=[seller.user.email]
-            )
+            try:
+                send_custom_email(
+                    subject='New Message Received',
+                    template_name='emails/new_message_email.html',
+                    context={'seller': seller.user, 'message': message},
+                    recipient_list=[seller.user.email]
+                )
+            except:
+                pass
             return JsonResponse({'success': True, 'message': 'Your message has been sent successfully!'})
         else:
             errors = form.errors.as_json()
