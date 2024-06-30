@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+  <style>
+    .faq-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+    }
+
+    .faq-list {
+      width: 60%;
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .faq-list li {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+    }
+
+    .faq-question {
+      font-size: 1.2em;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .faq-answer {
+      display: none;
+      padding-top: 10px;
+    }
+
+    .faq-answer.active {
+      display: block;
+    }
+  </style>
+
+  <div class="faq-container">
+    <ul class="faq-list">
+      <h2>Here we have listed all the Frequently Asked Questions</h2>
+      {% for faq in faqs %}
+        <li>
+          <h3 class="faq-question">{{ faq.question }}</h3>
+          <div class="faq-answer">{{ faq.answer|safe }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const questions = document.querySelectorAll('.faq-question');
+      questions.forEach(question => {
+        question.addEventListener('click', function() {
+          const answer = this.nextElementSibling;
+          answer.classList.toggle('active');
+        });
+      });
+    });
+  </script>
+{% endblock %}

@@ -110,6 +110,7 @@
 
 /* Button styles */
 button.package-button,
+button.listings-button,
 button#unique-buy-listings-button {
     background-color: #64C2DB;
     color: white;

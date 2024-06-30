@@ -1,16 +1,16 @@
 {% for listing in listings %}
-<div class="listing-box" id="listing-{{ listing.id }}">
+<div class="listing-box" id="listing-{{ listing.id|safe }}">
     {% if listing.is_featured %}
     <div class="featured">Featured</div>
     {% endif %}
     <div class="listing-thumbnail-image">
-        <a href="{{ listing.thumbnail_image.url }}" class="listing-popup-link"><img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}"></a>
+        <a href="{% url 'listing_detail' listing.slug %}" class="listing-popup-link"><img src="{{ listing.thumbnail_image.url}}" alt="Image for {{ listing.project_name|safe }}"></a>
     </div>
-    <h2>{{ listing.project_name }}</h2>
-    <p>{{ listing.project_address }}</p>
-    <p>{{ listing.project_description|truncatewords:20 }}</p>
+    <h2>{{ listing.project_name|safe }}</h2>
+    <p><i class="fa fa-map-marker"></i> {{ listing.project_address|safe }}</p>
+    <p>{{ listing.project_description|truncatewords:3|safe }}</p>
     <div class="listing-bottom">
-        <p class="price">Price: {{ listing.sales_price }}</p>
+        <p class="price">Price: {{ listing.sales_price|safe }}</p>
         <a href="{% url 'listing_detail' listing.slug %}" class="view-details-btn">View Details</a>
     </div>
 </div>

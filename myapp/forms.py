@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Listing, Seller, Package, City, State, ListingImage, Category, Message
+from .models import *
 from django.core.validators import RegexValidator
 from localflavor.us.us_states import STATE_CHOICES
 from django.forms import modelformset_factory
@@ -225,4 +225,30 @@ class MessageForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={'placeholder': 'Phone'}),
             'company': forms.TextInput(attrs={'placeholder': 'Company (optional)'}),
             'message': TinyMCE(attrs={'cols': 80, 'rows': 30}),
+        }
+
+class ContactUsForm(forms.ModelForm):
+    class Meta:
+        model = ContactUs
+        fields = ['name', 'email', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Your name'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Your email'}),
+            'message': forms.Textarea(attrs={'placeholder': 'Your message', 'rows': 4}),
+        }
+
+class FAQForm(forms.ModelForm):
+    class Meta:
+        model = FAQ
+        fields = ['question', 'answer']
+        widgets = {
+            'answer': TinyMCE(attrs={'cols': 80, 'rows': 30}),
+        }
+
+class PageForm(forms.ModelForm):
+    class Meta:
+        model = Page
+        fields = ['title', 'content']
+        widgets = {
+            'content': TinyMCE(attrs={'cols': 80, 'rows': 30}),
         }

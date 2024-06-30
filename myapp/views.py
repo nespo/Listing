@@ -21,6 +21,7 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from .utils import send_custom_email, generate_invoice_pdf, get_site_settings
 from django.utils.functional import SimpleLazyObject
+from django.views.generic import FormView
 import json
 import stripe
 import random
@@ -496,6 +497,7 @@ def buy_package_listing(request):
             messages.error(request, f'Error processing payment: {str(e)}')
             return redirect('buy_package_listing')
 
+        transaction = None
         if package_id:
             package = get_object_or_404(Package, id=package_id)
             if seller.package and seller.new_package:
@@ -504,7 +506,7 @@ def buy_package_listing(request):
 
             if seller.package:
                 seller.new_package = package
-                seller.membership_expiry = seller.membership_expiry  # Future package starts from the current package expiry date
+                seller.membership_expiry = seller.membership_expiry
             else:
                 seller.package = package
                 seller.normal_post_count = package.normal_post_limit
@@ -515,34 +517,14 @@ def buy_package_listing(request):
             seller.save()
             print(f"Package {package.name} assigned to seller {seller.user.username}")
 
-            Transaction.objects.create(
+            transaction = Transaction.objects.create(
                 seller=seller,
                 amount=amount,
-                description=f'Purchase of package {package.name}',
-                transaction_type='Package'
+                description=f'{package.name}',
+                transaction_type='Package',
+                transaction_id=payment_intent.id
             )
-            '''send_mail(
-                'Package Purchased',
-                f'You have successfully purchased the {package.name} package. It will be active from {seller.membership_expiry}.',
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-            )'''
 
-            # Generate invoice PDF
-            site_settings = get_site_settings()
-            invoice_context = {
-                'invoice_id': random.randint(12345, 99999),
-                'invoice_date': timezone.now(),
-                'package': package,
-                'amount': amount,
-                'user': request.user,
-                'site_title': site_settings.site_title if site_settings else '',
-                'site_logo_url': request.build_absolute_uri(site_settings.site_logo.url) if site_settings and site_settings.site_logo else '',
-                'site_address': site_settings.site_description if site_settings else '',
-            }
-            invoice_pdf = generate_invoice_pdf(invoice_context)
-
-            # Send email notification with invoice attachment
             try:
                 send_custom_email(
                     subject='Package Purchased',
@@ -556,7 +538,16 @@ def buy_package_listing(request):
                         'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
                     },
                     recipient_list=[request.user.email],
-                    attachment=invoice_pdf
+                    attachment=generate_invoice_pdf({
+                        'invoice_id': transaction.transaction_id,
+                        'invoice_date': timezone.now(),
+                        'package': package,
+                        'amount': amount,
+                        'user': request.user,
+                        'site_title': get_site_settings().site_title if get_site_settings() else '',
+                        'site_logo_url': request.build_absolute_uri(get_site_settings().site_logo.url) if get_site_settings() and get_site_settings().site_logo else '',
+                        'site_address': get_site_settings().site_description if get_site_settings() else '',
+                    })
                 )
             except:
                 pass
@@ -569,26 +560,18 @@ def buy_package_listing(request):
             seller.save()
             print(f"Listings updated for seller {seller.user.username}")
 
-            Transaction.objects.create(
+            transaction = Transaction.objects.create(
                 seller=seller,
                 amount=amount,
-                description=f'Purchase of {description}',
-                transaction_type='Individual Listing'
+                description=f'{description}',
+                transaction_type='Individual Listing',
+                transaction_id=payment_intent.id
             )
-            '''send_mail(
-                'Listings Purchased',
-                f'You have successfully purchased {description}.',
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-            )'''
 
-            # Convert SimpleLazyObject to User
-            # Convert SimpleLazyObject to User
             user = request.user
             if isinstance(user, SimpleLazyObject):
                 user = user._wrapped
 
-            # Print context to debug
             context = {
                 'user': {
                     'first_name': seller.first_name,
@@ -597,7 +580,6 @@ def buy_package_listing(request):
             }
             print(context)
     
-            # Send email notification without attachment
             try:
                 send_custom_email(
                     subject='Listings Purchased',
@@ -610,6 +592,7 @@ def buy_package_listing(request):
 
         messages.success(request, 'Purchase successful')
         return redirect('dashboard')
+
     current_normal_posts_used = seller.package.normal_post_limit - seller.normal_post_count if seller.package else 0
     current_featured_posts_used = seller.package.featured_post_limit - seller.featured_post_count if seller.package else 0
 
@@ -623,6 +606,20 @@ def buy_package_listing(request):
     return render(request, 'buy_package_listing.html', context)
 
 
+def public_packages(request):
+    packages = Package.objects.all()
+    listing_price = ListingPrice.objects.first()
+    login_form = LoginForm()
+    register_form = SellerRegistrationForm()
+    
+    context = {
+        'packages': packages,
+        'listing_price': listing_price,
+        'login_form': login_form,
+        'register_form': register_form,
+    }
+    return render(request, 'public_packages.html', context)
+
 @login_required
 def cancel_auto_renew(request):
     seller = request.user.seller
@@ -634,28 +631,31 @@ def cancel_auto_renew(request):
 def transaction_history(request):
     transactions = Transaction.objects.filter(seller=request.user.seller).select_related('seller')
     
-    # Add pagination
     paginator = Paginator(transactions, 5)  # Show 5 transactions per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
     for transaction in page_obj:
-        transaction.auto_renew = transaction.seller.is_auto_renew
-        transaction.payment_method_saved = bool(transaction.seller.stripe_payment_method_id)
+        if transaction.transaction_type == 'Package':
+            transaction.auto_renew_display = 'Yes' if transaction.seller.is_auto_renew else 'No'
+        else:
+            transaction.auto_renew_display = 'No'
     
     return render(request, 'transaction_history.html', {'page_obj': page_obj})
 
-def submit_message(request):
+def submit_message(request, slug=None):
     if request.method == 'POST':
+        seller_id = request.POST.get('seller_id')
         slug = request.POST.get('slug')
+        print(f"Seller ID: {seller_id}, Slug: {slug}")
+
         if slug:
             listing = get_object_or_404(Listing, slug=slug)
             seller = listing.seller
         else:
-            seller_id = request.POST.get('seller_id')
             seller = get_object_or_404(Seller, id=seller_id)
             listing = None
-        
+
         form = MessageForm(request.POST)
         if form.is_valid():
             message = form.save(commit=False)
@@ -671,7 +671,7 @@ def submit_message(request):
                     context={'seller': seller.user, 'message': message},
                     recipient_list=[seller.user.email]
                 )
-            except:
+            except Exception as e:
                 pass
             return JsonResponse({'success': True, 'message': 'Your message has been sent successfully!'})
         else:
@@ -815,3 +815,33 @@ def seller_profile(request, seller_id):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'seller_profile.html', {'seller': seller, 'listings': page_obj, 'form': form})
+
+
+class ContactUsView(FormView):
+    template_name = 'contact_us.html'
+    form_class = ContactUsForm
+    success_url = reverse_lazy('contact_us')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['login_form'] = LoginForm()
+        context['register_form'] = SellerRegistrationForm()
+        return context
+
+    def form_valid(self, form):
+        form.save()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Success'})
+        return super().form_valid(form)
+
+def faq_list(request):
+    faqs = FAQ.objects.all()
+    login_form = LoginForm()
+    register_form = SellerRegistrationForm()
+    return render(request, 'faq_list.html', {'faqs': faqs, 'login_form': login_form, 'register_form': register_form,})
+
+def page_detail(request, slug):
+    page = Page.objects.get(slug=slug)
+    login_form = LoginForm()
+    register_form = SellerRegistrationForm()
+    return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})

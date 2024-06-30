@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock %}
+{% block content %}
+  <style>
+    .contact-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      margin: auto;
+      max-width: 1000px;
+    }
+
+    .contact-form-wrapper, .contact-info-wrapper {
+      width: 48%;
+      margin: 0 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+      background-color: #fff;
+    }
+
+    .contact-form-wrapper h2, .contact-info-wrapper h3 {
+      text-align: center;
+    }
+
+    .contact-info-wrapper {
+      background-color: #f9f9f9;
+    }
+
+    .contact-info-wrapper p, .contact-info-wrapper strong, .contact-info-wrapper a {
+      margin: 10px 0;
+      display: block;
+      text-align: center;
+    }
+
+    .popup-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      padding: 20px;
+      border: 1px solid #ddd;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      border-radius: 8px;
+    }
+
+    .popup-message p {
+      margin: 0;
+    }
+
+    .popup-message button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #64C2DB;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .contact-form-wrapper form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-form-wrapper label {
+      margin-top: 10px;
+    }
+
+    .contact-form-wrapper input, .contact-form-wrapper textarea {
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      width: 95%;
+    }
+
+    .contact-form-wrapper button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #64C2DB;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .contact-form-wrapper button:hover {
+      background-color: #4fa6bd;
+    }
+  </style>
+  <h2 style="text-align: center;">Get connected with one of our trained GreenEnergy experts for any questions.</h2>
+  <div class="contact-container">
+    <div class="contact-form-wrapper">
+      <h2>Contact Us</h2>
+      <form method="post" id="contact-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <label for="id_name">Name:</label>
+        {{ form.name.errors }}
+        {{ form.name }}
+
+        <label for="id_email">Email:</label>
+        {{ form.email.errors }}
+        {{ form.email }}
+
+        <label for="id_message">Message:</label>
+        {{ form.message.errors }}
+        {{ form.message }}
+
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <div class="contact-info-wrapper">
+      <h3>QUESTION REGARDING YOUR CURRENT ACCOUNT?</h3>
+      <p>Contact one of our trained experts now to resolve any issues with an existing account, so you can get back to what you know.</p>
+      <p><strong>Contact Support:</strong></p>
+      <p>Mon-Fri 7:30AM-8PM ET</p>
+      <p>800-613-1303</p>
+      <p><a href="mailto:Help@LoopNet.com">info@greenenergyconnection</a></p>
+    </div>
+  </div>
+
+  <div class="popup-message" id="popup-message">
+    <p>Your message has been received and we will contact you soon.</p>
+    <button id="popup-close-button">Close</button>
+  </div>
+
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      var form = event.target;
+      var formData = new FormData(form);
+
+      fetch(form.action, {
+        method: form.method,
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      }).then(response => {
+        if (response.ok) {
+          document.getElementById('popup-message').style.display = 'block';
+          form.reset();
+        } else {
+          // Handle errors here
+        }
+      });
+    });
+
+    document.getElementById('popup-close-button').addEventListener('click', function() {
+      document.getElementById('popup-message').style.display = 'none';
+    });
+  </script>
+{% endblock %}

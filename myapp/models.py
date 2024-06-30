@@ -339,13 +339,58 @@ class Message(models.Model):
     def __str__(self):
         return f"Message from {self.first_name} {self.last_name} to {self.seller.user.username} about {self.listing.project_name if self.listing else 'No Listing'}"
 
-
 class Transaction(models.Model):
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_date = models.DateTimeField(default=timezone.now)
     description = models.TextField(null=True, blank=True)
     transaction_type = models.CharField(max_length=50)
+    transaction_id = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Transaction by {self.seller.user.username} on {self.transaction_date}"
+
+    @property
+    def is_auto_renew_transaction(self):
+        return self.transaction_type == 'Package' and self.seller.is_auto_renew
+    
+class FAQ(models.Model):
+    question = models.CharField(max_length=255)
+    answer = HTMLField()
+
+    def __str__(self):
+        return self.question
+
+class Page(models.Model):
+    title = models.CharField(max_length=255)
+    content = HTMLField()
+    slug = models.SlugField(unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+class ContactUs(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    message = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message from {self.name} ({self.email})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            send_mail(
+                subject='New Contact Us Message',
+                message=self.message,
+                from_email=self.email,
+                recipient_list=[settings.ADMIN_EMAIL],
+            )
+        except:
+            pass

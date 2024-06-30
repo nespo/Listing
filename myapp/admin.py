@@ -6,8 +6,8 @@ from django.utils.html import format_html
 from django.core.mail import send_mail
 from django.conf import settings
 from django import forms
-from .models import Category, Package, Seller, Listing, ListingImage, Transaction, ListingPrice, SiteSettings, FooterMenuItem, FooterWidget, FooterWidgetLink
-
+from .forms import FAQForm, PageForm
+from .models import *
 
 class FooterWidgetLinkInline(admin.TabularInline):
     model = FooterWidgetLink
@@ -165,4 +165,18 @@ class ListingAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('seller', 'amount', 'transaction_date', 'description', 'transaction_type')
+    list_display = ('seller', 'amount', 'transaction_date', 'description', 'transaction_type', 'transaction_id')
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    form = FAQForm
+    list_display = ('question',)
+
+@admin.register(Page)
+class PageAdmin(admin.ModelAdmin):
+    form = PageForm
+    list_display = ('title', 'slug')
+
+@admin.register(ContactUs)
+class ContactUsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'sent_at')

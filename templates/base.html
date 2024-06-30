@@ -34,6 +34,11 @@
                 <ul>
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'all_listings' %}">All Listings</a></li>
+                    {% if not user.is_authenticated %}
+                    <li><a href="{% url 'public_packages' %}">Pricing</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'faq_list' %}">Faqs</a></li>
+                    <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
                 </ul>
             </nav>
             <div class="account-icon">
@@ -57,6 +62,9 @@
             <ul>
                 <li><a href="{% url 'home' %}"><span class="icon"><i class="fas fa-home"></i></span>Home</a></li>
                 <li><a href="{% url 'all_listings' %}"><span class="icon"><i class="fas fa-list"></i></span>All Listings</a></li>
+                {% if not user.is_authenticated %}
+                <li><a href="{% url 'public_packages' %}">Our Packages</a></li>
+                {% endif %}
                 {% if user.is_authenticated %}
                 <li><a href="{% url 'dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard</a></li>
                 <li><a href="{% url 'create_listing' %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
@@ -66,6 +74,8 @@
                 <li><a href="{% url 'update_profile' %}"><span class="icon"><i class="fas fa-user-edit"></i></span>Update your profile</a></li>
                 <li><a href="{% url 'change_password' %}"><span class="icon"><i class="fas fa-key"></i></span>Change your password</a></li>
                 {% endif %}
+                <li><a href="{% url 'faq_list' %}">Faqs</a></li>
+                <li><a href="{% url 'page_detail' slug='contact_us' %}">Contact Us</a></li>
             </ul>
         </div>
     </header>

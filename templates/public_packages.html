@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Available Packages{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'package/styles.css' %}">
+{% endblock %}
+{% block content %}
+<h2 class="Header-Text-Package-Buying">Available Packages</h2>
+<div class="package-container">
+    <div class="available-packages card">
+        <h3>Available Packages</h3>
+        <div class="packages-grid">
+            {% for package in packages %}
+            <div class="package-option card">
+                <h4>{{ package.name }}</h4>
+                <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
+                <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
+                <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                <p><i class="fas fa-cube"></i> Package Type: {{ package.get_duration_unit_display }}</p>
+                <button type="button" class="package-button" onclick="showSignUpForm()">Buy Package</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="individual-listings-purchase card">
+        <h3>Buy Individual Listings</h3>
+        <form method="post" id="unique-individual-listing-form">
+            {% csrf_token %}
+            <div class="listing-options-grid">
+                <div class="listing-option card">
+                    <label for="unique-individual-normal-posts">Normal Listings: </label>
+                    <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="100" value="0">
+                    <span id="unique-normal-listings-count">0</span>
+                    <p>Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span>/Listing</p>
+                    <p>Total Price: $<span id="total-normal-listing-price">0</span></p>
+                </div>
+                <div class="listing-option card">
+                    <label for="unique-individual-featured-posts">Featured Listings: </label>
+                    <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="100" value="0">
+                    <span id="unique-featured-listings-count">0</span>
+                    <p>Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span>/Listing</p>
+                    <p>Total Price: $<span id="total-featured-listing-price">0</span></p>
+                </div>
+            </div>
+            <button type="button" id="unique-buy-listings-button" class="listings-button" onclick="showSignUpForm()">Buy Individual Listings</button>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function showSignUpForm() {
+            var signupPopup = document.getElementById('signup-popup');
+            if (signupPopup) {
+                signupPopup.style.display = 'block';
+            } else {
+                console.error('Signup popup not found');
+            }
+        }
+
+        function updateNormalListingsCount(value) {
+            document.getElementById('unique-normal-listings-count').textContent = value;
+            updateTotalPrice();
+        }
+
+        function updateFeaturedListingsCount(value) {
+            document.getElementById('unique-featured-listings-count').textContent = value;
+            updateTotalPrice();
+        }
+
+        function updateTotalPrice() {
+            var normalSlider = document.getElementById('unique-individual-normal-posts');
+            var featuredSlider = document.getElementById('unique-individual-featured-posts');
+            var normalPrice = parseFloat(document.getElementById('unique-normal-listing-price').textContent);
+            var featuredPrice = parseFloat(document.getElementById('unique-featured-listing-price').textContent);
+
+            var totalNormalPrice = normalSlider.value * normalPrice;
+            var totalFeaturedPrice = featuredSlider.value * featuredPrice;
+
+            document.getElementById('total-normal-listing-price').textContent = totalNormalPrice.toFixed(2);
+            document.getElementById('total-featured-listing-price').textContent = totalFeaturedPrice.toFixed(2);
+        }
+
+        // Add event listeners to the sliders
+        var normalSlider = document.getElementById('unique-individual-normal-posts');
+        var featuredSlider = document.getElementById('unique-individual-featured-posts');
+
+        normalSlider.addEventListener('input', function () {
+            updateNormalListingsCount(normalSlider.value);
+        });
+
+        featuredSlider.addEventListener('input', function () {
+            updateFeaturedListingsCount(featuredSlider.value);
+        });
+
+        window.showSignUpForm = showSignUpForm;
+        window.updateNormalListingsCount = updateNormalListingsCount;
+        window.updateFeaturedListingsCount = updateFeaturedListingsCount;
+    });
+</script>
+{% endblock %}
+{% endblock %}

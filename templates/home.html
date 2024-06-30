@@ -91,7 +91,9 @@
         {% autoescape off %}
         <div class="listing-box">
             <div class="listing-thumbnail-image">
-                <a href="{{ listing.thumbnail_image.url }}" class="listing-popup-link"><img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}"></a>
+                <a href="{% url 'listing_detail' slug=listing.slug %}" class="listing-popup-link">
+                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
+                </a>                
             </div>
             <h2>{{ listing.project_name|truncatewords:3 }}</h2>
             <p>{{ listing.project_address }}</p>

@@ -98,7 +98,7 @@
                 <h3><a href="{% url 'seller_profile' seller_id=seller.id %}">{{ seller.first_name }} {{ seller.last_name }}</a></h3>
                 <p><i class="fas fa-map-marker-alt"></i> {{ seller.company_address }}</p>
                 <a href="tel:{{ seller.company_phone_number }}" class="listing-call-button"><i class="fas fa-phone"></i> Call</a>
-                <button class="listing-message-button"><i class="fas fa-envelope"></i> Send Message</button>
+                <button class="listing-message-button" data-slug="{{ listing.slug }}" data-seller-id="{{ seller.id }}"><i class="fas fa-envelope"></i> Send Message</button>
             </div>
         </div>
     </div>
@@ -132,6 +132,8 @@
             <div class="listing-form-group">
                 {{ form.message.label_tag }}{{ form.message }}
             </div>
+            <input type="hidden" name="slug" id="listing-slug" value="{{ listing.slug }}">
+            <input type="hidden" name="seller_id" id="seller-id" value="{{ seller.id }}">
             <button type="submit" class="listing-submit-button">Send Message</button>
         </form>
     </div>
@@ -142,7 +144,7 @@
         <span>{{ seller.company_name }}</span>
         <div class="listing-seller-icons">
             <a href="tel:{{ seller.company_phone_number }}" class="listing-call-icon"><i class="fas fa-phone-alt"></i></a>
-            <button class="listing-message-icon"><i class="fas fa-comment-dots"></i></button>
+            <button class="listing-message-icon" data-slug="{{ listing.slug }}" data-seller-id="{{ seller.id }}"><i class="fas fa-comment-dots"></i></button>
         </div>
     </div>
 </div>
@@ -183,6 +185,10 @@
         });
 
         $('.listing-message-button, .listing-message-icon').on('click', function(){
+            var slug = $(this).data('slug');
+            var sellerId = $(this).data('seller-id');
+            $('#listing-slug').val(slug || '');
+            $('#seller-id').val(sellerId || '{{ seller.id }}');
             $('#listing-message-form-modal').fadeIn();
         });
 
@@ -193,8 +199,9 @@
         $('#listing-message-form').on('submit', function(event) {
             event.preventDefault();
             var formData = $(this).serialize();
+            var url = "{% url 'submit_message_with_slug' slug=listing.slug %}";
             $.ajax({
-                url: "{% url 'submit_message' listing.slug %}",
+                url: url,
                 type: "POST",
                 data: formData,
                 success: function(response) {

@@ -80,7 +80,7 @@
                             {% endif %}
                         </p>
                     </a>
-                    <button class="listing-message-button" data-slug="{{ listing.slug }}">Send a Message</button>
+                    <button class="listing-message-button" data-slug="{{ listing.slug }}" data-seller-id="{{ seller.id }}">Send a Message</button>
                 </div>
             {% endfor %}
         </div>
@@ -164,8 +164,7 @@
         $('#listing-message-form').on('submit', function(event) {
             event.preventDefault();
             var formData = $(this).serialize();
-            var slug = $('#listing-slug').val();
-            var url = slug ? "/listing/" + slug + "/submit_message/" : "/seller/submit_message/";
+            var url = "{% url 'submit_message_without_slug' %}";
             $.ajax({
                 url: url,
                 type: "POST",

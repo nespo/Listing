@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}
+  {{ page.title }}
+{% endblock %}
+{% block content %}
+  <div class="content-wrapper">
+    <h2>{{ page.title }}</h2>
+    <div class="content">{{ page.content|safe }}</div>
+  </div>
+{% endblock %}
+{% block extra_css %}
+<style>
+  .content-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start; /* Left align */
+      padding: 20px;
+      box-sizing: border-box;
+      margin-top: -33px;
+  }
+
+  .content-wrapper h2 {
+      margin-bottom: 20px;
+      font-size: 2em; /* Ensure the title stands out */
+  }
+
+  .content {
+      width: 100%;
+  }
+
+  /* Ensure proper mobile optimization */
+  @media (max-width: 768px) {
+      .content-wrapper {
+          padding: 10px;
+      }
+  }
+</style>
+{% endblock %}
