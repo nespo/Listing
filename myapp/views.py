@@ -338,7 +338,7 @@ def activate(request, uidb64, token):
             messages.success(request, 'Thank you for your email confirmation. Now you can login to your account.')
             del request.session['user_data']
             del request.session['seller_data']
-            return redirect('login')
+            return redirect('home')
         else:
             messages.warning(request, 'Activation link is invalid!')
             return redirect('home')
