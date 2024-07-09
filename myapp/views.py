@@ -762,7 +762,7 @@ def buy_package_listing(request):
                 seller=seller,
                 amount=amount,
                 description=f'{package.name}',
-                transaction_type='Package',
+                transaction_type='Membership',
                 transaction_id=payment_intent.id
             )
 
