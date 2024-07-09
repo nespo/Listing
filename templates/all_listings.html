@@ -1,173 +1,172 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %} <!-- Ensure humanize is loaded -->
+
 {% block title %}Search Listing{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'alllisting/styles.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 {% endblock %}
+
 {% block content %}
-<h2 style="text-align: center;">Use The Search Option To See Listings</h2>
+<div class="top-bar">
+    <h1>Find Your Ideal Project</h1>
+    <p>Use the search filters below to find the projects that match your criteria.</p>
+</div>
 <div class="search-filters">
-    <input type="text" id="location" placeholder="Location">
-    <select id="category">
-        <option value="">Project Type</option>
-        {% for category in categories %}
-            <option value="{{ category.name }}">{{ category.name }}</option>
+    <select id="country" placeholder="Country">
+        <option value="">Country</option>
+        {% for country in countries %}
+            <option value="{{ country.name }}" {% if request.GET.country == country.name %}selected{% endif %}>
+                {{ country.name }}
+            </option>
         {% endfor %}
     </select>
+    
+    <select id="category" placeholder="Project Type">
+        <option value="">Project Type</option>
+        {% for category in categories %}
+            <option value="{{ category.name }}" {% if request.GET.categories and category.name in request.GET.categories %}selected{% endif %}>
+                {{ category.name }}
+            </option>
+        {% endfor %}
+    </select>    
     <input type="number" id="min_price" placeholder="Min Price">
     <input type="number" id="max_price" placeholder="Max Price">
     <select id="sort_by">
-        <option value="">Sort By</option>
+        <option value=""> Sort By</option>
         <option value="date_newest">Date (Newest)</option>
         <option value="date_oldest">Date (Oldest)</option>
         <option value="price_low_to_high">Price (Low to High)</option>
         <option value="price_high_to_low">Price (High to Low)</option>
         <option value="update_time">Update Time</option>
-    </select>
+    </select>    
 </div>
-
+<div class="total-results floating">
+    Total Results: <span id="total-results">{{ listings.count }}</span>
+</div>
 <div class="container">
     <div class="map-section">
-        <!-- Leaflet Map will be embedded here -->
         <div id="map" style="height: 100%; width: 100%;"></div>
     </div>
     <div class="listings-section" id="listings">
-        {% include 'partials/listings.html' %}
+        {% include 'partials/listings.html' %}        
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <!-- Include jQuery and jQuery UI library -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    var map;
-    var markers = [];
-    var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
+        var map;
+        var markers = [];
+        var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
 
-    function initMap() {
-        map = L.map('map').setView([51.505, -0.09], 2);
+        var countrySelect = new Choices('#country');
+        var categorySelect = new Choices('#category');
+        var sortBySelect = new Choices('#sort_by', { removeItemButton: true });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        function initMap() {
+            map = L.map('map').setView([51.505, -0.09], 2);
 
-        updateMarkers(listingsData);
-    }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-    function updateMarkers(listings) {
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = [];
-
-        listings.forEach(listing => {
-            var marker = L.marker([listing.latitude, listing.longitude]).addTo(map)
-                .bindPopup(listing.project_name);
-            markers.push(marker);
-
-            marker.on('click', function() {
-                scrollToListing(listing.id);
-            });
-        });
-    }
-
-    function scrollToListing(id) {
-        var listingElement = document.getElementById('listing-' + id);
-        if (listingElement) {
-            // Remove highlight class from any previously highlighted listing
-            $('.listing-box').removeClass('highlighted');
-
-            // Scroll to the listing and highlight it
-            listingElement.scrollIntoView({behavior: 'smooth', block: 'center'});
-            listingElement.classList.add('highlighted');
+            updateMarkers(listingsData);
         }
-    }
 
-    function fetchListings() {
-        var location = $('#location').val();
-        var category = $('#category').val();
-        var min_price = $('#min_price').val();
-        var max_price = $('#max_price').val();
-        var sort_by = $('#sort_by').val();
-
-        $.ajax({
-            url: '{% url "all_listings" %}',
-            data: {
-                'location': location,
-                'categories[]': category,
-                'min_price': min_price,
-                'max_price': max_price,
-                'sort_by': sort_by
-            },
-            success: function(response) {
-                $('#listings').html(response.html);
-                updateMarkers(response.listings);
-            },
-            error: function(xhr, status, error) {
-                console.log("AJAX request failed:");
-                console.log("Status:", status);
-                console.log("Error:", error);
+        function updateMarkers(listings) {
+            console.log('updateMarkers called with:', listings);
+            
+            if (!Array.isArray(listings)) {
+                console.error('Listings data is not an array:', listings);
+                return;
             }
-        });
-    }
 
-    function setFieldValuesFromUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const location = urlParams.get('location');
-        const categories = urlParams.getAll('categories[]');
-        const min_price = urlParams.get('price_min');
-        const max_price = urlParams.get('price_max');
-        const sort_by = urlParams.get('sort_by');
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
 
-        if (location) {
-            $('#location').val(location);
-        }
-        if (categories.length > 0 && categories[0] !== "") {
-            $('#category').val(categories).trigger('change');
-        } else if (window.location.search.includes('categories[]')) {
-            $('#category option:eq(1)').prop('selected', true).trigger('change');
-        }
-        if (min_price) {
-            $('#min_price').val(min_price);
-        }
-        if (max_price) {
-            $('#max_price').val(max_price);
-        }
-        if (sort_by) {
-            $('#sort_by').val(sort_by);
-        }
+            listings.forEach(listing => {
+                var marker = L.marker([listing.latitude, listing.longitude]).addTo(map)
+                    .bindPopup(listing.project_name);
+                markers.push(marker);
 
-        fetchListings();
-    }
-
-    $('#location, #category, #min_price, #max_price, #sort_by').on('input change', fetchListings);
-
-    $.ajax({
-        url: '{% url "state_autocomplete" %}',
-        success: function(data) {
-            $('#location').autocomplete({
-                source: data,
-                minLength: 0,
-                select: function(event, ui) {
-                    $('#location').val(ui.item.value);
-                    fetchListings();
-                }
-            }).focus(function() {
-                $(this).autocomplete("search", "");
+                marker.on('click', function() {
+                    scrollToListing(listing.id);
+                });
             });
         }
+
+        function scrollToListing(id) {
+            var listingElement = document.getElementById('listing-' + id);
+            if (listingElement) {
+                $('.listing-box').removeClass('highlighted');
+                listingElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+                listingElement.classList.add('highlighted');
+            }
+        }
+
+        function fetchListings() {
+            var country = $('#country').val();
+            var category = $('#category').val();
+            var min_price = $('#min_price').val();
+            var max_price = $('#max_price').val();
+            var sort_by = sortBySelect.getValue().value; // Get value using Choices.js API
+
+            $.ajax({
+                url: '{% url "all_listings" %}',
+                data: {
+                    'country': country,
+                    'categories[]': category,
+                    'min_price': min_price,
+                    'max_price': max_price,
+                    'sort_by': sort_by
+                },
+                success: function(response) {
+                    console.log('AJAX success response:', response);
+                    $('#listings').html(response.html);
+                    $('#total-results').text(response.total_results);
+
+                    try {
+                        var listings = JSON.parse(response.listings);
+                        if (Array.isArray(listings)) {
+                            updateMarkers(listings);
+                        } else {
+                            console.error('Listings data is not an array after parsing:', listings);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing listings data:', e);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log("AJAX request failed:");
+                    console.log("Status:", status);
+                    console.log("Error:", error);
+                }
+            });
+        }
+
+        $('#country, #category, #min_price, #max_price, #sort_by').on('change', function(e) {
+            if (this.id === 'sort_by') {
+                sort_by = sortBySelect.getValue().value; // Update on change using Choices.js API
+            }
+            fetchListings();
+        });
+
+        initMap();
+        setFieldValuesFromUrl();
     });
-
-    initMap();
-    setFieldValuesFromUrl();
-});
 </script>
-
 <script id="listings-data" type="application/json">
     {{ listings_data|safe }}
 </script>
-
 {% endblock %}

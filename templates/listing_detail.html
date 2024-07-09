@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 {% block title %}{{ listing.project_name }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/listing_detail.css' %}">
@@ -26,77 +27,100 @@
         <div class="listing-views"><i class="fas fa-eye"></i> {{ listing.views }} Views</div>
     {% endif %}
 </div>
-<div class="listing-content-detail">
-    <div class="listing-details-detail">
-        <div class="listing-description-box">
-            <div class="listing-description-header">
-                <h3>Description</h3>
-                <p class="listing-created-date"><i class="fas fa-calendar-alt"></i> 
-                    {% if listing.updated_at %}
-                        Updated on: {{ listing.updated_at|date:"M d, Y" }}
-                    {% else %}
-                        Created on: {{ listing.created_at|date:"M d, Y" }}
-                    {% endif %}
-                </p>
+<div class="listing-main">
+    <div class="listing-content-detail">
+        <div class="listing-row">
+            <div class="listing-section">
+                <div class="section-header">
+                    <h3>Description</h3>
+                    <p class="listing-created-date"><i class="fas fa-calendar-alt"></i> 
+                        {% if listing.updated_at %}
+                            Updated on: {{ listing.updated_at|date:"M d, Y" }}
+                        {% else %}
+                            Created on: {{ listing.created_at|date:"M d, Y" }}
+                        {% endif %}
+                    </p>
+                </div>
+                <hr class="section-divider">
+                <p>{{ listing.project_description|safe }}</p>
             </div>
-            <p>{{ listing.project_description|safe }}</p>
         </div>
-        <div class="listing-row-detail">
-            <div class="listing-column">
-                <h2>Project Information:</h2>
+        
+        <div class="listing-row">
+            <div class="listing-section">
+                <div class="section-header">
+                    <h3>Project Information</h3>
+                </div>
+                <hr class="section-divider">
                 {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
                 {% if listing.project_cod_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project COD Date:</strong> {{ listing.project_cod_date }}</p>{% endif %}
                 {% if listing.project_pto_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project PTO Date:</strong> {{ listing.project_pto_date }}</p>{% endif %}
                 {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size }}</p>{% endif %}
                 {% if listing.battery_storage %}<p><i class="fas fa-battery-full"></i> <strong>Battery Storage (mWh):</strong> {{ listing.battery_storage }}</p>{% endif %}
-                {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income }}</p>{% endif %}
+                {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.epc_name %}<p><i class="fas fa-tools"></i> <strong>EPC Name:</strong> {{ listing.epc_name }}</p>{% endif %}
-                {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> {{ listing.current_annual_om_cost }}</p>{% endif %}
-                {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate }}</p>{% endif %}
-                {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> {{ listing.sales_price }}</p>{% endif %}
+                {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> {{ listing.current_annual_om_cost|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate }}%</p>{% endif %}
+                {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> {{ listing.sales_price|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.status %}<p><i class="fas fa-info-circle"></i> <strong>Listing Status:</strong> {{ listing.get_status_display }}</p>{% endif %}
                 {% if listing.seller %}<p><i class="fas fa-user"></i> <strong>Seller's Name:</strong> {{ listing.seller.first_name }} {{ listing.seller.last_name }}</p>{% endif %}
                 {% if listing.contractor_name %}<p><i class="fas fa-hard-hat"></i> <strong>Contractor Name:</strong> {{ listing.contractor_name }}</p>{% endif %}
             </div>
+        </div>
         
-            <div class="listing-column">
-                <h2>Property Details:</h2>
+        <div class="listing-row">
+            <div class="listing-section">
+                <div class="section-header">
+                    <h3>Property Details</h3>
+                </div>
+                <hr class="section-divider">
                 {% if listing.project_address %}<p><i class="fas fa-map-marker-alt"></i> <strong>Project Address:</strong> {{ listing.project_address }}</p>{% endif %}
                 {% if listing.project_city %}<p><i class="fas fa-city"></i> <strong>Project City:</strong> {{ listing.project_city.name }}</p>{% endif %}
                 {% if listing.project_state %}<p><i class="fas fa-flag"></i> <strong>Project State:</strong> {{ listing.project_state.name }}</p>{% endif %}
                 {% if listing.latitude and listing.longitude %}<p><i class="fas fa-map-pin"></i> <strong>Project GPS Coordinate:</strong> {{ listing.latitude }}, {{ listing.longitude }}</p>{% endif %}
                 {% if listing.lot_size %}<p><i class="fas fa-tree"></i> <strong>Lot Size (acres):</strong> {{ listing.lot_size }}</p>{% endif %}
-                {% if listing.get_property_type_display %}<p><i class="fas fa-home"></i> <strong>Property Type:</strong> {{ listing.get_property_type_display }}</p>{% endif %}
-                {% if listing.lease_term %}<p><i class="fas fa-file-contract"></i> <strong>Lease Term:</strong> {{ listing.lease_term|safe }}</p>{% endif %}
-                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre }}</p>{% endif %}
-                {% if listing.lease_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>Lease Escalation Rate:</strong> {{ listing.lease_escalation_rate }}</p>{% endif %}
                 {% if listing.get_project_status_display %}<p><i class="fas fa-info-circle"></i> <strong>Project Status:</strong> {{ listing.get_project_status_display }}</p>{% endif %}
+                {% if listing.get_property_type_display %}<p><i class="fas fa-home"></i> <strong>Property Type:</strong> {{ listing.get_property_type_display }}</p>{% endif %}
+                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre }}%</p>{% endif %}
+                {% if listing.lease_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>Lease Escalation Rate:</strong> {{ listing.lease_escalation_rate }}%</p>{% endif %}
+                {% if listing.lease_term %}<p><i class="fas fa-file-contract"></i> <strong>Lease Term:</strong> {{ listing.lease_term|safe }}</p>{% endif %}
             </div>
         </div>
-        <div class="listing-row-detail">
-            <div class="listing-column">
-                <h2>ITC/PTC Information:</h2>
+        
+        <div class="listing-row">
+            <div class="listing-section">
+                <div class="section-header">
+                    <h3>ITC/PTC Information</h3>
+                </div>
+                <hr class="section-divider">
                 {% if listing.tax_credit_type %}<p><i class="fas fa-file-invoice-dollar"></i> <strong>Tax Credit Type:</strong> {{ listing.get_tax_credit_type_display }}</p>{% endif %}
-                {% if listing.total_tax_credit_percentage %}<p><i class="fas fa-percentage"></i> <strong>Total Tax Credit Percentage:</strong> {{ listing.total_tax_credit_percentage }}</p>{% endif %}
+                {% if listing.total_tax_credit_percentage %}<p><i class="fas fa-percentage"></i> <strong>Total Tax Credit Percentage:</strong> {{ listing.total_tax_credit_percentage }}%</p>{% endif %}
                 {% if listing.remarks %}<p><i class="fas fa-comments"></i> <strong>Remarks:</strong> {{ listing.remarks|safe }}</p>{% endif %}
             </div>
+        </div>
         
-            <div class="listing-column">
-                <h2>Other:</h2>
+        <div class="listing-row">
+            <div class="listing-section">
+                <div class="section-header">
+                    <h3>Other</h3>
+                </div>
+                <hr class="section-divider">
                 {% if listing.buyer_protections %}<p><i class="fas fa-shield-alt"></i> <strong>Buyer's Protections:</strong> {{ listing.buyer_protections|safe }}</p>{% endif %}
             </div>
-        </div>        
+        </div>
     </div>
     <div class="listing-seller-detail">
         <div class="listing-seller-info">
             {% if seller.profile_image %}
                 <img src="{{ seller.profile_image.url }}" alt="{{ seller.user.username }}" class="listing-seller-profile-image">
             {% else %}
-                <img src="{% static 'default-profile.png' %}" alt="Default Profile" class="listing-seller-profile-image">
+                <img src="{% static 'default-profile.jpg' %}" alt="Default Profile" class="listing-seller-profile-image">
             {% endif %}
             <div class="listing-seller-contact-info">
                 <h3><a href="{% url 'seller_profile' seller_id=seller.id %}">{{ seller.first_name }} {{ seller.last_name }}</a></h3>
                 <p><i class="fas fa-map-marker-alt"></i> {{ seller.company_address }}</p>
+            </div>
+            <div class="seller-contact-buttons">
                 <a href="tel:{{ seller.company_phone_number }}" class="listing-call-button"><i class="fas fa-phone"></i> Call</a>
                 <button class="listing-message-button" data-slug="{{ listing.slug }}" data-seller-id="{{ seller.id }}"><i class="fas fa-envelope"></i> Send Message</button>
             </div>
@@ -111,7 +135,7 @@
 <div id="listing-message-form-modal" class="listing-message-form-modal">
     <div class="listing-message-form-content">
         <span class="listing-message-form-close">&times;</span>
-        <h2>Contact {{ seller.company_name }}</h2>
+        <h2 style="text-align: center;">Contact {{ seller.first_name }} {{ seller.last_name }}</h2>
         <form id="listing-message-form" method="post">
             {% csrf_token %}
             <div class="listing-form-group">
@@ -154,6 +178,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 <script>
     $(document).ready(function(){
         $('.listing-gallery-detail').slick({
@@ -216,6 +241,35 @@
                     console.log(xhr.status + ": " + xhr.responseText);
                 }
             });
+        });
+
+        const phoneNumberFields = ['id_phone'];
+        phoneNumberFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const phoneInput = window.intlTelInput(field, {
+                    initialCountry: "auto",
+                    geoIpLookup: function(callback) {
+                        fetch('https://ipinfo.io/json')
+                            .then(response => response.json())
+                            .then(data => callback(data.country))
+                            .catch(() => callback('us'));
+                    },
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                    nationalMode: false // Ensures that the phone number is formatted with the international dial code
+                });
+
+                // Set initial phone number value
+                const initialPhoneNumber = field.value;
+                if (initialPhoneNumber) {
+                    phoneInput.setNumber(initialPhoneNumber);
+                }
+
+                field.addEventListener("countrychange", function () {
+                    const countryData = phoneInput.getSelectedCountryData();
+                    field.value = "+" + countryData.dialCode;
+                });
+            }
         });
     });
 </script>

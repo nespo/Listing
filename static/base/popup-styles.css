@@ -1,173 +1,4 @@
-/* Universal Styles */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    padding-top: 90px;
-}
-
-html, body {
-    overflow-x: hidden;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-h1, h2, h3, h4, h5, h6{
-    color: #04436c !important;
-}
-
-/* Scoped CSS for this page */
-#home-page header {
-    background-color: #f8f9fa;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 10px 0;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-}
-
-#home-page .navbar {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center; /* Align items vertically */
-    padding: 0 20px;
-}
-
-#home-page .logo {
-    flex: 1;
-    text-align: center;
-}
-
-#home-page .logo img {
-    height: 50px;
-}
-
-#home-page .menu {
-    flex: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#home-page .menu ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 20px;
-}
-
-#home-page .menu ul li {
-    display: inline;
-}
-
-#home-page .menu ul li a {
-    text-decoration: none;
-    color: #04436C;
-    font-weight: bold;
-    padding: 8px 16px;
-    transition: background-color 0.3s ease;
-}
-
-#home-page .menu ul li a:hover {
-    background-color: #e2e6ea;
-    border-radius: 4px;
-}
-
-#home-page .account-icon {
-    flex: 1;
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center; /* Align items vertically */
-}
-
-#home-page .account-icon img {
-    height: 30px;
-    cursor: pointer;
-}
-
-#home-page .dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: white;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    border-radius: 4px;
-    overflow: hidden;
-    width: 150px;
-    margin-top: 132px;
-}
-
-#home-page .dropdown-content a,
-#home-page .logout-button {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-    transition: background-color 0.3s ease;
-}
-
-#home-page .dropdown-content a:hover,
-#home-page .logout-button:hover {
-    background-color: #f1f1f1;
-}
-
-#home-page .hamburger {
-    display: none;
-    cursor: pointer;
-    align-items: center; /* Align items vertically */
-}
-
-#home-page .hamburger img {
-    height: 30px;
-}
-
-#home-page .mobile-menu {
-    display: none;
-    position: fixed;
-    top: 90px;
-    left: -100%;
-    width: 70%;
-    max-width: 300px;
-    height: calc(100% - 90px);
-    background-color: white;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    transition: left 0.3s ease;
-    padding-top: 20px;
-}
-
-#home-page .mobile-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-#home-page .mobile-menu ul li {
-    padding: 10px 20px;
-}
-
-#home-page .mobile-menu ul li a {
-    text-decoration: none;
-    color: #04436C;
-    display: block;
-    align-items: center;
-    display: flex;
-}
-
-#home-page .mobile-menu ul li a .icon {
-    margin-right: 10px;
-}
-
+/* General Popup Styles */
 #home-page .popup {
     display: none;
     position: fixed;
@@ -178,6 +9,7 @@ h1, h2, h3, h4, h5, h6{
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
 }
 
 #home-page .popup-content {
@@ -225,46 +57,6 @@ h1, h2, h3, h4, h5, h6{
     display: block;
     transition: background-color 0.3s ease;
 }
-
-@media (max-width: 768px) {
-    #home-page .menu {
-        display: none;
-    }
-
-    #home-page .hamburger {
-        display: flex; /* Use flex to align items */
-    }
-
-    #home-page .navbar {
-        justify-content: space-between;
-        position: relative;
-    }
-
-    #home-page .logo {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    #home-page .logo img {
-        height: 40px; /* Adjust logo size for mobile */
-    }
-
-    #home-page .account-icon {
-        margin-top: 0;
-    }
-
-    #home-page .mobile-menu {
-        display: block;
-    }
-
-    #home-page .mobile-menu ul {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
 
 /* Scoped CSS for login/signup/reset/message popups */
 #home-page #login-popup .popup-content,
@@ -334,7 +126,7 @@ h1, h2, h3, h4, h5, h6{
 #home-page #signup-popup select,
 #home-page #reset-popup select,
 #home-page #messages-popup select {
-    width: calc(100% - 20px);
+    width: 100%;
     padding: 10px;
     margin-top: 5px;
     border: 1px solid #ccc;
@@ -361,7 +153,7 @@ h1, h2, h3, h4, h5, h6{
 #home-page #signup-popup button:hover,
 #home-page #reset-popup button:hover,
 #home-page #messages-popup button:hover {
-    background-color: #45a049;
+    background-color: #4fa6bd;
 }
 
 #home-page #login-popup .form-group,
@@ -443,4 +235,214 @@ h1, h2, h3, h4, h5, h6{
 
 #home-page .message .closebtn:hover {
     color: black;
+}
+
+.heading-text-signup {
+    text-align: center;
+}
+
+.iti {
+    width: 100%;
+}
+
+#id_mobile_number, #id_company_phone_number {
+    padding-left: 46px !important; /* Adjust the padding value as needed */
+}
+
+.iti__country-list {
+    max-width: 400px;
+}
+
+#signup-popup .popup-content {
+    position: relative;
+}
+
+#step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#step-indicator .step {
+    width: 25px;
+    height: 25px;
+    background: #ccc;
+    border-radius: 50%;
+    margin: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fff;
+    transition: background 0.3s;
+}
+
+#step-indicator .step.active {
+    background: #64C2DB;
+}
+
+.step-content {
+    display: none;
+}
+
+.step-content.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label i {
+    margin-right: 8px;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.next-step, .prev-step, .submit-btn {
+    background-color: #64C2DB;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.next-step:hover, .prev-step:hover, .submit-btn:hover {
+    background-color: #4fa6bd;
+}
+
+/* Clearfix for form groups */
+.step-content::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.form-group i {
+    position: absolute;
+    left: 10px;
+    top: 75%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 10px 10px 30px !important; /* Adjust padding to make space for the icon */
+}
+
+#home-page #signup-popup select {
+    padding: 10px 10px 10px 30px !important;
+}
+
+/* Sliding Animations */
+@keyframes slide-in-left {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-out-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes slide-out-right {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.slide-in-left {
+    animation: slide-in-left 0.3s forwards;
+}
+
+.slide-in-right {
+    animation: slide-in-right 0.3s forwards;
+}
+
+.slide-out-left {
+    animation: slide-out-left 0.3s forwards;
+}
+
+.slide-out-right {
+    animation: slide-out-right 0.3s forwards;
+}
+
+/* Error Handling Specific CSS */
+.form-group .error {
+    color: red;
+    margin-top: 5px;
+    font-size: 12px;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    padding-left: 30px; /* Ensure the padding matches the icon spacing */
+}
+
+#home-page #login-popup .form-group .error,
+#home-page #signup-popup .form-group .error,
+#home-page #reset-popup .form-group .error,
+#home-page #messages-popup .form-group .error {
+    padding-left: 0px !important; /* Adjust to align with the icon */
+}
+
+div#error-login_form {
+    position: relative;
+    margin-top: 10px;
+    text-align: center;
+}
+
+i#toggle-login-password, i#toggle-signup-password, i#toggle-signup-confirm-password{
+    left: 90%;
+    cursor: pointer;
+}
+
+
+@media (max-width: 480px) {
+
+    #home-page .popup {
+        margin-top: 120px;
+    }
 }

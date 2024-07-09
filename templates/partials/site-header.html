@@ -1,0 +1,60 @@
+<header id="home-page">
+    <div class="navbar">
+        <div class="hamburger" id="hamburger">
+            <i class="fas fa-bars fa-lg" id="hamburger-icon" style="color: #04436C;"></i>
+            <i class="fas fa-times fa-lg" id="close-icon" style="display:none;"></i>
+        </div>
+        <div class="logo">
+            <a href="{% url 'home' %}">
+                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_title }}">
+            </a>
+        </div>
+        <nav class="menu">
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'all_listings' %}">All Listings</a></li>
+                {% if not user.is_authenticated %}
+                <li><a href="{% url 'public_packages' %}">Pricing</a></li>
+                {% endif %}
+                <li><a href="{% url 'faq_list' %}">FAQs</a></li>
+                <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
+            </ul>
+        </nav>
+        <div class="account-icon">
+            <i class="fa-regular fa-circle-user fa-2xl" id="account-icon" style="cursor: pointer; color: #04436C;"></i>
+            <div class="dropdown-content" id="dropdown-content">
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+                {% else %}
+                <a href="#" id="login">Login</a>
+                <a href="#" id="signup">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+        <ul>
+            <li><a href="{% url 'home' %}"><span class="icon"><i class="fas fa-home"></i></span>Home</a></li>
+            <li><a href="{% url 'all_listings' %}"><span class="icon"><i class="fas fa-list"></i></span>All Listings</a></li>
+            {% if not user.is_authenticated %}
+            <li><a href="{% url 'public_packages' %}"><span class="icon"><i class="fas fa-box"></i></span>Our Packages</a></li>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard</a></li>
+            <li><a href="{% url 'add_payment_method' %}"><span class="icon"><i class="fas fa-credit-card"></i></span>Add Payment Method</a></li>
+            <li><a href="{% url 'create_listing' %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
+            <li><a href="{% url 'buy_package_listing' %}"><span class="icon"><i class="fas fa-box-open"></i></span>Change your package</a></li>
+            <li><a href="{% url 'transaction_history' %}"><span class="icon"><i class="fas fa-history"></i></span>View your transaction history</a></li>
+            <li><a href="{% url 'seller_listings' %}"><span class="icon"><i class="fas fa-list-alt"></i></span>View your listings</a></li>
+            <li><a href="{% url 'update_profile' %}"><span class="icon"><i class="fas fa-user-edit"></i></span>Update your profile</a></li>
+            <li><a href="{% url 'change_password' %}"><span class="icon"><i class="fas fa-key"></i></span>Change your password</a></li>
+            {% endif %}
+            <li><a href="{% url 'faq_list' %}"><span class="icon"><i class="fas fa-question-circle"></i></span>Faqs</a></li>
+            <li><a href="{% url 'page_detail' slug='contact_us' %}"><span class="icon"><i class="fas fa-envelope"></i></span>Contact Us</a></li>
+        </ul>
+    </div>    
+</header>

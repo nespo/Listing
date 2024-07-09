@@ -105,7 +105,42 @@
                 text-align: left;
             }
         }
+
+        .no-transactions {
+            text-align: center;
+            margin-top: 50px;
+            color: #555;
+        }
+
+        .no-transactions h2 {
+            color: #04436C;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .no-transactions p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .no-transactions-buttons a {
+            background-color: #64C2DB;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .no-transactions-buttons a:hover {
+            background-color: #4fa6bd;
+        }
     </style>
+
+    {% if has_transactions %}
     <div class="transaction-container">
         <h2 class="transaction-header">Transaction History</h2>
         <div class="transaction-table-container">
@@ -152,4 +187,14 @@
             </span>
         </div>
     </div>
+    {% else %}
+    <div class="no-transactions">
+      <h2>You don't have any transactions</h2>
+      <p>Why wait? Start by buying a package now to enjoy our services! Visit our FAQ section to learn more.</p>
+      <div class="no-transactions-buttons">
+        <a href="{% url 'buy_package_listing' %}">Buy Package</a>
+        <a href="{% url 'faq_list' %}">FAQ</a>
+      </div>
+    </div>
+    {% endif %}
 {% endblock %}

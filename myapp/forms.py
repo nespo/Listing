@@ -1,14 +1,27 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import *
 from django.core.validators import RegexValidator
 from localflavor.us.us_states import STATE_CHOICES
 from django.forms import modelformset_factory
 from tinymce.widgets import TinyMCE
 import re
+from .models import *
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=255)
+    password = forms.CharField(widget=forms.PasswordInput())
+
 
 class SellerRegistrationForm(forms.ModelForm):
+    username = forms.CharField(max_length=255)
+    email = forms.EmailField()
+    password = forms.CharField(widget=forms.PasswordInput())
+    confirm_password = forms.CharField(widget=forms.PasswordInput())
     company_name = forms.CharField(max_length=255)
+    country = forms.ModelChoiceField(queryset=Country.objects.all(), required=True)
+    state = forms.ModelChoiceField(queryset=Region.objects.none(), required=True)
+    city = forms.ModelChoiceField(queryset=City.objects.none(), required=True)
+    mobile_number = forms.CharField(max_length=20, required=False)
     company_address = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Company Address'}))
     company_phone_number = forms.CharField(
         max_length=20,
@@ -19,21 +32,56 @@ class SellerRegistrationForm(forms.ModelForm):
     )
     first_name = forms.CharField(max_length=255)
     last_name = forms.CharField(max_length=255)
-    email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput())
 
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password']
-        widgets = {
-            'password': forms.PasswordInput(),
-        }
+        model = Seller
+        fields = [
+            'username', 'email', 'password', 'confirm_password', 'company_name', 'company_address',
+            'country', 'state', 'city', 'company_phone_number', 'mobile_number',
+            'first_name', 'last_name'
+        ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'country' in self.data:
+            try:
+                country_id = int(self.data.get('country'))
+                self.fields['state'].queryset = Region.objects.filter(country_id=country_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.country:
+            self.fields['state'].queryset = Region.objects.filter(country=self.instance.country).order_by('name')
+
+        if 'state' in self.data:
+            try:
+                state_id = int(self.data.get('state'))
+                self.fields['city'].queryset = City.objects.filter(region_id=state_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.state:
+            self.fields['city'].queryset = City.objects.filter(region=self.instance.state).order_by('name')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if password != confirm_password:
+            self.add_error('confirm_password', "Password and Confirm Password do not match")
+
+        return cleaned_data
+    
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("This username is already taken.")
         return username
+
+    def clean_company_phone_number(self):
+        phone_number = self.cleaned_data.get('company_phone_number')
+        if Seller.objects.filter(company_phone_number=phone_number).exists():
+            raise forms.ValidationError("This phone number is already in use.")
+        return phone_number
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -61,16 +109,17 @@ class SellerRegistrationForm(forms.ModelForm):
             raise forms.ValidationError("Password must contain at least one special character.")
         return password
 
-class LoginForm(forms.Form):
-    username = forms.CharField(max_length=255)
-    password = forms.CharField(widget=forms.PasswordInput())
 
 class ListingForm(forms.ModelForm):
     thumbnail_image = forms.ImageField(required=False)
-    listing_type = forms.ChoiceField(choices=[('package', 'Package'), ('individual', 'Individual')], widget=forms.RadioSelect, required=False)
-    project_state = forms.ModelChoiceField(queryset=State.objects.all(), required=False)
+    project_country = forms.ModelChoiceField(queryset=Country.objects.all(), required=True)
+    project_state = forms.ModelChoiceField(queryset=Region.objects.none(), required=False)
     project_city = forms.ModelChoiceField(queryset=City.objects.none(), required=False)
-    categories = forms.ModelMultipleChoiceField(queryset=Category.objects.all(), required=True)
+    categories = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
     project_description = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}))
     lease_term = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}), required=False)
     remarks = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}), required=False)
@@ -78,36 +127,39 @@ class ListingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
+        is_creation = kwargs.pop('is_creation', False)
         super(ListingForm, self).__init__(*args, **kwargs)
 
         if self.user:
             seller = self.user.seller
-            listing_choices = []
-
-            if seller.package and (seller.normal_post_count > 0 or seller.featured_post_count > 0):
-                listing_choices.append(('package', 'Package'))
-
-            if seller.individual_normal_posts > 0 or seller.individual_featured_posts > 0:
-                listing_choices.append(('individual', 'Individual'))
-
-            if len(listing_choices) == 1:
-                self.fields['listing_type'].initial = listing_choices[0][0]
-                self.fields['listing_type'].widget = forms.HiddenInput()
-            else:
-                self.fields['listing_type'].choices = listing_choices
-
-            if seller.featured_post_count == 0 and seller.individual_featured_posts == 0:
+            if seller.featured_post_count == 0:
                 self.fields['is_featured'].disabled = True
+
+        if 'project_country' in self.data:
+            try:
+                country_id = int(self.data.get('project_country'))
+                self.fields['project_state'].queryset = Region.objects.filter(country_id=country_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.project_country:
+            self.fields['project_state'].queryset = Region.objects.filter(country=self.instance.project_country).order_by('name')
 
         if 'project_state' in self.data:
             try:
                 state_id = int(self.data.get('project_state'))
-                self.fields['project_city'].queryset = City.objects.filter(state_id=state_id).order_by('name')
+                self.fields['project_city'].queryset = City.objects.filter(region_id=state_id).order_by('name')
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk and self.instance.project_state:
-            self.fields['project_city'].queryset = City.objects.filter(state=self.instance.project_state).order_by('name')
+            self.fields['project_city'].queryset = City.objects.filter(region=self.instance.project_state).order_by('name')
 
+        if is_creation:
+            self.fields['status'].required = False
+            self.fields['status'].initial = 'inactive'
+            self.fields['status'].widget = forms.HiddenInput()
+        else:
+            self.fields['status'].widget = forms.Select(choices=Listing.STATUS_CHOICES)
+            
     def clean_sales_price(self):
         sales_price = self.cleaned_data.get('sales_price')
         if sales_price <= 0:
@@ -118,12 +170,12 @@ class ListingForm(forms.ModelForm):
         model = Listing
         fields = [
             'categories', 'project_ntp_date', 'project_cod_date', 'project_pto_date',
-            'is_featured', 'status', 'project_name', 'project_description', 'contractor_name',
+            'is_featured', 'project_name', 'project_description', 'contractor_name',
             'project_size', 'battery_storage', 'projected_annual_income', 'epc_name', 'current_annual_om_cost',
-            'om_escalation_rate', 'sales_price', 'project_address', 'project_state', 'project_city',
+            'om_escalation_rate', 'sales_price', 'project_address', 'project_country', 'project_state', 'project_city',
             'lot_size', 'property_type', 'lease_term', 'current_lease_rate_per_acre', 'lease_escalation_rate',
             'project_status', 'tax_credit_type', 'total_tax_credit_percentage', 'remarks', 'buyer_protections',
-            'latitude', 'longitude', 'thumbnail_image', 'listing_type'
+            'latitude', 'longitude', 'thumbnail_image', 'status'
         ]
         labels = {
             'categories': 'Project Technology*',
@@ -131,7 +183,6 @@ class ListingForm(forms.ModelForm):
             'project_cod_date': 'Project COD Date',
             'project_pto_date': 'Project PTO Date',
             'is_featured': 'Featured',
-            'status': 'Listing Status*',
             'project_name': 'Project Name*',
             'project_description': 'Project Description',
             'contractor_name': 'Contractor Name',
@@ -143,6 +194,7 @@ class ListingForm(forms.ModelForm):
             'om_escalation_rate': 'O&M Escalation Rate',
             'sales_price': 'Sales Price',
             'project_address': 'Project Address',
+            'project_country': 'Project Country',
             'project_state': 'Project State',
             'project_city': 'Project City',
             'lot_size': 'Lot Size',
@@ -158,13 +210,12 @@ class ListingForm(forms.ModelForm):
             'latitude': 'Latitude',
             'longitude': 'Longitude',
             'thumbnail_image': 'Thumbnail Image',
-            'listing_type': 'Listing Type',
         }
         widgets = {
             'project_ntp_date': forms.DateInput(attrs={'type': 'date'}),
             'project_cod_date': forms.DateInput(attrs={'type': 'date'}),
             'project_pto_date': forms.DateInput(attrs={'type': 'date'}),
-            'status': forms.Select(attrs={'placeholder': 'Status'}),
+            'status': forms.HiddenInput(),  # Conditionally set as hidden
             'project_name': forms.TextInput(attrs={'placeholder': 'Project Name'}),
             'project_description': forms.Textarea(attrs={'placeholder': 'Project Description'}),
             'contractor_name': forms.TextInput(attrs={'placeholder': 'Contractor Name'}),
@@ -176,6 +227,7 @@ class ListingForm(forms.ModelForm):
             'om_escalation_rate': forms.NumberInput(attrs={'placeholder': 'O&M Escalation Rate'}),
             'sales_price': forms.NumberInput(attrs={'placeholder': 'Sales Price'}),
             'project_address': forms.TextInput(attrs={'placeholder': 'Project Address'}),
+            'project_country': forms.Select(attrs={'placeholder': 'Project Country'}),
             'project_state': forms.Select(attrs={'placeholder': 'Project State'}),
             'project_city': forms.Select(attrs={'placeholder': 'Project City'}),
             'lot_size': forms.NumberInput(attrs={'placeholder': 'Lot Size'}),
@@ -191,15 +243,16 @@ class ListingForm(forms.ModelForm):
             'latitude': forms.NumberInput(attrs={'placeholder': 'Latitude'}),
             'longitude': forms.NumberInput(attrs={'placeholder': 'Longitude'}),
             'thumbnail_image': forms.ClearableFileInput(attrs={'placeholder': 'Thumbnail Image'}),
-            'listing_type': forms.RadioSelect(attrs={'placeholder': 'Listing Type'}),
         }
 
+        
 class ListingImageForm(forms.ModelForm):
     class Meta:
         model = ListingImage
         fields = ['image']
 
 ListingImageFormSet = modelformset_factory(ListingImage, form=ListingImageForm, extra=10)
+
 
 class UserProfileForm(forms.ModelForm):
     company_address = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Company Address'}))
@@ -209,7 +262,10 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = Seller
-        fields = ['company_name', 'company_address', 'company_phone_number', 'first_name', 'last_name', 'bio', 'about', 'profile_image']
+        fields = [
+            'company_name', 'company_address', 'company_phone_number', 'mobile_number', 
+            'country', 'state', 'city', 'first_name', 'last_name', 'bio', 'about', 'profile_image'
+        ]
         widgets = {
             'company_phone_number': forms.TextInput(attrs={'placeholder': 'Phone number in format +9999999999'})
         }
@@ -224,18 +280,22 @@ class MessageForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
             'phone': forms.TextInput(attrs={'placeholder': 'Phone'}),
             'company': forms.TextInput(attrs={'placeholder': 'Company (optional)'}),
-            'message': TinyMCE(attrs={'cols': 80, 'rows': 30}),
+            'message': TinyMCE(attrs={'cols': 10, 'rows': 5}),
         }
+
 
 class ContactUsForm(forms.ModelForm):
     class Meta:
         model = ContactUs
-        fields = ['name', 'email', 'message']
+        fields = ['name', 'email', 'phone_number', 'message']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Your name'}),
             'email': forms.EmailInput(attrs={'placeholder': 'Your email'}),
+            'phone_number': forms.TextInput(attrs={'placeholder': 'Your phone number', 'id': 'id_phone_number'}),  # Updated field with id for JS
             'message': forms.Textarea(attrs={'placeholder': 'Your message', 'rows': 4}),
         }
+
+
 
 class FAQForm(forms.ModelForm):
     class Meta:
@@ -245,6 +305,7 @@ class FAQForm(forms.ModelForm):
             'answer': TinyMCE(attrs={'cols': 80, 'rows': 30}),
         }
 
+
 class PageForm(forms.ModelForm):
     class Meta:
         model = Page
@@ -252,3 +313,8 @@ class PageForm(forms.ModelForm):
         widgets = {
             'content': TinyMCE(attrs={'cols': 80, 'rows': 30}),
         }
+
+class PackageForm(forms.ModelForm):
+    class Meta:
+        model = Package
+        fields = ['name', 'normal_post_limit', 'featured_post_limit', 'price', 'duration', 'duration_unit', 'description', 'inclusions']

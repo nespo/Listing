@@ -5,46 +5,56 @@
 {% load static %}
 {% block content %}
 <div class="background-container">
-    <div class="header-text">Find your next commercial property</div>
-    <div class="search-container">
-        <h1>Find New Projects</h1>
-        <form id="search-form" action="{% url 'all_listings' %}" method="GET">
-            <div class="search-fields">
-                <div class="field">
-                    <label for="location">Location</label>
-                    <input type="text" id="location" name="location" placeholder="Enter location">
-                </div>
-                <div class="field">
-                    <label for="property-type">Property Type</label>
-                    <select id="property-type" name="categories[]">
-                        <option value="">All</option>
-                        {% for category in categories %}
-                            <option value="{{ category.name }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="field">
-                    <label for="price-min">Min Price</label>
-                    <input type="number" id="price-min" name="price_min" placeholder="Min Price" min="0">
-                </div>
-                <div class="field">
-                    <label for="price-max">Max Price</label>
-                    <input type="number" id="price-max" name="price_max" placeholder="Max Price" min="0">
-                </div>
-                <div class="field">
-                    <button type="submit">Search</button>
-                </div>
-            </div>
-        </form>
+    <div class="background-slider">
+        <div class="slide"><img src="{% static 'home/3.jpg' %}" alt="Background Image"></div>
+        <div class="slide"><img src="{% static 'home/4.jpg' %}" alt="Background Image"></div>
+        <div class="slide"><img src="{% static 'home/5.jpg' %}" alt="Background Image"></div>
     </div>
+    <div class="header-text">Find Your Perfect Energy Project Here</div>
+</div>
+<div class="search-container">
+    <h1>Find New Projects</h1>
+    <form id="search-form" action="{% url 'all_listings' %}" method="GET">
+        <div class="search-fields">
+            <div class="field">
+                <label for="location">Country</label>
+                <select id="location" name="location">
+                    <option value="">Select a country</option>
+                    {% for country in countries %}
+                        <option value="{{ country.name }}">{{ country.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="property-type">Property Type</label>
+                <select id="property-type" name="categories[]">
+                    <option value="">All</option>
+                    {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="price-min">Min Price</label>
+                <input type="number" id="price-min" name="price_min" placeholder="Min Price" min="0">
+            </div>
+            <div class="field">
+                <label for="price-max">Max Price</label>
+                <input type="number" id="price-max" name="price_max" placeholder="Max Price" min="0">
+            </div>
+            <div class="field">
+                <button type="submit">Search</button>
+            </div>
+        </div>
+    </form>
 </div>
 
 <div class="categories-container">
     <h2 class="categories-header">Browse Projects by Category</h2>
-    <div class="slider-container categories-slider">
+    <div class="slider-container categories-slider {% if categories|length > 4 %}multiple-categories{% endif %}">
         {% for category in categories %}
             <div class="category-box product-item">
-                <a href="{{ category.get_absolute_url }}">
+                <a href="{% url 'all_listings' %}?categories[]={{ category.name }}">
                     <div class="category-icon">
                         {% if category.icon %}
                             <img src="{{ category.icon.url }}" alt="{{ category.name }}">
@@ -66,20 +76,25 @@
     <h2 class="listings-header">Featured Listings</h2>
     <div class="slider-container featured-slider">
         {% for listing in featured_listings %}
-        {% autoescape off %}
         <div class="listing-box">
-            <div class="listing-thumbnail-image">
-                <a href="{{ listing.thumbnail_image.url }}" class="listing-popup-link"><img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}"></a>
+            <div class="listing-header">
+                <div class="listing-date">Updated: {{ listing.updated_at|date:"Y-m-d" }}</div>
+                <div class="listing-category">
+                    {% for category in listing.categories.all %}
+                        <a href="{% url 'all_listings' %}?categories[]={{ category.name }}" class="category-link">{{ category.name }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </div>
             </div>
-            <h2>{{ listing.project_name|truncatewords:3 }}</h2>
-            <p>{{ listing.project_address }}</p>
-            <p>Updated at: {{ listing.updated_at|truncatewords:1 }}</p>
+            <div class="listing-thumbnail-image">
+                <a href="{% url 'listing_detail' listing.slug %}" class="listing-popup-link">
+                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
+                </a>
+            </div>
+            <h2>{{ listing.project_name|truncatewords:5 }}</h2>
             <div class="listing-bottom">
-                <p class="price">Price: {{ listing.sales_price }}</p>
                 <a href="{% url 'listing_detail' listing.slug %}" class="view-details-btn">View Details</a>
             </div>
         </div>
-        {% endautoescape %}
         {% endfor %}
     </div>
 </div>
@@ -88,39 +103,51 @@
     <h2 class="listings-header">Latest Listings</h2>
     <div class="slider-container normal-slider">
         {% for listing in normal_listings %}
-        {% autoescape off %}
         <div class="listing-box">
-            <div class="listing-thumbnail-image">
-                <a href="{% url 'listing_detail' slug=listing.slug %}" class="listing-popup-link">
-                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
-                </a>                
+            <div class="listing-header">
+                <div class="listing-date">Updated: {{ listing.updated_at|date:"Y-m-d" }}</div>
+                <div class="listing-category">
+                    {% for category in listing.categories.all %}
+                        <a href="{% url 'all_listings' %}?categories[]={{ category.name }}" class="category-link">{{ category.name }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </div>
             </div>
-            <h2>{{ listing.project_name|truncatewords:3 }}</h2>
-            <p>{{ listing.project_address }}</p>
-            <p>{{ listing.updated_at|truncatewords:1}}</p>
+            <div class="listing-thumbnail-image">
+                <a href="{% url 'listing_detail' listing.slug %}" class="listing-popup-link">
+                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
+                </a>
+            </div>
+            <h2>{{ listing.project_name|truncatewords:5 }}</h2>
             <div class="listing-bottom">
-                <p class="price">Price: {{ listing.sales_price }}</p>
                 <a href="{% url 'listing_detail' listing.slug %}" class="view-details-btn">View Details</a>
             </div>
         </div>
-        {% endautoescape %}
         {% endfor %}
     </div>
 </div>
 {% endblock %}
 
-
 {% block extra_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'home/styles.css' %}">
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.css"/>
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.css"/>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<style>
+    .slider-container.categories-slider.slick-initialized.slick-slider.slick-dotted {
+        margin-left: 65px;
+    }
+    .slider-container.categories-slider.multiple-categories.slick-initialized.slick-slider.slick-dotted {
+        margin-left: 0;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
     $(document).ready(function(){
         function initSlick(selector, slidesToShowDesktop, slidesToShowMobile) {
@@ -159,24 +186,69 @@
             });
         }
 
+        initSlick('.background-slider', 1, 1);
         initSlick('.featured-slider', 4, 2);
         initSlick('.normal-slider', 4, 2);
         initSlick('.categories-slider', 4, 1);
 
-        // Fetch state data and initialize autocomplete
+        // Check the number of categories and adjust the margin accordingly
+        const categoriesCount = $('.category-box').length;
+        if (categoriesCount > 4) {
+            $('.categories-slider').addClass('multiple-categories');
+        } else {
+            $('.categories-slider').removeClass('multiple-categories');
+        }
+
+        // Initialize Choices.js for the country select field
+        const locationElement = document.getElementById('location');
+        const choicesLocation = new Choices(locationElement, {
+            shouldSort: false,
+            searchEnabled: true,
+        });
+
+        // Fetch country data and initialize Choices.js options
         $.ajax({
-            url: '{% url "state_autocomplete" %}',
+            url: '{% url "country_autocomplete" %}',
             success: function(data) {
-                $('#location').autocomplete({
-                    source: data,
-                    minLength: 0,
-                    select: function(event, ui) {
-                        $('#location').val(ui.item.value);
-                    }
-                }).focus(function() {
-                    $(this).autocomplete("search", "");
-                });
+                const countries = data.map(country => ({ value: country, label: country }));
+                choicesLocation.setChoices(countries, 'value', 'label', true);
             }
+        });
+
+        // Initialize Choices.js for the property type select field
+        const propertyTypeElement = document.getElementById('property-type');
+        const choicesPropertyType = new Choices(propertyTypeElement, {
+            shouldSort: false,
+            searchEnabled: true,
+        });
+
+        // Fetch property type data and initialize Choices.js options
+        const propertyTypes = [
+            {% for category in categories %}
+                { value: "{{ category.name }}", label: "{{ category.name }}" },
+            {% endfor %}
+        ];
+        choicesPropertyType.setChoices(propertyTypes, 'value', 'label', true);
+
+        // Handle form submission
+        $('#search-form').on('submit', function(e) {
+            e.preventDefault();
+            const location = $('#location').val();
+            const categories = $('#property-type').val();
+            const minPrice = $('#price-min').val();
+            const maxPrice = $('#price-max').val();
+
+            const queryParams = new URLSearchParams();
+
+            if (location) queryParams.append('location', location);
+            if (categories) queryParams.append('categories[]', categories);
+            if (minPrice) queryParams.append('price_min', minPrice);
+            if (maxPrice) queryParams.append('price_max', maxPrice);
+
+            const queryString = queryParams.toString();
+            const url = `{% url 'all_listings' %}?${queryString}`;
+
+            window.location.href = url;
         });
     });
 </script>

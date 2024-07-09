@@ -102,17 +102,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    hamburgerIcon.addEventListener("click", function (event) {
-        const isMenuOpen = mobileMenu.style.left === "0px";
-        if (isMenuOpen) {
-            mobileMenu.style.left = "-100%";
-            hamburgerIcon.src = "https://cdn-icons-png.flaticon.com/512/1828/1828859.png"; // Hamburger menu icon
-        } else {
-            mobileMenu.style.left = "0";
-            hamburgerIcon.src = "https://cdn-icons-png.flaticon.com/512/1828/1828778.png"; // Cross icon
-        }
-        event.stopPropagation();
-    });
+    //hamburgerIcon.addEventListener("click", function (event) {
+        //const isMenuOpen = mobileMenu.style.left === "0px";
+        //if (isMenuOpen) {
+            //mobileMenu.style.left = "-100%";
+            //hamburgerIcon.src = "https://cdn-icons-png.flaticon.com/512/1828/1828859.png"; // Hamburger menu icon
+        //} else {
+            //mobileMenu.style.left = "0";
+            //hamburgerIcon.src = "https://cdn-icons-png.flaticon.com/512/1828/1828778.png"; // Cross icon
+        //}
+        //event.stopPropagation();
+    //});
 
     if (mobileLoginLink) {
         mobileLoginLink.addEventListener("click", function () {
@@ -133,7 +133,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (loginForm) {
         loginForm.addEventListener("submit", function (event) {
             event.preventDefault();
+            console.log('Form submission prevented'); // Log this message
+
             const formData = new FormData(loginForm);
+            console.log('FormData:', ...formData); // Log the form data
+
             fetch(loginForm.action, {
                 method: loginForm.method,
                 headers: {
@@ -142,15 +146,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status); // Log response status
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data); // Log the response data
                 if (data.success) {
+                    console.log('Login successful:', data.message);
                     window.location.href = '/dashboard'; // Redirect to dashboard on successful login
                 } else {
-                    displayErrors(data.errors);
+                    console.log('Login errors:', data.errors);
+                    const formErrorDiv = document.getElementById('error-login_form');
+                    formErrorDiv.textContent = data.errors.form;
+                    formErrorDiv.style.display = 'block';
                 }
             })
-            .catch(error => console.error('An error occurred:', error));
+            .catch(error => {
+                console.error('An error occurred:', error);
+                const formErrorDiv = document.getElementById('error-login_form');
+                formErrorDiv.textContent = 'An error occurred while trying to log in. Please try again.';
+                formErrorDiv.style.display = 'block';
+            });
         });
     }
 
@@ -209,27 +226,47 @@ document.addEventListener("DOMContentLoaded", function () {
                     let messagesPopupContent = document.querySelector("#messages-popup .messages-container");
                     if (!messagesPopupContent) {
                         messagesPopup.innerHTML = `
-                            <div class="popup-content">
-                                <span class="close" id="close-messages">&times;</span>
-                                <div class="messages-container"></div>
-                            </div>
+                        <div class="popup-content" style="
+                        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+                        border-radius: 15px;
+                        padding: 20px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                        border: 1px solid #ccc;
+                        backdrop-filter: blur(10px);
+                        ">
+                        <span class="close" id="close-messages" style="
+                            color: #aaa;
+                            float: right;
+                            font-size: 20px;
+                            font-weight: bold;
+                            cursor: pointer;
+                            ">&times;</span>
+                        <div class="messages-container" style="
+                            padding: 10px;
+                            background: #ffffff;
+                            border-radius: 10px;
+                            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+                            ">
+                            <!-- Messages will be dynamically inserted here -->
+                        </div>
+                    </div>
                         `;
                         messagesPopupContent = document.querySelector("#messages-popup .messages-container");
                     }
-                    messagesPopupContent.innerHTML = `<div class="message success">Your account has been sent to get admin approval.</div>`;
+                    messagesPopupContent.innerHTML = `<div class="message success">We have send you an Email. Please Verify Your Email.</div>`;
                     messagesPopup.style.display = "block";
                 } else {
-                    displayErrors(data.errors);
+                    displayErrors(data.errors, 'signup');
                 }
             })
             .catch(error => console.error('An error occurred:', error));
         });
     }
 
-    function displayErrors(errors) {
+    function displayErrors(errors, formType) {
         document.querySelectorAll('.error').forEach(el => el.textContent = '');
         for (let field in errors) {
-            const errorElement = document.getElementById(`error-${field}`);
+            const errorElement = document.getElementById(`error-${formType}_${field}`);
             if (errorElement) {
                 errorElement.textContent = errors[field];
             }

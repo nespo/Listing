@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="payment-container">
+    <h2 class="payment-heading text-center">Add Payment Method</h2>
+    <p class="payment-info text-center">Having a saved payment method ensures a seamless transaction experience and helps in maintaining your membership without interruptions.</p>
+    
+    {% if existing_payment_method %}
+        <div class="payment-method-details">
+            <h3>Existing Payment Method</h3>
+            <p>Card Brand: {{ existing_payment_method.card.brand|capfirst }}</p>
+            <p>Card Last 4 Digits: **** **** **** {{ existing_payment_method.card.last4 }}</p>
+            <p>Card Expiry: {{ existing_payment_method.card.exp_month }}/{{ existing_payment_method.card.exp_year }}</p>
+            <form id="remove-payment-form" method="post" action="{% url 'add_payment_method' %}">
+                {% csrf_token %}
+                <button type="button" onclick="confirmRemoval()" class="payment-btn remove-btn">Remove Payment Method</button>
+                <input type="hidden" name="remove_payment_method" value="true">
+            </form>
+        </div>
+    {% endif %}
+    
+    <div class="payment-form-container">
+        <form id="payment-form" method="post" action="{% url 'add_payment_method' %}">
+            {% csrf_token %}
+            <div id="card-element" class="payment-card-element"><!-- A Stripe Element will be inserted here. --></div>
+            <button id="submit" class="payment-btn">{% if existing_payment_method %}Update Your Payment Method{% else %}Add Payment Method{% endif %}</button>
+            <div id="card-errors" class="payment-card-errors" role="alert"></div>
+        </form>
+    </div>
+</div>
+
+<div id="popup-container" class="payment-popup-container" style="display: none;">
+    <div id="popup-content" class="payment-popup-content"></div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    var stripe = Stripe('{{ stripe_publishable_key }}');
+    var elements = stripe.elements();
+    var style = {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+
+    var card = elements.create('card', {style: style});
+    card.mount('#card-element');
+
+    card.on('change', function(event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        stripe.confirmCardSetup('{{ client_secret }}', {
+            payment_method: {
+                card: card,
+            },
+        }).then(function(result) {
+            if (result.error) {
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                var hiddenInput = document.createElement('input');
+                hiddenInput.setAttribute('type', 'hidden');
+                hiddenInput.setAttribute('name', 'payment_method_id');
+                hiddenInput.setAttribute('value', result.setupIntent.payment_method);
+                form.appendChild(hiddenInput);
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        });
+    });
+
+    function confirmRemoval() {
+        showPopup('Removing your payment method will disable any active package auto-renewal. Are you sure you want to proceed?', 'Confirm', 'Cancel', function() {
+            var removeForm = document.getElementById('remove-payment-form');
+            HTMLFormElement.prototype.submit.call(removeForm);
+        });
+    }
+
+    {% if messages %}
+        {% for message in messages %}
+            showPopup('{{ message }}', 'OK');
+        {% endfor %}
+    {% endif %}
+</script>
+
+<script>
+    function showPopup(message, confirmText = 'OK', cancelText = null, onConfirm = null) {
+        var popupContainer = document.getElementById('popup-container');
+        var popupContent = document.getElementById('popup-content');
+
+        // Clear previous content
+        popupContent.innerHTML = '';
+
+        // Add message
+        var messageElem = document.createElement('p');
+        messageElem.innerText = message;
+        popupContent.appendChild(messageElem);
+
+        // Add confirm button
+        var confirmButton = document.createElement('button');
+        confirmButton.innerText = confirmText;
+        confirmButton.classList.add('payment-btn', 'payment-popup-btn');
+        confirmButton.onclick = function() {
+            if (onConfirm) onConfirm();
+            popupContainer.style.display = 'none';
+        };
+        popupContent.appendChild(confirmButton);
+
+        // Add cancel button if provided
+        if (cancelText) {
+            var cancelButton = document.createElement('button');
+            cancelButton.innerText = cancelText;
+            cancelButton.classList.add('payment-btn', 'payment-popup-btn');
+            cancelButton.onclick = function() {
+                popupContainer.style.display = 'none';
+            };
+            popupContent.appendChild(cancelButton);
+        }
+
+        // Show popup
+        popupContainer.style.display = 'flex';
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 500px;
+        margin: auto;
+        padding-top: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .payment-heading {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .payment-info {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .payment-method-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+    .payment-form-container {
+        width: 100%;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+    .payment-btn {
+        background-color: #64C2DB;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 5px;
+        width: 100%;
+    }
+    .payment-btn:hover {
+        background-color: #4fa6bd;
+    }
+    .payment-card-element {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+    .payment-card-errors {
+        color: red;
+        margin-top: 10px;
+    }
+    .payment-popup-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .payment-popup-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        max-width: 300px;
+        width: 100%;
+    }
+    .payment-popup-btn {
+        margin-top: 20px;
+    }
+    .remove-btn {
+        background-color: #ff4d4d;
+    }
+    .remove-btn:hover {
+        background-color: #cc0000;
+    }
+
+    .container-visitor-view{
+        background: transparent !important;
+    }
+</style>
+{% endblock %}

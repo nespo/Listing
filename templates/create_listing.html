@@ -4,29 +4,32 @@
 {% block title %}Create Listing{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock %}
 {% block content %}
 <div class="listing-create-container">
-    <h2>Create Listing</h2>
-    <form method="post" enctype="multipart/form-data" class="listing-create-form">
+    <h2 style="margin-top: -30px;">Create Listing</h2>
+    <form id="listing-create-form" method="post" enctype="multipart/form-data" class="listing-create-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
-        {% for field_name in field_order %}
-            {% with form|get_field:field_name as field %}
-                <div class="listing-create-form-group {% if field_name in 'lease_term lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <small class="form-text text-muted">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endwith %}
-        {% endfor %}
-        
+        <div id="form-content">
+            {% for field_name in field_order %}
+                {% with form|get_field:field_name as field %}
+                    <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
         <h3>Listing Images</h3>
         <div class="listing-create-form-group">
             <label for="id_images">Upload Images</label>
@@ -34,36 +37,39 @@
             <small class="form-text text-muted">You can select multiple images or drag and drop them here.</small>
         </div>
 
-        <button type="submit" class="listing-create-btn">Create Listing</button>
+        <button id="submit-button" type="submit" class="listing-create-btn btn btn-primary">Create Listing</button>
     </form>
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'tinymce/js/tinymce/tinymce.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    /*tinymce.init({
-        selector: 'textarea',
-        plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak',
-        toolbar_mode: 'floating',
-        height: 300
-    });*/
-    tinymce.init({
-        selector: 'textarea',
-        plugins: 'lists link',
-        menubar: false,
-        toolbar: 'bold italic underline | bullist numlist | link',
-        height: 300,
-        branding: false,
-        forced_root_block: false,
-        force_p_newlines: false,
-        force_br_newlines: true,
-        content_css: false,
-        content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-        valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
-        invalid_elements: 'script,iframe,object,embed'
-    });
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to toggle lease fields
+    function initializeTinyMCE() {
+        tinymce.remove(); // Removes all existing TinyMCE instances
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'lists link',
+            menubar: false,
+            toolbar: 'bold italic underline | bullist numlist | link',
+            height: 300,
+            branding: false,
+            forced_root_block: 'p',
+            force_p_newlines: true,
+            force_br_newlines: false,
+            content_css: false,
+            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+            valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
+            invalid_elements: 'script,iframe,object,embed',
+            license_key: 'gpl' // Set the license key
+        });
+    }
+
+    $(document).ready(function() {
+        $('#id_project_country').select2();
+        $('#id_project_state').select2();
+        $('#id_project_city').select2();
+
         function toggleLeaseFields() {
             var leaseFields = document.querySelectorAll('.lease-field');
             var propertyType = document.getElementById('id_property_type').value;
@@ -76,67 +82,135 @@
             });
         }
 
-        // Attach change event listener to property type field
         document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
 
-        // Initial call to toggle fields based on the initial value
+        // Call toggleLeaseFields on page load
         toggleLeaseFields();
 
-        // Fetch cities based on selected state
-        document.getElementById('id_project_state').addEventListener('change', function () {
-            var url = "{% url 'load_cities' %}";
-            var stateId = this.value;
-            fetch(url + '?state=' + stateId)
-                .then(response => response.json())
-                .then(data => {
-                    var citySelect = document.getElementById('id_project_city');
-                    citySelect.innerHTML = '<option value="">Select a city</option>';
-                    data.forEach(function (city) {
-                        var option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
+        $('#id_project_country').change(function () {
+            var url = "{% url 'listing_load_states' %}";
+            var countryId = $(this).val();
+            $.ajax({
+                url: url,
+                data: {
+                    'country_id': countryId
+                },
+                success: function (data) {
+                    $('#id_project_state').html('<option value="">Select a state</option>');
+                    $.each(data, function (key, value) {
+                        $('#id_project_state').append('<option value="' + value.id + '">' + value.name + '</option>');
                     });
-                })
-                .catch(error => console.error('Error fetching cities:', error));
-        });
-
-        // Show or hide battery storage field based on selected categories
-        document.getElementById('id_categories').addEventListener('change', function () {
-            var batteryField = document.querySelector('.battery_storage');
-            if (batteryField) {
-                if (Array.from(this.selectedOptions).map(option => option.value).includes('BESS')) {
-                    batteryField.style.display = 'block';
-                } else {
-                    batteryField.style.display = 'none';
+                    $('#id_project_state').trigger('change.select2');
                 }
-            }
+            });
         });
 
-        // Initialize cities if a state is already selected
+        $('#id_project_state').change(function () {
+            var url = "{% url 'listing_load_cities' %}";
+            var stateId = $(this).val();
+            $.ajax({
+                url: url,
+                data: {
+                    'state_id': stateId
+                },
+                success: function (data) {
+                    $('#id_project_city').html('<option value="">Select a city</option>');
+                    $.each(data, function (key, value) {
+                        $('#id_project_city').append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                    $('#id_project_city').trigger('change.select2');
+                }
+            });
+        });
+
+        function toggleBatteryStorage() {
+            var batteryField = document.querySelector('.battery-storage');
+            var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
+            if (selectedCategories.includes('BESS')) {
+                batteryField.style.display = 'block';
+            } else {
+                batteryField.style.display = 'none';
+            }
+        }
+
+        $('#id_categories').change(function () {
+            toggleBatteryStorage();
+        });
+
+        toggleBatteryStorage();
+
+        var countrySelect = document.getElementById('id_project_country');
+        var selectedCountry = countrySelect.value;
+        if (selectedCountry) {
+            $(countrySelect).trigger('change');
+        }
+
         var stateSelect = document.getElementById('id_project_state');
-        var citySelect = document.getElementById('id_project_city');
         var selectedState = stateSelect.value;
         if (selectedState) {
-            var url = "{% url 'load_cities' %}";
-            fetch(url + '?state=' + selectedState)
-                .then(response => response.json())
-                .then(data => {
-                    citySelect.innerHTML = '<option value="">Select a city</option>';
-                    data.forEach(function (city) {
-                        var option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
+            $(stateSelect).trigger('change');
+        }
+
+        $('#listing-create-form').submit(function(e) {
+            e.preventDefault();
+            tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
+            var formData = new FormData(this);
+
+            $('#submit-button').prop('disabled', true).html('Creating...');
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "create_listing" %}',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirect_url;
+                    }
+                },
+                error: function(xhr) {
+                    $('#form-content').html(xhr.responseJSON.form_html || '');
+                    var errors = xhr.responseJSON.errors || {};
+                    var firstErrorElement = null;
+
+                    console.log('Errors:', errors); // Debugging the errors returned
+
+                    $.each(errors, function(field, messages) {
+                        var fieldElement = $('[name="' + field + '"]');
+                        if (fieldElement.length) {
+                            fieldElement.addClass('is-invalid');
+                            fieldElement.next('.invalid-feedback').html(messages.join(', '));
+                            if (!firstErrorElement) {
+                                firstErrorElement = fieldElement;
+                            }
+                        } else {
+                            // Handle non-field errors
+                            if (!firstErrorElement && field === '__all__') {
+                                var nonFieldErrors = messages.join(', ');
+                                $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
+                                firstErrorElement = $('.non-field-error');
+                            }
+                        }
                     });
 
-                    var selectedCity = "{{ form.instance.project_city.id }}";
-                    if (selectedCity) {
-                        citySelect.value = selectedCity;
+                    if (firstErrorElement && firstErrorElement.length > 0) {
+                        console.log('First error element:', firstErrorElement);
+                        firstErrorElement[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        console.error('First error element not found.');
                     }
-                })
-                .catch(error => console.error('Error fetching initial cities:', error));
-        }
+
+                    $('#submit-button').prop('disabled', false).html('Create Listing');
+                    initializeTinyMCE();
+                    $('#id_project_country').select2();
+                    $('#id_project_state').select2();
+                    $('#id_project_city').select2();
+                }
+            });
+        });
+
+        initializeTinyMCE();
     });
 </script>
 {% endblock %}

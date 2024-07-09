@@ -4,127 +4,163 @@
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'package/styles.css' %}">
 {% endblock %}
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
 {% block content %}
-<h2 class="Header-Text-Package-Buying">Buy Packages or Listings</h2>
-<div class="package-container">
-    <div class="package-details">
-        {% if user.seller.package %}
-        <div class="current-package card active-card">
-            <h3>Current Package: {{ user.seller.package.name }}</h3>
-            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ current_normal_posts_used }}/{{ user.seller.package.normal_post_limit }} used</p>
-            <p><i class="fas fa-star"></i> Featured Posts: {{ current_featured_posts_used }}/{{ user.seller.package.featured_post_limit }} used</p>
-            <p><i class="fas fa-calendar-alt"></i> Expiry Date: {{ user.seller.membership_expiry }}</p>
-            <p><i class="fas fa-cube"></i> Package Type: {{ user.seller.package.get_duration_unit_display }}</p>
-            <p><i class="fas fa-sync-alt"></i> Auto-Renewal: {{ user.seller.is_auto_renew|yesno:"Enabled,Disabled" }}</p>
-            {% if user.seller.is_auto_renew %}
-            <form method="post" action="{% url 'cancel_auto_renew' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-warning">Cancel Auto-Renewal</button>
-            </form>
+<section class="plans__container">
+    <div class="plans">
+        <div class="plansHero">
+            <h1 class="plansHero__title">Simple, Transparent Pricing</h1>
+            <p class="plansHero__subtitle">No contracts. No surprise fees.</p>
+            {% if not user.seller.stripe_payment_method_id and user.seller.package %}
+                <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; padding: 10px; margin: 20px 0 0; text-align: center;">
+                    <p style="font-size: 16px; margin: 0;">Please add a payment method to enable auto-renewal.</p>
+                    <button style="background-color: #64C2DB; color: white; border: none; border-radius: 5px; padding: 10px 20px; margin-top: 10px; cursor: pointer;">Add Payment Method</button>
+                </div>
             {% endif %}
         </div>
-        {% endif %}
-        {% if user.seller.new_package %}
-        <div class="upcoming-package card">
-            <h3>Upcoming Package: {{ user.seller.new_package.name }}</h3>
-            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ user.seller.new_package.normal_post_limit }}</p>
-            <p><i class="fas fa-star"></i> Featured Posts: {{ user.seller.new_package.featured_post_limit }}</p>
-            <p><i class="fas fa-dollar-sign"></i> Price: ${{ user.seller.new_package.price }}</p>
-            <p><i class="fas fa-cube"></i> Package Type: {{ user.seller.new_package.get_duration_unit_display }}</p>
-            <p><i class="fas fa-calendar-alt"></i> Starts on: {{ user.seller.membership_expiry|date:"Y-m-d" }}</p>
+        {% if not show_package_container %}
+        <div class="planItem planItem--free">
+            <div class="card">
+                <div class="card__top-bar"></div>
+                <h2 class="card__title">No Active Membership Found</h2>
+                <p class="card__desc">You must buy a Membership to start creating listings.</p>
+            </div>
         </div>
         {% endif %}
-    </div>
-
-    <div class="individual-listings card">
-        <h3>Current Individual Listings</h3>
-        <p><i class="fas fa-thumbtack"></i> Normal Listings: {{ user.seller.individual_normal_posts }}</p>
-        <p><i class="fas fa-star"></i> Featured Listings: {{ user.seller.individual_featured_posts }}</p>
-    </div>
-</div>
-
-{% if not user.seller.is_auto_renew %}
-<div class="available-packages card">
-    {% if not user.seller.package or not user.seller.new_package %}
-    <h3>Available Packages</h3>
-    <form method="post" id="unique-package-form">
-        {% csrf_token %}
-        <div class="packages-grid">
-            {% for package in packages %}
-                {% if not user.seller.package or user.seller.package.id != package.id %}
-                <div class="package-option card">
-                    <h4>{{ package.name }}</h4>
-                    <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
-                    <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
-                    <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
-                    <p><i class="fas fa-cube"></i> Package Type: {{ package.get_duration_unit_display }}</p>
-
-                    {% if user.seller.package %}
-                        {% if package.normal_post_limit > user.seller.package.normal_post_limit or package.featured_post_limit > user.seller.package.featured_post_limit %}
-                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Upgrade</button>
-                        {% elif package.normal_post_limit < user.seller.package.normal_post_limit or package.featured_post_limit < user.seller.package.featured_post_limit %}
-                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Downgrade</button>
-                        {% else %}
-                        <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
-                        {% endif %}
-                    {% else %}
-                    <button type="button" class="package-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">Buy Package</button>
+        <div class="planItem__container">
+            {% if show_package_container %}
+            <div class="planItem">
+                <div class="card">
+                    <div class="card__top-bar"></div>
+                    <div class="expiry-date">
+                        <p><i class="fas fa-calendar-alt"></i> Expiry Date: {{ user.seller.membership_expiry }}</p>
+                    </div>
+                    <h2 class="card__title">Current Membership: {{ user.seller.package.name }}</h2>
+                    <div class="card__desc single-row">
+                        <div>
+                            <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ normal_posts_used }}/{{ total_normal_posts }}</p>
+                            <p><i class="fas fa-star"></i> Featured Posts: {{ featured_posts_used }}/{{ total_featured_posts }}</p>
+                        </div>
+                        <div>
+                            <p class="floating-text"><i class="fas fa-cube"></i> Membership Type: {{ user.seller.package.get_duration_unit_display }}</p>
+                            <p><i class="fas fa-sync-alt"></i> Auto-Renewal: {{ user.seller.is_auto_renew|yesno:"Enabled,Disabled" }}</p>
+                        </div>
+                    </div>
+                    {% if user.seller.new_package %}
+                    <div style="font-family: Arial, sans-serif; background: linear-gradient(to right, #64C2DB, #4fa6bd, #04436C); color: white; border-radius: 10px; padding: 20px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center;">
+                        <h2 style="font-size: 24px; margin: 0; color: white !important;">Upcoming Membership</h2>
+                        <p style="font-size: 20px; margin: 10px 0 0;">{{ user.seller.new_package.name }}</p>
+                        <p style="font-size: 16px; margin: 5px 0 0;">Membership starting time: {{user.seller.membership_expiry}}</p>
+                    </div>                                                                          
                     {% endif %}
+                    {% if user.seller.is_auto_renew %}
+                    <form method="post" action="{% url 'cancel_auto_renew' %}" id="cancel-auto-renew-form">
+                        {% csrf_token %}
+                        <button type="button" class="button btn-warning full-width-button" id="cancel-auto-renew-button">Cancel Auto-Renewal</button>
+                    </form>
+                    {% endif %}
+                    <div class="faq-link">
+                        <p>To learn more about our Memberships, please visit our <a href="/faqs">FAQs</a>.</p>
+                    </div>
                 </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </form>
-    {% endif %}
-</div>
-{% endif %}
-
-
-<div class="individual-listings-purchase card">
-    <h3>Buy Individual Listings</h3>
-    <form method="post" id="unique-individual-listing-form">
-        {% csrf_token %}
-        <div class="listing-options-grid">
-            <div class="listing-option card">
-                <label for="unique-individual-normal-posts">Normal Listings: </label>
-                <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="100"
-                    value="0">
-                <span id="unique-normal-listings-count">0</span>
-                <p>Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span>/Listing</p>
             </div>
-            <div class="listing-option card">
-                <label for="unique-individual-featured-posts">Featured Listings: </label>
-                <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="100"
-                    value="0">
-                <span id="unique-featured-listings-count">0</span>
-                <p>Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span>/Listing</p>
+            {% endif %}
+            {% if show_individual_listings %}
+            <div class="planItem">
+                <div class="card">
+                    <div class="card__top-bar"></div>
+                    <h2 class="card__title">Buy Individual Listings</h2>
+                    <form method="post" id="unique-individual-listing-form">
+                        {% csrf_token %}
+                        <div class="listing-options-grid">
+                            <div class="listing-option">
+                                <label for="unique-individual-normal-posts">Normal Listings:</label>
+                                <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="10" value="0" class="range-slider">
+                                <div class="range-output">
+                                    <span id="unique-normal-listings-count">0</span>
+                                    <span class="price">Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span>/Listing</span>
+                                    <span class="total-price">Total Price: $<span id="unique-total-normal-listing-price">0.00</span></span>
+                                </div>
+                            </div>
+                            <div class="listing-option">
+                                <label for="unique-individual-featured-posts">Featured Listings:</label>
+                                <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="5" value="0" class="range-slider">
+                                <div class="range-output">
+                                    <span id="unique-featured-listings-count">0</span>
+                                    <span class="price">Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span>/Listing</span>
+                                    <span class="total-price">Total Price: $<span id="unique-total-featured-listing-price">0.00</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="unique-buy-listings-button" class="button listings-button full-width-button">Buy Individual Listings</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% if show_available_packages %}
+        <div class="available-packages">
+            <h2 class="available-packages__title" style="color: #fff !important;">Membership Plans</h2>
+            <div class="packages-grid">
+                {% for package in packages %}
+                    {% if not user.seller.package or user.seller.package.id != package.id %}
+                        {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
+                            <div class="planItem planItem--pro">
+                                <div class="card">
+                                    <div class="card__top-bar"></div>
+                                    <div class="package-type">
+                                        <p class="floating-text"><i class="fas fa-cube"></i> Membership Type: {{ package.get_duration_unit_display }}</p>
+                                    </div>
+                                    <h2>{{ package.name }}</h2>
+                                    <div class="card__desc">
+                                        <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
+                                        <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
+                                        <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                                    </div>
+                                    <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
+                                        {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
+                                        {% if seller.package %}    
+                                        Switch Membership
+                                        {% else %}
+                                        Buy Membership
+                                        {% endif %}
+                                        {% else %}
+                                            Buy Membership
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
-        <button type="button" id="unique-buy-listings-button" class="listings-button">Buy Individual Listings</button>
-    </form>
-</div>
+        {% endif %}
+    </div>
+</section>
 
 <!-- Modal Popup for Payment -->
-<div id="unique-payment-modal" class="modal" style="display: none;">
+<div id="unique-payment-modal" class="modal">
     <div class="modal-content">
         <span class="closex">&times;</span>
         <h2 id="unique-modal-title"></h2>
         <p id="unique-modal-description"></p>
         <div id="unique-card-element" style="display: none;"></div>
         <div id="unique-card-errors" role="alert"></div>
-        <button id="unique-stripe-button">Submit Payment</button>
+        <button id="unique-stripe-button" class="button">Submit Payment</button>
     </div>
 </div>
 
 <!-- Modal Popup for Messages -->
-<div id="unique-message-modal" class="modal" style="display: none;">
+<div id="unique-message-modal" class="modal">
     <div class="modal-content">
         <span class="close-message">&times;</span>
         <h2 id="unique-message-title"></h2>
         <p id="unique-message-content"></p>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -159,61 +195,104 @@
 
     var cardElement = document.getElementById('unique-card-element');
 
-    if (!hasSavedPaymentMethod) {
+    if (!hasSavedPaymentMethod && cardElement) {
         console.log('No saved payment method found');
         cardElement.style.display = 'block';
         card.mount('#unique-card-element');
         console.log('Card element mounted');
-    } else {
-        console.log('Saved payment method found');
+    } else if (cardElement) {
+        cardElement.style.display = 'none';
     }
 
     var paymentModal = document.getElementById('unique-payment-modal');
     var messageModal = document.getElementById('unique-message-modal');
-    var closePaymentModal = document.getElementsByClassName('closex')[0];
-    var closeMessageModal = document.getElementsByClassName('close-message')[0];
+    var closePaymentModal = document.querySelector('.closex');
+    var closeMessageModal = document.querySelector('.close-message');
     var stripeButton = document.getElementById('unique-stripe-button');
 
     var form; // Declare a variable to hold the form element
     var packageId; // Declare a variable to hold the package ID
 
+    function getCsrfToken() {
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        console.log('Retrieved CSRF token:', csrfToken);
+        return csrfToken;
+    }
+
+    function addCsrfTokenToForm(form) {
+        var csrfToken = getCsrfToken();
+        var csrfInput = document.createElement('input');
+        csrfInput.setAttribute('type', 'hidden');
+        csrfInput.setAttribute('name', 'csrfmiddlewaretoken');
+        csrfInput.setAttribute('value', csrfToken);
+        form.appendChild(csrfInput);
+        console.log('Added CSRF token to form:', csrfToken);
+    }
+
+    function addHiddenInputToForm(form, name, value) {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'hidden');
+        input.setAttribute('name', name);
+        input.setAttribute('value', value);
+        form.appendChild(input);
+        console.log(`Added hidden input to form: ${name}=${value}`);
+    }
+
     function openModal(modal, title, description) {
         console.log(`Opening modal: ${modal}`);
         if (modal === 'unique-payment-modal') {
-            document.getElementById('unique-modal-title').textContent = title;
-            document.getElementById('unique-modal-description').textContent = description;
+            var modalTitle = document.getElementById('unique-modal-title');
+            var modalDescription = document.getElementById('unique-modal-description');
 
-            if (!hasSavedPaymentMethod) {
-                console.log('Displaying card element in modal');
-                cardElement.style.display = 'block';
-                card.mount('#unique-card-element'); // Ensure the card element is mounted when needed
-            } else {
-                cardElement.style.display = 'none';
+            if (modalTitle && modalDescription) {
+                modalTitle.textContent = title;
+                modalDescription.textContent = description;
+
+                if (!hasSavedPaymentMethod && cardElement) {
+                    console.log('Displaying card element in modal');
+                    cardElement.style.display = 'block';
+                    card.mount('#unique-card-element'); // Ensure the card element is mounted when needed
+                } else if (cardElement) {
+                    cardElement.style.display = 'none';
+                }
+
+                if (paymentModal) {
+                    paymentModal.style.display = 'block';
+                }
             }
-
-            paymentModal.style.display = 'block';
         } else {
-            document.getElementById('unique-message-title').textContent = title;
-            document.getElementById('unique-message-content').textContent = description;
-            messageModal.style.display = 'block';
+            var messageTitle = document.getElementById('unique-message-title');
+            var messageContent = document.getElementById('unique-message-content');
+
+            if (messageTitle && messageContent) {
+                messageTitle.textContent = title;
+                messageContent.textContent = description;
+                if (messageModal) {
+                    messageModal.style.display = 'block';
+                }
+            }
         }
     }
 
     function closeModal(modal) {
         console.log(`Closing modal: ${modal}`);
-        if (modal === 'unique-payment-modal') {
+        if (modal === 'unique-payment-modal' && paymentModal) {
             paymentModal.style.display = 'none';
-        } else {
+        } else if (modal === 'unique-message-modal' && messageModal) {
             messageModal.style.display = 'none';
         }
     }
 
-    closePaymentModal.onclick = function () {
-        closeModal('unique-payment-modal');
+    if (closePaymentModal) {
+        closePaymentModal.onclick = function () {
+            closeModal('unique-payment-modal');
+        }
     }
 
-    closeMessageModal.onclick = function () {
-        closeModal('unique-message-modal');
+    if (closeMessageModal) {
+        closeMessageModal.onclick = function () {
+            closeModal('unique-message-modal');
+        }
     }
 
     window.onclick = function (event) {
@@ -228,16 +307,18 @@
     function showLoadingSpinner() {
         var loadingSpinner = document.createElement('div');
         loadingSpinner.className = 'loading-spinner';
-        stripeButton.appendChild(loadingSpinner);
-        stripeButton.disabled = true;
+        if (stripeButton) {
+            stripeButton.appendChild(loadingSpinner);
+            stripeButton.disabled = true;
+        }
     }
 
     function hideLoadingSpinner() {
         var loadingSpinner = document.querySelector('.loading-spinner');
-        if (loadingSpinner) {
+        if (loadingSpinner && stripeButton) {
             stripeButton.removeChild(loadingSpinner);
+            stripeButton.disabled = false;
         }
-        stripeButton.disabled = false;
     }
 
     function handlePayment(event, amount, description) {
@@ -248,28 +329,19 @@
 
         if (hasSavedPaymentMethod) {
             console.log('Using saved payment method');
-            var hiddenAmountInput = document.createElement('input');
-            hiddenAmountInput.setAttribute('type', 'hidden');
-            hiddenAmountInput.setAttribute('name', 'amount');
-            hiddenAmountInput.setAttribute('value', amount);
-            form.appendChild(hiddenAmountInput);
+            if (form) {
+                addHiddenInputToForm(form, 'amount', amount);
+                addHiddenInputToForm(form, 'description', description);
+                addCsrfTokenToForm(form);
 
-            var hiddenDescriptionInput = document.createElement('input');
-            hiddenDescriptionInput.setAttribute('type', 'hidden');
-            hiddenDescriptionInput.setAttribute('name', 'description');
-            hiddenDescriptionInput.setAttribute('value', description);
-            form.appendChild(hiddenDescriptionInput);
+                if (form.id === 'unique-package-form') {
+                    addHiddenInputToForm(form, 'package_id', packageId);
+                }
 
-            if (form.id === 'unique-package-form') {
-                var hiddenPackageIdInput = document.createElement('input');
-                hiddenPackageIdInput.setAttribute('type', 'hidden');
-                hiddenPackageIdInput.setAttribute('name', 'package_id');
-                hiddenPackageIdInput.setAttribute('value', packageId);
-                form.appendChild(hiddenPackageIdInput);
+                console.log('Submitting form with saved payment method:', form);
+                form.submit();
+                return;
             }
-
-            form.submit();
-            return;
         }
 
         stripe.createToken(card).then(function (result) {
@@ -277,40 +349,26 @@
             if (result.error) {
                 console.error('Stripe token creation error:', result.error.message);
                 var errorElement = document.getElementById('unique-card-errors');
-                errorElement.textContent = result.error.message;
+                if (errorElement) {
+                    errorElement.textContent = result.error.message;
+                }
             } else {
                 console.log('Stripe token created successfully');
-                if (!form) {
+                if (form) {
+                    addHiddenInputToForm(form, 'stripeToken', result.token.id);
+                    addHiddenInputToForm(form, 'amount', amount);
+                    addHiddenInputToForm(form, 'description', description);
+                    addCsrfTokenToForm(form);
+
+                    if (form.id === 'unique-package-form') {
+                        addHiddenInputToForm(form, 'package_id', packageId);
+                    }
+
+                    console.log('Submitting form with Stripe token:', form);
+                    form.submit();
+                } else {
                     openModal('unique-message-modal', 'Error', 'Form not found.');
-                    return;
                 }
-                var hiddenInput = document.createElement('input');
-                hiddenInput.setAttribute('type', 'hidden');
-                hiddenInput.setAttribute('name', 'stripeToken');
-                hiddenInput.setAttribute('value', result.token.id);
-                form.appendChild(hiddenInput);
-
-                var amountInput = document.createElement('input');
-                amountInput.setAttribute('type', 'hidden');
-                amountInput.setAttribute('name', 'amount');
-                amountInput.setAttribute('value', amount);
-                form.appendChild(amountInput);
-
-                var descriptionInput = document.createElement('input');
-                descriptionInput.setAttribute('type', 'hidden');
-                descriptionInput.setAttribute('name', 'description');
-                descriptionInput.setAttribute('value', description);
-                form.appendChild(descriptionInput);
-
-                if (form.id === 'unique-package-form') {
-                    var packageIdInput = document.createElement('input');
-                    packageIdInput.setAttribute('type', 'hidden');
-                    packageIdInput.setAttribute('name', 'package_id');
-                    packageIdInput.setAttribute('value', packageId);
-                    form.appendChild(packageIdInput);
-                }
-
-                form.submit();
             }
         });
     }
@@ -324,52 +382,85 @@
                 openModal('unique-message-modal', 'Error', 'Invalid package price.');
                 return;
             }
-            form = document.getElementById('unique-package-form'); // Set the form variable to the package form
+            form = document.createElement('form'); // Dynamically create the form element
+            form.setAttribute('method', 'post');
+            form.setAttribute('id', 'unique-package-form');
+            document.body.appendChild(form); // Append the form to the body
+            addCsrfTokenToForm(form); // Ensure CSRF token is added to the form
             openModal('unique-payment-modal', 'Buy Package', 'You are about to purchase a package for $' + packagePrice);
-            stripeButton.onclick = function (e) {
-                handlePayment(e, packagePrice, 'Purchase Package ID: ' + packageId);
-            };
+            if (stripeButton) {
+                stripeButton.onclick = function (e) {
+                    handlePayment(e, packagePrice, 'Purchase Package ID: ' + packageId);
+                };
+            }
         });
     });
 
     var normalPostsSlider = document.getElementById('unique-individual-normal-posts');
     var normalPostsCount = document.getElementById('unique-normal-listings-count');
-    normalPostsSlider.addEventListener('input', function () {
-        normalPostsCount.textContent = normalPostsSlider.value;
-    });
+    var normalListingPriceElement = document.getElementById('unique-normal-listing-price');
+    var totalNormalListingPrice = document.getElementById('unique-total-normal-listing-price');
+    var normalListingPrice = normalListingPriceElement ? parseFloat(normalListingPriceElement.textContent) : 0;
+
+    if (normalPostsSlider && normalPostsCount && totalNormalListingPrice) {
+        normalPostsSlider.addEventListener('input', function () {
+            normalPostsCount.textContent = normalPostsSlider.value;
+            totalNormalListingPrice.textContent = (normalPostsSlider.value * normalListingPrice).toFixed(2);
+        });
+    }
 
     var featuredPostsSlider = document.getElementById('unique-individual-featured-posts');
     var featuredPostsCount = document.getElementById('unique-featured-listings-count');
-    featuredPostsSlider.addEventListener('input', function () {
-        featuredPostsCount.textContent = featuredPostsSlider.value;
-    });
+    var featuredListingPriceElement = document.getElementById('unique-featured-listing-price');
+    var totalFeaturedListingPrice = document.getElementById('unique-total-featured-listing-price');
+    var featuredListingPrice = featuredListingPriceElement ? parseFloat(featuredListingPriceElement.textContent) : 0;
 
-    document.getElementById('unique-buy-listings-button').addEventListener('click', function (event) {
-        var normalListings = parseInt(normalPostsSlider.value, 10);
-        var featuredListings = parseInt(featuredPostsSlider.value, 10);
-        console.log(`Normal Listings: ${normalListings}, Featured Listings: ${featuredListings}`);
-        if (isNaN(normalListings) || isNaN(featuredListings) || normalListings < 0 || featuredListings < 0) {
-            openModal('unique-message-modal', 'Error', 'Please enter a valid number of listings.');
-            return;
-        }
-        var normalListingPrice = parseFloat(document.getElementById('unique-normal-listing-price').textContent);
-        var featuredListingPrice = parseFloat(document.getElementById('unique-featured-listing-price').textContent);
-        if (isNaN(normalListingPrice) || isNaN(featuredListingPrice)) {
-            openModal('unique-message-modal', 'Error', 'Invalid listing price.');
-            return;
-        }
-        var totalAmount = (normalListings * normalListingPrice) + (featuredListings * featuredListingPrice);
-        console.log(`Total Amount: ${totalAmount}`);
-        if (totalAmount <= 0) {
-            openModal('unique-message-modal', 'Error', 'Total amount must be greater than zero.');
-            return;
-        }
-        form = document.getElementById('unique-individual-listing-form'); // Set the form variable to the individual listing form
-        openModal('unique-payment-modal', 'Buy Individual Listings', 'You are about to purchase individual listings for $' + totalAmount.toFixed(2));
-        stripeButton.onclick = function (e) {
-            handlePayment(e, totalAmount, 'Purchase Individual Listings');
-        };
-    });
+    if (featuredPostsSlider && featuredPostsCount && totalFeaturedListingPrice) {
+        featuredPostsSlider.addEventListener('input', function () {
+            featuredPostsCount.textContent = featuredPostsSlider.value;
+            totalFeaturedListingPrice.textContent = (featuredPostsSlider.value * featuredListingPrice).toFixed(2);
+        });
+    }
+
+    var buyListingsButton = document.getElementById('unique-buy-listings-button');
+    if (buyListingsButton) {
+        buyListingsButton.addEventListener('click', function (event) {
+            var normalListings = normalPostsSlider ? parseInt(normalPostsSlider.value, 10) : 0;
+            var featuredListings = featuredPostsSlider ? parseInt(featuredPostsSlider.value, 10) : 0;
+            console.log(`Normal Listings: ${normalListings}, Featured Listings: ${featuredListings}`);
+            if (isNaN(normalListings) || isNaN(featuredListings) || normalListings < 0 || featuredListings < 0) {
+                openModal('unique-message-modal', 'Error', 'Please enter a valid number of listings.');
+                return;
+            }
+            var totalAmount = (normalListings * normalListingPrice) + (featuredListings * featuredListingPrice);
+            console.log(`Total Amount: ${totalAmount}`);
+            if (totalAmount <= 0) {
+                openModal('unique-message-modal', 'Error', 'Total amount must be greater than zero.');
+                return;
+            }
+            form = document.getElementById('unique-individual-listing-form'); // Set the form variable to the individual listing form
+            addCsrfTokenToForm(form); // Ensure CSRF token is added to the form
+            openModal('unique-payment-modal', 'Buy Individual Listings', 'You are about to purchase individual listings for $' + totalAmount.toFixed(2));
+            if (stripeButton) {
+                stripeButton.onclick = function (e) {
+                    handlePayment(e, totalAmount, 'Purchase Individual Listings');
+                };
+            }
+        });
+    }
+
+    var cancelAutoRenewButton = document.getElementById('cancel-auto-renew-button');
+    if (cancelAutoRenewButton) {
+        cancelAutoRenewButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            if (confirm('If you remove saved payment method, after the expiry of this Membership all your listings will be inactive. Do you want to continue?')) {
+                var cancelAutoRenewForm = document.getElementById('cancel-auto-renew-form');
+                if (cancelAutoRenewForm) {
+                    cancelAutoRenewForm.submit();
+                }
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

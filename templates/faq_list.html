@@ -1,62 +1,70 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Find All The Frequently Asked Question{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'Public_package/styles.css' %}">
+{% endblock %}
 {% block content %}
-  <style>
-    .faq-container {
-      display: flex;
-      justify-content: center;
-      margin: 20px;
-    }
+<section class="plans__container">
+    <div class="plans">
+        <div class="faq-container">
+            <div class="faq__top-bar"></div>
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            <ul class="faq-list">
+                {% for faq in faqs %}
+                <li class="faq-item">
+                    <h3 class="faq-question">{{ faq.question }} <i class="faq-toggle-icon fas fa-chevron-down"></i></h3>
+                    <div class="faq-answer">{{ faq.answer|safe }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function showSignUpForm() {
+            var signupPopup = document.getElementById('signup-popup');
+            if (signupPopup) {
+                signupPopup.style.display = 'block';
+            } else {
+                console.error('Signup popup not found');
+            }
+        }
 
-    .faq-list {
-      width: 60%;
-      list-style-type: none;
-      padding: 0;
-    }
-
-    .faq-list li {
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-    }
-
-    .faq-question {
-      font-size: 1.2em;
-      cursor: pointer;
-      margin: 0;
-    }
-
-    .faq-answer {
-      display: none;
-      padding-top: 10px;
-    }
-
-    .faq-answer.active {
-      display: block;
-    }
-  </style>
-
-  <div class="faq-container">
-    <ul class="faq-list">
-      <h2>Here we have listed all the Frequently Asked Questions</h2>
-      {% for faq in faqs %}
-        <li>
-          <h3 class="faq-question">{{ faq.question }}</h3>
-          <div class="faq-answer">{{ faq.answer|safe }}</div>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const questions = document.querySelectorAll('.faq-question');
-      questions.forEach(question => {
-        question.addEventListener('click', function() {
-          const answer = this.nextElementSibling;
-          answer.classList.toggle('active');
+        var faqItems = document.querySelectorAll('.faq-item');
+        console.log('FAQ Items:', faqItems);
+        faqItems.forEach(function(item) {
+            var question = item.querySelector('.faq-question');
+            console.log('FAQ Question:', question);
+            question.addEventListener('click', function() {
+                var currentlyActive = document.querySelector('.faq-answer.active');
+                if (currentlyActive && currentlyActive !== item.querySelector('.faq-answer')) {
+                    currentlyActive.classList.remove('active');
+                    currentlyActive.style.maxHeight = null;
+                    currentlyActive.previousElementSibling.querySelector('.faq-toggle-icon').classList.remove('fa-chevron-up');
+                    currentlyActive.previousElementSibling.querySelector('.faq-toggle-icon').classList.add('fa-chevron-down');
+                }
+                var answer = item.querySelector('.faq-answer');
+                console.log('FAQ Answer:', answer);
+                if (answer.classList.contains('active')) {
+                    answer.classList.remove('active');
+                    answer.style.maxHeight = null;
+                    question.querySelector('.faq-toggle-icon').classList.remove('fa-chevron-up');
+                    question.querySelector('.faq-toggle-icon').classList.add('fa-chevron-down');
+                } else {
+                    answer.classList.add('active');
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                    question.querySelector('.faq-toggle-icon').classList.remove('fa-chevron-down');
+                    question.querySelector('.faq-toggle-icon').classList.add('fa-chevron-up');
+                }
+                console.log('Answer maxHeight:', answer.style.maxHeight);
+            });
         });
-      });
+
+        window.showSignUpForm = showSignUpForm;
     });
-  </script>
+</script>
 {% endblock %}

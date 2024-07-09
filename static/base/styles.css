@@ -1,0 +1,21 @@
+/* Universal Styles */
+body {
+    font-family: "Open Sans", sans-serif !important;
+    margin: 0;
+    padding: 0;
+    padding-top: 90px;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2{
+    color: #04436C !important;
+}
+

@@ -17,14 +17,24 @@ from django.contrib.auth import update_session_auth_hash
 from django.template.loader import render_to_string
 from django.db.models import Q, Count
 from decimal import Decimal
+from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
 from django.core.paginator import Paginator
-from .utils import send_custom_email, generate_invoice_pdf, get_site_settings
+from .utils import send_custom_email, generate_invoice_pdf
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.functional import SimpleLazyObject
+from django.template import RequestContext
 from django.views.generic import FormView
+from django.contrib.auth.tokens import default_token_generator as account_activation_token
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_str, force_bytes
+from django.contrib.sites.shortcuts import get_current_site
+from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib.humanize.templatetags.humanize import intcomma
 import json
 import stripe
-import random
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -136,27 +146,36 @@ def remove_payment_method(request):
 def update_profile(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=request.user.seller)
+        print("POST data:", request.POST)
+        print("FILES data:", request.FILES)
+        
         if form.is_valid():
+            print("Form is valid")
             if form.has_changed():
                 form.save()
+                print("Form data saved")
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'success': True, 'message': 'Profile updated successfully.'})
                 else:
                     messages.success(request, 'Profile updated successfully')
                     return render(request, 'update_profile.html', {'form': form, 'show_modal': True})
             else:
+                print("No changes detected in the form")
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'message': 'No changes detected.'})
                 else:
                     messages.info(request, 'No changes detected.')
         else:
+            print("Form is not valid:", form.errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 errors = {field: error[0] for field, error in form.errors.items()}
                 return JsonResponse({'success': False, 'errors': errors})
     else:
         form = UserProfileForm(instance=request.user.seller)
+        print("Initial form data:", form.initial)
     
     return render(request, 'update_profile.html', {'form': form})
+
 
 @login_required
 def change_password(request):
@@ -180,7 +199,7 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
     return render(request, 'change_password.html', {'form': form})
 
-def register_seller(request):
+'''def register_seller(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
@@ -218,6 +237,165 @@ def register_seller(request):
     else:
         form = SellerRegistrationForm()
     return render(request, 'register_seller.html', {'form': form})
+'''
+
+def register_seller(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = SellerRegistrationForm(request.POST)
+        if form.is_valid():
+            current_site = get_current_site(request)
+            mail_subject = 'Activate your account.'
+            email = form.cleaned_data.get('email')
+            user_data = {
+                'username': form.cleaned_data.get('username'),
+                'email': email,
+                'password': form.cleaned_data.get('password'),
+            }
+            seller_data = {
+                'company_name': form.cleaned_data.get('company_name'),
+                'company_address': form.cleaned_data.get('company_address'),
+                'company_phone_number': form.cleaned_data.get('company_phone_number'),
+                'first_name': form.cleaned_data.get('first_name'),
+                'last_name': form.cleaned_data.get('last_name'),
+                'country': form.cleaned_data.get('country').id,
+                'state': form.cleaned_data.get('state').id,
+                'city': form.cleaned_data.get('city').id,
+                'mobile_number': form.cleaned_data.get('mobile_number'),
+            }
+            uid = urlsafe_base64_encode(force_bytes(email))
+            token = account_activation_token.make_token(User(username=user_data['username']))
+
+            # Store user_data and seller_data in the session
+            request.session['user_data'] = user_data
+            request.session['seller_data'] = seller_data
+
+            message = render_to_string('emails/acc_active_email.html', {
+                'domain': current_site.domain,
+                'uid': uid,
+                'token': token,
+                'username': user_data['username'],
+            })
+
+            try:
+                send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+            except Exception as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Error sending email. Please try again later.'})
+                else:
+                    messages.error(request, 'Error sending email. Please try again later.')
+                    return redirect('home')
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': 'Please confirm your email address to complete the registration.'})
+            else:
+                messages.success(request, 'Please confirm your email address to complete the registration.')
+                return redirect('home')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                errors = {field: error[0] for field, error in form.errors.items()}
+                return JsonResponse({'success': False, 'errors': errors})
+            else:
+                return render(request, 'register_seller.html', {'form': form})
+    else:
+        form = SellerRegistrationForm()
+    return render(request, 'register_seller.html', {'form': form})
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        email = uid
+        user_data = request.session.get('user_data')
+        seller_data = request.session.get('seller_data')
+
+        if user_data and seller_data and user_data['email'] == email:
+            user = User.objects.create_user(
+                username=user_data['username'],
+                email=user_data['email'],
+                password=user_data['password'],
+                is_active=True  # Activate user upon creation
+            )
+            seller = Seller.objects.create(
+                user=user,
+                company_name=seller_data['company_name'],
+                company_address=seller_data['company_address'],
+                company_phone_number=seller_data['company_phone_number'],
+                first_name=seller_data['first_name'],
+                last_name=seller_data['last_name'],
+                country=Country.objects.get(id=seller_data['country']),
+                state=Region.objects.get(id=seller_data['state']),
+                city=City.objects.get(id=seller_data['city']),
+                mobile_number=seller_data['mobile_number'],
+                is_approved=False
+            )
+            # Create Stripe customer
+            stripe_customer = stripe.Customer.create(email=user.email)
+            seller.stripe_customer_id = stripe_customer.id
+            seller.save()
+
+            messages.success(request, 'Thank you for your email confirmation. Now you can login to your account.')
+            del request.session['user_data']
+            del request.session['seller_data']
+            return redirect('login')
+        else:
+            messages.warning(request, 'Activation link is invalid!')
+            return redirect('home')
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+        messages.warning(request, 'Activation link is invalid!')
+        return redirect('home')
+    
+@csrf_exempt
+def validate_step(request):
+    if request.method == 'POST':
+        step = int(request.POST.get('step', 0))
+        print(f"Received POST data: {request.POST}")
+        form = SellerRegistrationForm(request.POST)
+
+        # Define the fields required for each step
+        step_fields = [
+            ['username', 'email'],
+            ['email', 'mobile_number', 'first_name', 'last_name', 'password', 'confirm_password'],
+            ['company_name', 'company_address', 'company_phone_number'],
+            ['country', 'state', 'city']
+        ]
+
+        fields = step_fields[step] if step < len(step_fields) else []
+
+        # Remove fields not related to the current step
+        fields_to_remove = [field for field in form.fields if field not in fields]
+        for field in fields_to_remove:
+            form.fields.pop(field)
+            
+        # Validate form
+        if form.is_valid():
+            print("Form is valid.")
+            return JsonResponse({'success': True})
+        else:
+            errors = {field: error[0] for field, error in form.errors.items()}
+            print(f"Form errors: {errors}")
+            return JsonResponse({'success': False, 'errors': errors})
+
+    print("Invalid request.")
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def load_countries(request):
+    countries = Country.objects.all().order_by('name')
+    return JsonResponse(list(countries.values('id', 'name')), safe=False)
+
+def load_states(request, country_id):
+    print(country_id)
+    states = Region.objects.filter(country_id=country_id).order_by('name')
+    return JsonResponse(list(states.values('id', 'name')), safe=False)
+
+def load_citiess(request, state_id):
+    cities = City.objects.filter(region_id=state_id).order_by('name')
+    return JsonResponse(list(cities.values('id', 'name')), safe=False)
+
+def get_country_code(request, country_id):
+    country = Country.objects.get(id=country_id)
+    return JsonResponse({'country_code': country.code2})  # Using the correct field name
 
 def login_user(request):
     if request.method == 'POST':
@@ -247,14 +425,26 @@ def login_user(request):
     return redirect('home')
 
 @login_required
+def listing_load_states(request):
+    country_id = request.GET.get('country_id')
+    states = Region.objects.filter(country_id=country_id).order_by('name')
+    return JsonResponse(list(states.values('id', 'name')), safe=False)
+
+@login_required
+def listing_load_cities(request):
+    state_id = request.GET.get('state_id')
+    cities = City.objects.filter(region_id=state_id).order_by('name')
+    return JsonResponse(list(cities.values('id', 'name')), safe=False)
+
+@login_required
 def create_listing(request):
     seller = request.user.seller
-    if not (seller.package or seller.individual_normal_posts > 0 or seller.individual_featured_posts > 0):
+    if not seller.package and not (seller.normal_post_count > 0 or seller.featured_post_count > 0):
         messages.error(request, 'You must buy packages or listings to post a listing.')
         return redirect('buy_package_listing')
 
     field_order = [
-        'project_name', 'project_description', 'categories', 'status', 'project_state', 
+        'project_name', 'project_description', 'categories', 'project_country', 'project_state', 
         'project_city', 'project_ntp_date', 'project_cod_date', 'project_pto_date',
         'contractor_name', 'project_size', 'battery_storage', 
         'projected_annual_income', 'epc_name', 'current_annual_om_cost', 
@@ -264,43 +454,42 @@ def create_listing(request):
         'buyer_protections', 'latitude', 'longitude', 'thumbnail_image'
     ]
 
-    has_featured_posts = seller.featured_post_count > 0 or seller.individual_featured_posts > 0
+    has_featured_posts = seller.featured_post_count > 0
 
     if has_featured_posts:
         field_order.insert(0, 'is_featured')
 
     if request.method == 'POST':
-        form = ListingForm(request.POST, request.FILES, user=request.user)
+        form = ListingForm(request.POST, request.FILES, user=request.user, is_creation=True)
         
         if form.is_valid():
             listing = form.save(commit=False)
             listing.seller = request.user.seller
+            listing.status = 'active'
+            listing.expires_on = seller.membership_expiry
 
             if listing.is_featured:
-                if seller.package and seller.featured_post_count > 0:
+                if seller.featured_post_count > 0:
                     seller.featured_post_count -= 1
-                elif seller.individual_featured_posts > 0:
-                    seller.individual_featured_posts -= 1
+                    seller.featured_post_used += 1
                 else:
-                    messages.error(request, 'You do not have enough featured posts available.')
-                    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order})
+                    return JsonResponse({'errors': {'__all__': ['You do not have enough featured posts available.']}}, status=400)
             else:
-                if seller.package and seller.normal_post_count > 0:
+                if seller.normal_post_count > 0:
                     seller.normal_post_count -= 1
-                elif seller.individual_normal_posts > 0:
-                    seller.individual_normal_posts -= 1
+                    seller.normal_post_used += 1
                 else:
-                    messages.error(request, 'You do not have enough normal posts available.')
-                    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order})
-
-            seller.save()
+                    return JsonResponse({'errors': {'__all__': ['You do not have enough normal posts available.']}}, status=400)
 
             if not listing.slug:
                 listing.slug = slugify(listing.project_name)
+                original_slug = listing.slug
+                counter = 1
+                while Listing.objects.filter(slug=listing.slug).exists():
+                    listing.slug = f"{original_slug}-{counter}"
+                    counter += 1
             
             listing.save()
-
-            # Save the categories to the listing
             form.save_m2m()
 
             images = request.FILES.getlist('images')
@@ -308,14 +497,8 @@ def create_listing(request):
                 photo = ListingImage(listing=listing, image=image)
                 photo.save()
 
-            '''send_mail(
-                'Listing Created',
-                f'Your listing "{listing.project_name}" has been created successfully.',
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-            )'''
+            seller.save()
 
-            # Send email notification
             try:
                 send_custom_email(
                     subject='Listing Created',
@@ -329,99 +512,153 @@ def create_listing(request):
             except:
                 pass
             messages.success(request, 'Listing created successfully')
-            return redirect('dashboard')
+            return JsonResponse({'success': True, 'redirect_url': redirect('dashboard').url})
         else:
-            print("Form is not valid.")
-            print(form.errors)
+            form_html = render_to_string('create_listing_form.html', {'form': form, 'field_order': field_order})
+            return JsonResponse({'errors': form.errors, 'form_html': form_html}, status=400)
     else:
-        form = ListingForm(user=request.user)
+        form = ListingForm(user=request.user, is_creation=True)
 
     return render(request, 'create_listing.html', {'form': form, 'field_order': field_order})
 
-def load_cities(request):
-    state_id = request.GET.get('state')
-    if state_id:
-        cities = City.objects.filter(state_id=state_id).order_by('name')
-        cities_list = list(cities.values('id', 'name'))
-    else:
-        cities_list = []
-    return JsonResponse(cities_list, safe=False)
 
 @login_required
 def edit_listing(request, slug):
     listing = get_object_or_404(Listing, slug=slug)
     seller = request.user.seller
+    original_status = listing.status
+    print(f"Membership expiry: {seller.membership_expiry}, Timezone: {timezone.now()}")
+
+    if seller.membership_expiry <= timezone.now():
+        messages.error(request, 'Your package has expired. Please renew your package to edit listings.')
+        return redirect(reverse('dashboard'))
 
     field_order = [
-        'project_name', 'project_description', 'categories', 'status', 'project_state', 
+        'project_name', 'project_description', 'categories', 'status', 'project_country', 'project_state',
         'project_city', 'project_ntp_date', 'project_cod_date', 'project_pto_date',
-        'contractor_name', 'project_size', 'battery_storage', 
-        'projected_annual_income', 'epc_name', 'current_annual_om_cost', 
-        'om_escalation_rate', 'sales_price', 'project_address', 'lot_size', 
+        'contractor_name', 'project_size', 'battery_storage',
+        'projected_annual_income', 'epc_name', 'current_annual_om_cost',
+        'om_escalation_rate', 'sales_price', 'project_address', 'lot_size',
         'property_type', 'lease_term', 'current_lease_rate_per_acre', 'lease_escalation_rate',
         'project_status', 'tax_credit_type', 'total_tax_credit_percentage', 'remarks',
         'buyer_protections', 'latitude', 'longitude', 'thumbnail_image'
     ]
 
     if request.method == 'POST':
+        print("Form submitted with POST method")
+        print("POST data:", request.POST)
         form = ListingForm(request.POST, request.FILES, instance=listing, user=request.user)
+        existing_images = ListingImage.objects.filter(listing=listing)
 
         if form.is_valid():
+            print("Form is valid")
             updated_listing = form.save(commit=False)
-            updated_listing.seller = request.user.seller
+            updated_listing.seller = seller
+            new_status = request.POST.getlist('status')[0]
+            print(f"Original status: {original_status}, New status: {new_status}, Update listing: {updated_listing.status}")
 
-            # Save the updated listing without modifying post counts or checking is_featured
-            if not updated_listing.slug:
-                updated_listing.slug = slugify(updated_listing.project_name)
+            if original_status == 'inactive' and new_status in ['contingent', 'pending']:
+                message = "You can't change the status from inactive to any other thing except Active"
+                messages.success(request, "You can't change the status from inactive to any other thing except Active")
+                return JsonResponse({'success': False, 'message': message, 'message_type': 'error'})
 
-            updated_listing.save()
-
-            # Save the categories to the listing
-            form.save_m2m()
-
-            # Handle image deletions
-            images_to_delete = request.POST.getlist('delete_images')
-            for image_id in images_to_delete:
-                image = ListingImage.objects.get(id=image_id)
-                image.delete()
-
-            # Handle new images
-            images = request.FILES.getlist('images')
-            for image in images:
-                photo = ListingImage(listing=updated_listing, image=image)
-                photo.save()
-
-            '''send_mail(
-                'Listing Updated',
-                f'Your listing "{updated_listing.project_name}" has been updated successfully.',
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-            )'''
-
-            # Send email notification
             try:
-                send_custom_email(
-                    subject='Listing Updated',
-                    template_name='emails/listing_updated_email.html',
-                    context={'user': {
-                                'first_name': seller.first_name,
-                                },
-                            'listing': updated_listing},
-                    recipient_list=[request.user.email]
-                )
-            except:
-                pass
+                with transaction.atomic():
+                    # Store the previous status
+                    updated_listing.previous_status = original_status
+                    
+                    if seller.membership_expiry > timezone.now():
+                        updated_listing.expires_on = seller.membership_expiry
 
-            messages.success(request, 'Listing updated successfully')
-            return redirect('listing_detail', updated_listing.slug)
+                    if updated_listing.expires_on and updated_listing.expires_on <= timezone.now():
+                        updated_listing.status = 'inactive'
+                    elif new_status == 'sold':
+                        updated_listing.status = 'inactive'
+                    else:
+                        if new_status == 'active':
+                            print("Attempting to activate listing")
+                            if original_status != 'active':
+                                if updated_listing.is_featured:
+                                    print(f"Featured listing, current featured post count: {seller.featured_post_count}")
+                                    if seller.featured_post_count > 0:
+                                        seller.featured_post_count -= 1
+                                        seller.featured_post_used += 1
+                                        seller.save()  # Explicitly save the seller object
+                                        print(f"Decremented featured post count, new count: {seller.featured_post_count}")
+                                    else:
+                                        updated_listing.status = 'inactive'
+                                        print("No more featured posts available, deactivating listing")
+                                        send_mail(
+                                            'Listing Deactivated',
+                                            'Your listing has been deactivated because you have reached your featured post limit.',
+                                            settings.DEFAULT_FROM_EMAIL,
+                                            [seller.user.email],
+                                        )
+                                else:
+                                    print(f"Normal listing, current normal post count: {seller.normal_post_count}")
+                                    if seller.normal_post_count > 0:
+                                        seller.normal_post_count -= 1
+                                        seller.normal_post_used += 1
+                                        seller.save()  # Explicitly save the seller object
+                                        print(f"Decremented normal post count, new count: {seller.normal_post_count}")
+                                    else:
+                                        updated_listing.status = 'inactive'
+                                        print("No more normal posts available, deactivating listing")
+                                        send_mail(
+                                            'Listing Deactivated',
+                                            'Your listing has been deactivated because you have reached your normal post limit.',
+                                            settings.DEFAULT_FROM_EMAIL,
+                                            [seller.user.email],
+                                        )
+                        else:
+                            updated_listing.status = new_status
+
+                    updated_listing.save()
+                    print(f"Listing status updated to {updated_listing.status}")
+                    form.save_m2m()
+
+                    images_to_delete = request.POST.getlist('delete_images')
+                    for image_id in images_to_delete:
+                        image = ListingImage.objects.get(id=image_id)
+                        image.delete()
+                        print(f"Deleted image with ID {image_id}")
+
+                    images = request.FILES.getlist('images')
+                    for image in images:
+                        photo = ListingImage(listing=updated_listing, image=image)
+                        photo.save()
+                        print(f"Added new image to listing with ID {photo.id}")
+
+                    try:
+                        send_custom_email(
+                            subject='Listing Updated',
+                            template_name='emails/listing_updated_email.html',
+                            context={'user': {'first_name': seller.first_name},
+                                     'listing': updated_listing},
+                            recipient_list=[request.user.email]
+                        )
+                        print("Email notification sent.")
+                    except Exception as e:
+                        print(f"Failed to send email: {e}")
+                        pass
+
+                messages.success(request, 'Listing updated successfully')
+                return JsonResponse({'success': True, 'message': 'Listing updated successfully', 'message_type': 'success'})
+            except Exception as e:
+                print(f"Transaction error: {e}")
+                return JsonResponse({'errors': {'__all__': ['An error occurred while updating the listing. Please try again.']}, 'message': 'An error occurred while updating the listing. Please try again.', 'message_type': 'error'}, status=500)
+
         else:
-            print("Form is not valid.")
-            print(form.errors)
+            print("Form errors:", form.errors)
+            form_html = render_to_string('edit_listing.html', {'form': form, 'field_order': field_order, 'existing_images': existing_images}, request=request)
+            return JsonResponse({'errors': form.errors, 'form_html': form_html}, status=400)
+
     else:
         form = ListingForm(instance=listing, user=request.user)
         existing_images = ListingImage.objects.filter(listing=listing)
 
-    return render(request, 'edit_listing.html', {'form': form, 'field_order': field_order, 'existing_images': existing_images})
+    context = {'form': form, 'field_order': field_order, 'existing_images': existing_images}
+    return render(request, 'edit_listing.html', context)
 
 
 def listing_detail(request, slug):
@@ -444,8 +681,12 @@ def listing_detail(request, slug):
 
 @login_required
 def seller_listings(request):
-    listings = Listing.objects.filter(seller=request.user.seller)
-    return render(request, 'seller_listings.html', {'listings': listings})
+    listings = Listing.objects.filter(seller=request.user.seller).order_by('-id')  # Ensure queryset is ordered
+    paginator = Paginator(listings, 4)  # Show 4 listings per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    has_listings = listings.exists()
+    return render(request, 'seller_listings.html', {'page_obj': page_obj, 'has_listings': has_listings})
 
 
 @login_required
@@ -526,8 +767,23 @@ def buy_package_listing(request):
             )
 
             try:
+                site_settings = get_site_settings()
+                invoice_pdf = generate_invoice_pdf({
+                    'invoice_id': transaction.transaction_id,
+                    'invoice_date': timezone.now(),
+                    'package': package,
+                    'amount': amount,
+                    'user': request.user,
+                    'first_name': seller.first_name,
+                    'last_name': seller.last_name,
+                    'address': seller.company_address,
+                    'site_title': 'Green Energy Connection',
+                    'site_logo_url': request.build_absolute_uri(site_settings.site_logo.url) if site_settings and site_settings.site_logo else '',
+                    'site_phone': '+123456789',
+                    'site_email': 'info@greenenergyconnection.com',
+                })
                 send_custom_email(
-                    subject='Package Purchased',
+                    subject='Package Purchase Confirmation',
                     template_name='emails/package_purchase_email.html',
                     context={
                         'user': {
@@ -538,25 +794,22 @@ def buy_package_listing(request):
                         'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
                     },
                     recipient_list=[request.user.email],
-                    attachment=generate_invoice_pdf({
-                        'invoice_id': transaction.transaction_id,
-                        'invoice_date': timezone.now(),
-                        'package': package,
-                        'amount': amount,
-                        'user': request.user,
-                        'site_title': get_site_settings().site_title if get_site_settings() else '',
-                        'site_logo_url': request.build_absolute_uri(get_site_settings().site_logo.url) if get_site_settings() and get_site_settings().site_logo else '',
-                        'site_address': get_site_settings().site_description if get_site_settings() else '',
-                    })
+                    attachment={
+                        'filename': invoice_pdf['filename'],
+                        'content': invoice_pdf['content'],
+                        'mimetype': invoice_pdf['mimetype']
+                    }
                 )
-            except:
-                pass
+            except Exception as e:
+                print(f"Email sending error: {e}")
 
         elif normal_listings > 0 or featured_listings > 0:
             if normal_listings > 0:
-                seller.individual_normal_posts += normal_listings
+                seller.normal_post_count += normal_listings
+                seller.individual_normal_post_count += normal_listings
             if featured_listings > 0:
-                seller.individual_featured_posts += featured_listings
+                seller.featured_post_count += featured_listings
+                seller.individual_featured_post_count += featured_listings
             seller.save()
             print(f"Listings updated for seller {seller.user.username}")
 
@@ -587,36 +840,115 @@ def buy_package_listing(request):
                     context=context,
                     recipient_list=[request.user.email]
                 )
-            except:
-                pass
+            except Exception as e:
+                print(f"Email sending error: {e}")
 
         messages.success(request, 'Purchase successful')
         return redirect('dashboard')
 
-    current_normal_posts_used = seller.package.normal_post_limit - seller.normal_post_count if seller.package else 0
-    current_featured_posts_used = seller.package.featured_post_limit - seller.featured_post_count if seller.package else 0
+    total_normal_posts = seller.normal_post_count + seller.normal_post_used
+    total_featured_posts = seller.featured_post_count + seller.featured_post_used
+    normal_posts_used = seller.normal_post_used
+    featured_posts_used = seller.featured_post_used
 
     context = {
         'packages': packages,
         'listing_price': listing_price,
         'stripe_key': settings.STRIPE_PUBLISHABLE_KEY,
-        'current_normal_posts_used': current_normal_posts_used,
-        'current_featured_posts_used': current_featured_posts_used,
+        'total_normal_posts': total_normal_posts,
+        'total_featured_posts': total_featured_posts,
+        'normal_posts_used': normal_posts_used,
+        'featured_posts_used': featured_posts_used,
+        'show_package_container': seller.package or seller.new_package,
+        'show_available_packages': not seller.is_auto_renew and (not seller.package or not seller.new_package),
+        'show_individual_listings': True if seller.package else False  # Always true in this example, adjust as necessary
     }
     return render(request, 'buy_package_listing.html', context)
 
+def get_site_settings():
+    try:
+        return SiteSettings.objects.first()
+    except SiteSettings.DoesNotExist:
+        return None
+    
+@method_decorator(login_required, name='dispatch')
+class AddPaymentMethodView(View):
+    template_name = 'add_payment_method.html'
+
+    def get(self, request, *args, **kwargs):
+        seller = request.user.seller
+        existing_payment_method = None
+        
+        if seller.stripe_payment_method_id:
+            existing_payment_method = stripe.PaymentMethod.retrieve(seller.stripe_payment_method_id)
+        
+        intent = stripe.SetupIntent.create(
+            customer=seller.stripe_customer_id
+        )
+        return render(request, self.template_name, {
+            'client_secret': intent.client_secret, 
+            'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+            'existing_payment_method': existing_payment_method
+        })
+
+    def post(self, request, *args, **kwargs):
+        seller = request.user.seller
+        if 'remove_payment_method' in request.POST:
+            try:
+                # Detach the payment method
+                stripe.PaymentMethod.detach(seller.stripe_payment_method_id)
+                
+                # Update seller model
+                seller.stripe_payment_method_id = None
+                seller.is_auto_renew = False
+                seller.save()
+
+                messages.success(request, 'Your payment method has been removed successfully.')
+                return redirect('add_payment_method')
+            except stripe.error.StripeError as e:
+                messages.error(request, f"Error removing payment method: {str(e)}")
+                return redirect('add_payment_method')
+        
+        payment_method_id = request.POST.get('payment_method_id')
+        try:
+            # Attach the payment method to the customer
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=seller.stripe_customer_id,
+            )
+            
+            # Set the payment method as the default payment method
+            stripe.Customer.modify(
+                seller.stripe_customer_id,
+                invoice_settings={
+                    'default_payment_method': payment_method_id,
+                },
+            )
+
+            # Update the seller with the new payment method
+            seller.stripe_payment_method_id = payment_method_id
+            seller.save()
+
+            messages.success(request, 'Your payment method has been added successfully.')
+            return redirect('add_payment_method')
+
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error adding payment method: {str(e)}")
+            return redirect('add_payment_method')
 
 def public_packages(request):
     packages = Package.objects.all()
     listing_price = ListingPrice.objects.first()
     login_form = LoginForm()
     register_form = SellerRegistrationForm()
+    faqs = FAQ.objects.all()
     
     context = {
         'packages': packages,
         'listing_price': listing_price,
         'login_form': login_form,
         'register_form': register_form,
+        'faqs' : faqs,
     }
     return render(request, 'public_packages.html', context)
 
@@ -629,7 +961,7 @@ def cancel_auto_renew(request):
 
 @login_required
 def transaction_history(request):
-    transactions = Transaction.objects.filter(seller=request.user.seller).select_related('seller')
+    transactions = Transaction.objects.filter(seller=request.user.seller).select_related('seller').order_by('-id')
     
     paginator = Paginator(transactions, 5)  # Show 5 transactions per page
     page_number = request.GET.get('page')
@@ -641,7 +973,9 @@ def transaction_history(request):
         else:
             transaction.auto_renew_display = 'No'
     
-    return render(request, 'transaction_history.html', {'page_obj': page_obj})
+    has_transactions = transactions.exists()
+    
+    return render(request, 'transaction_history.html', {'page_obj': page_obj, 'has_transactions': has_transactions})
 
 def submit_message(request, slug=None):
     if request.method == 'POST':
@@ -715,94 +1049,117 @@ def decimal_default(obj):
         return float(obj)
     raise TypeError
 
+def country_autocomplete(request):
+    if 'term' in request.GET:
+        qs = Country.objects.filter(name__icontains=request.GET.get('term'))
+        countries = list(qs.values_list('name', flat=True))
+        return JsonResponse(countries, safe=False)
+    else:
+        countries = list(Country.objects.values_list('name', flat=True))
+        return JsonResponse(countries, safe=False)
+
+
 def state_autocomplete(request):
     if 'term' in request.GET:
-        qs = State.objects.filter(name__icontains=request.GET.get('term'))
+        qs = Region.objects.filter(name__icontains=request.GET.get('term'))
         states = list(qs.values_list('name', flat=True))
         return JsonResponse(states, safe=False)
     else:
-        states = list(State.objects.values_list('name', flat=True))
+        states = list(Region.objects.values_list('name', flat=True))
         return JsonResponse(states, safe=False)
+
+def city_autocomplete(request):
+    if 'term' in request.GET:
+        qs = City.objects.filter(name__icontains=request.GET.get('term'))
+        cities = list(qs.values_list('name', flat=True))
+        return JsonResponse(cities, safe=False)
+    else:
+        cities = list(City.objects.values_list('name', flat=True))
+        return JsonResponse(cities, safe=False)
+
+# Custom JSON Encoder to handle Decimal serialization
+class DecimalEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
     
 def all_listings(request):
     listings = Listing.objects.all().order_by('-is_featured', '-created_at')
-    states = State.objects.all()
+    states = Region.objects.all()
+    countries = Country.objects.all()
     categories = Category.objects.all()
+    login_form = LoginForm()
+    register_form = SellerRegistrationForm()
+    
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        location = request.GET.get('location')
+        country = request.GET.get('country')
         category_names = request.GET.getlist('categories[]')
         min_price = request.GET.get('min_price')
         max_price = request.GET.get('max_price')
         sort_by = request.GET.get('sort_by')
 
-        print("Filters received: ")
-        print(f"Location: {location}")
-        print(f"Categories: {category_names}")
-        print(f"Min Price: {min_price}")
-        print(f"Max Price: {max_price}")
-        print(f"Sort By: {sort_by}")
-
         filters = Q()
 
-        if location:
-            filters &= Q(project_state__name__icontains=location)
-            print(f"Location filter applied: {location}")
+        if country:
+            filters &= Q(project_country__name__icontains=country)
 
         if min_price:
             filters &= Q(sales_price__gte=min_price)
-            print(f"Min Price filter applied: {min_price}")
 
         if max_price:
             filters &= Q(sales_price__lte=max_price)
-            print(f"Max Price filter applied: {max_price}")
 
         if category_names and category_names != ['']:
             category_ids = Category.objects.filter(name__in=category_names).values_list('id', flat=True)
             filters &= Q(categories__id__in=category_ids)
-            print(f"Category filter applied: {category_names} -> {list(category_ids)}")
-        else:
-            print("No valid categories selected, skipping category filter")
 
         listings = listings.filter(filters).distinct()
-        print(f"Filtered Listings Count: {listings.count()}")
 
+        # Apply user-defined sorting while keeping featured posts first
         if sort_by:
             if sort_by == 'date_newest':
-                listings = listings.order_by('-created_at')
+                listings = listings.order_by('-is_featured', '-created_at')
             elif sort_by == 'date_oldest':
-                listings = listings.order_by('created_at')
+                listings = listings.order_by('-is_featured', 'created_at')
             elif sort_by == 'price_low_to_high':
-                listings = listings.order_by('sales_price')
+                listings = listings.order_by('-is_featured', 'sales_price')
             elif sort_by == 'price_high_to_low':
-                listings = listings.order_by('-sales_price')
+                listings = listings.order_by('-is_featured', '-sales_price')
             elif sort_by == 'update_time':
-                listings = listings.order_by('-updated_at')
+                listings = listings.order_by('-is_featured', '-updated_at')
+        else:
+            listings = listings.order_by('-is_featured', '-created_at')
 
-            print(f"Sort applied: {sort_by}")
+        html = render_to_string('partials/listings.html', {'listings': listings, 'login_form': login_form, 'register_form': register_form,})
+        listings_data = json.dumps([{
+            'id': listing.id,
+            'project_name': listing.project_name,
+            'latitude': listing.latitude,
+            'longitude': listing.longitude,
+        } for listing in listings], cls=DecimalEncoder)
 
-        # Ensure featured listings come first
-        listings = listings.order_by('-is_featured', *listings.query.order_by)
-        print("Listings ordered with featured first.")
+        return JsonResponse({
+            'html': html,
+            'listings': listings_data,
+            'total_results': listings.count()
+        })
 
-        html = render_to_string('partials/listings.html', {'listings': listings})
-        listings_data = list(listings.values('latitude', 'longitude', 'id', 'project_name'))
-        return JsonResponse({'html': html, 'listings': listings_data})
-
-    listings_data = list(listings.values('latitude', 'longitude', 'id', 'project_name'))
-    #Login form for normal user
-    login_form = LoginForm()
-    register_form = SellerRegistrationForm()
-
-    context = {
-        'login_form': login_form,
-        'register_form': register_form,
+    return render(request, 'all_listings.html', {
         'listings': listings,
         'states': states,
         'categories': categories,
-        'listings_data': json.dumps(listings_data, default=decimal_default),
-    }
-    return render(request, 'all_listings.html', context)
+        'countries': countries,
+        'login_form': login_form,
+        'register_form': register_form,
+        'listings_data': json.dumps([{
+            'id': listing.id,
+            'project_name': listing.project_name,
+            'latitude': listing.latitude,
+            'longitude': listing.longitude,
+        } for listing in listings], cls=DecimalEncoder)
+    })
 
 
 def seller_profile(request, seller_id):

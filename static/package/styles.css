@@ -1,187 +1,235 @@
-.Header-Text-Package-Buying {
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --mainColor: #64C2DB;
+    --hoverColor: #4fa6bd;
+    --baseColor: #656c7c;
+    --baseSize: 16px;
+    --baseLineHeight: 1.5;
+    --fontFamily: 'Inter', sans-serif;
+    --white: #fff;
+    --primaryColor: #4fa6bd;
+    --secondaryColor: #ffecf0;
+    --headingColor: #04436C;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--fontFamily);
+    font-size: var(--baseSize);
+    line-height: var(--baseLineHeight);
+    color: var(--baseColor);
+    background-color: #f7f8fa;
+}
+
+.plans__container {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.plansHero {
     text-align: center;
-    margin-bottom: 40px;
-    color: #04436C;
+    margin-bottom: 3rem;
+}
+
+.plansHero__title {
     font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--headingColor);
 }
 
-/* Container and card styles */
-.package-container,
-.individual-listings,
-.available-packages,
-.individual-listings-purchase {
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: 20px;
+.plansHero__subtitle {
+    font-size: 1.25rem;
+    color: var(--baseColor);
 }
 
-.package-details {
-    margin: 20px;
+.planItem__container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.planItem {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    flex: 1 1 calc(50% - 1rem);
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.planItem--pro {
+    flex: 1 1 calc(33% - 1rem);
+}
+
+.available-packages {
+    margin-top: 2rem;
+    background-color: var(--mainColor);
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.available-packages__title {
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 1rem;
+}
+
+.packages-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
 }
 
 .card {
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
-.active-card {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-/* Typography styles */
-.package-details h3,
-.individual-listings h3,
-.available-packages h3,
-.individual-listings-purchase h3 {
-    color: #04436C;
-    margin-bottom: 20px;
-    font-size: 1.8rem;
-}
-
-.package-details p,
-.individual-listings p,
-.available-packages p,
-.individual-listings-purchase p {
-    color: #666;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-}
-
-.package-details p i,
-.individual-listings p i,
-.available-packages p i,
-.individual-listings-purchase p i {
-    margin-right: 10px;
-    color: #64C2DB;
-}
-
-/* Packages grid styles */
-.available-packages .packages-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.package-option {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--white);
+    position: relative;
 }
 
-.package-option:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.card__top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-color: var(--mainColor);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
 }
 
-.package-option h4 {
-    color: #04436C;
-    margin-bottom: 10px;
-    font-size: 1.5rem;
+.card__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--headingColor);
 }
 
-.package-option p {
-    color: #666;
-    margin-bottom: 10px;
+.card__desc {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.card__desc.single-row {
     display: flex;
-    align-items: center;
-    font-size: 1rem;
+    justify-content: space-between;
 }
 
-.package-option p i {
-    margin-right: 10px;
-    color: #64C2DB;
+.card__desc p {
+    margin: 0.5rem 0;
 }
 
-/* Button styles */
-button.package-button,
-button.listings-button,
-button#unique-buy-listings-button {
-    background-color: #64C2DB;
-    color: white;
-    padding: 12px 24px;
-    margin: 20px 0 10px;
+button {
+    background-color: var(--mainColor);
+    color: var(--white);
+    padding: 1rem 2rem;
     border: none;
-    border-radius: 50px;
+    border-radius: 0.5rem;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    font-size: 1rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1.25rem;
+    transition: background-color 0.3s ease;
 }
 
-button.package-button:hover,
-button#unique-buy-listings-button:hover {
-    background-color: #55b0c5;
-    transform: translateY(-5px);
+button:hover {
+    background-color: var(--hoverColor);
 }
 
-button#unique-buy-listings-button {
-    width: 100%;
-}
-
-button#unique-buy-listings-button:hover {
-    background-color: #4fa6bd;
-}
-
-/* Cancel button styles */
 button.btn-warning {
-    background-color: #55b0c5;
-    color: white;
-    padding: 12px 24px;
-    margin: 20px 0;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    font-size: 1rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f39c12;
 }
 
 button.btn-warning:hover {
-    background-color: #4fa6bd;
-    transform: translateY(-5px);
+    background-color: #e67e22;
 }
 
-/* Individual listings purchase styles */
-.individual-listings-purchase .listing-options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.individual-listings div {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-}
-
-#unique-individual-normal-posts,
-#unique-individual-featured-posts {
+.full-width-button {
     width: 100%;
-    margin: 10px 0;
-    accent-color: #64C2DB;
+}
+
+.listing-options-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    margin-bottom: 2rem;
 }
 
 .listing-option {
-    margin-bottom: 20px;
+    flex: 1;
 }
 
-/* Modal styles */
+.range-slider {
+    width: 100%;
+}
+
+.range-output {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.range-output .price,
+.range-output .total-price {
+    font-weight: bold;
+    color: var(--primaryColor);
+    background-color: var(--secondaryColor);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+button.listings-button {
+    width: 100%;
+    font-size: 1.25rem;
+}
+
+.expiry-date {
+    position: absolute;
+    top: -1.5rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    color: var(--primaryColor);
+    background-color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.package-type {
+    position: absolute;
+    top: -1.5rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    color: var(--primaryColor);
+    background-color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.faq-link {
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+
+.faq-link a {
+    color: var(--mainColor);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.faq-link a:hover {
+    text-decoration: underline;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -198,7 +246,7 @@ button.btn-warning:hover {
 .modal-content {
     background-color: #fff;
     margin: 5% auto;
-    padding: 30px;
+    padding: 20px;
     border: 1px solid #888;
     width: 80%;
     max-width: 500px;
@@ -208,16 +256,13 @@ button.btn-warning:hover {
 }
 
 .modal-content h2 {
-    color: #04436C;
-    margin-bottom: 20px;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .modal-content p {
-    color: #666;
-    margin-bottom: 20px;
     font-size: 1rem;
-    line-height: 1.5;
+    margin-bottom: 1rem;
 }
 
 .closex,
@@ -251,7 +296,7 @@ button.btn-warning:hover {
 }
 
 button#unique-stripe-button {
-    background-color: #64C2DB;
+    background-color: var(--mainColor);
     color: white;
     padding: 12px 24px;
     margin-top: 10px;
@@ -265,17 +310,16 @@ button#unique-stripe-button {
 }
 
 button#unique-stripe-button:hover {
-    background-color: #4fa6bd;
+    background-color: var(--hoverColor);
     transform: translateY(-5px);
 }
 
-/* Loading spinner styles */
 .loading-spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border-left-color: #64C2DB;
+    border-left-color: var(--mainColor);
     animation: spin 1s linear infinite;
     display: inline-block;
     margin-left: 10px;
@@ -290,106 +334,85 @@ button#unique-stripe-button:hover {
     }
 }
 
-/* Media queries for responsive design */
 @media screen and (max-width: 768px) {
-    .Header-Text-Package-Buying {
+    .plansHero {
+        padding: 2rem 0;
+    }
+
+    .plansHero__title {
         font-size: 2rem;
-        margin: 20px;
     }
 
-    .package-container,
-    .available-packages,
-    .individual-listings,
-    .individual-listings-purchase {
-        padding: 10px;
-        margin: 0 10px;
+    .plansHero__subtitle {
+        font-size: 1rem;
     }
 
-    .available-packages .packages-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .package-option,
-    .individual-listings div {
+    .planItem__container {
         flex-direction: column;
-        align-items: flex-start;
     }
 
-    .modal-content {
-        width: 90%;
-        padding: 20px;
+    .planItem {
+        flex: 1 1 100%;
     }
 
-    .modal-content h2 {
-        font-size: 1.5rem;
+    .planItem--pro {
+        flex: 1 1 100%;
     }
 
-    .modal-content p {
-        font-size: 0.9rem;
+    .listing-options-grid {
+        flex-direction: column;
+        gap: 1rem;
     }
 }
 
 @media screen and (max-width: 480px) {
-    .Header-Text-Package-Buying {
-        font-size: 1.8rem;
+    .plansHero__title {
+        font-size: 1.5rem;
+        margin-top: -30px;
     }
 
-    .package-details h3,
-    .individual-listings h3,
-    .available-packages h3,
-    .individual-listings-purchase h3 {
-        font-size: 1rem;
+    .plansHero__subtitle {
+        font-size: 0.875rem;
     }
 
-    .package-details p,
-    .individual-listings p,
-    .available-packages p,
-    .individual-listings-purchase p,
-    .package-option h4 {
-        font-size: 0.9rem;
+    .planItem {
+        padding: 1rem;
+        margin-top: -40px;
+        margin-bottom: 60px;
     }
 
-    button.package-button,
-    button#unique-buy-listings-button,
-    button#unique-stripe-button,
-    button.btn-warning {
-        font-size: 0.9rem;
-        padding: 10px 20px;
+    .card__title {
+        font-size: 1.25rem;
+        margin-top: 60px;
     }
 
-    /* Mobile specific styles */
-    .package-container,
-    .individual-listings,
-    .available-packages,
-    .individual-listings-purchase {
-        padding: 10px;
-        margin: 10px;
-        box-shadow: none;
+    .card__desc {
+        font-size: 0.875rem;
     }
 
-    .package-option {
-        padding: 10px;
-        box-shadow: none;
-    }
-
-    .card {
-        padding: 15px;
-        box-shadow: none;
+    button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
     }
 
     .listing-options-grid {
-        display: flex;
         flex-direction: column;
     }
 
-    .listing-option {
-        width: 76%;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    .range-output {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    #unique-individual-normal-posts,
-    #unique-individual-featured-posts {
-        width: calc(100% - 40px);
-        margin: 5px 0;
+    .expiry-date{
+        top: 0;
+        right: 0;
+        margin-top: 20px;
     }
+
+    .range-output .price, .range-output .total-price{
+        font-size: 14px;
+    }
+
 }

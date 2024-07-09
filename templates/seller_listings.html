@@ -5,30 +5,51 @@
     .listing-link {
       text-decoration: none;
       color: #000;
+      font-size: 1.2em;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 10px;
     }
 
     .listing-buttons {
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
     .listing-buttons a {
       background-color: #64C2DB;
       color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
+      padding: 10px 20px;
+      border-radius: 5px;
       text-decoration: none;
-      margin-left: 10px;
+      font-size: 0.9em;
+      transition: background-color 0.3s ease;
+      text-align: center;
+      flex: 1;
+      min-width: 100px;
     }
+
     .listing-buttons a:hover {
       background-color: #4fa6bd;
     }
+
     .listing-item {
       position: relative;
-      margin-bottom: 15px;
-      padding: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
       border: 1px solid #ddd;
       border-radius: 4px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
     }
+
+    .listing-item:hover {
+      transform: translateY(-5px);
+    }
+
     .views-count {
       position: absolute;
       top: 10px;
@@ -39,14 +60,97 @@
       border-radius: 15px;
       font-size: 0.9em;
     }
+
+    .category-status {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .pagination a, .pagination span {
+      margin: 0 5px;
+      padding: 8px 12px;
+      text-decoration: none;
+      background-color: #64C2DB;
+      color: white;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .pagination a:hover {
+      background-color: #4fa6bd;
+    }
+
+    .pagination .current {
+      background-color: #4fa6bd;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .listing-buttons a {
+        flex: 1 1 100%;
+        margin-top: 5px;
+        margin-left: 0;
+      }
+
+      .pagination a, .pagination span {
+        padding: 6px 10px;
+        font-size: 0.9em;
+      }
+    }
+
+    .no-listings {
+      text-align: center;
+      margin-top: 50px;
+      color: #555;
+    }
+
+    .no-listings h2 {
+      color: #04436C;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+
+    .no-listings p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+    }
+
+    .no-listings-buttons a {
+      background-color: #64C2DB;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      margin: 0 10px;
+    }
+
+    .no-listings-buttons a:hover {
+      background-color: #4fa6bd;
+    }
   </style>
 
-  <h2>Your Listings</h2>
+  {% if has_listings %}
+  <h2 style="text-align: center; color: #04436C;">Here you will see all our listings</h2>
+  {% endif %}
   <ul>
-    {% for listing in listings %}
+    {% for listing in page_obj %}
       <li class="listing-item">
         <div class="views-count">{{ listing.views }} views</div>
         <a href="{% url 'listing_detail' listing.slug %}" class="listing-link">{{ listing.project_name }}</a>
+        <div class="category-status">
+          Categories: {% for category in listing.categories.all %}{{ category.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          | Status: {{ listing.get_status_display }}
+        </div>
         <div class="listing-buttons">
           <a href="{% url 'edit_listing' listing.slug %}">Edit</a>
           <a href="{% url 'listing_detail' listing.slug %}">View</a>
@@ -54,4 +158,35 @@
       </li>
     {% endfor %}
   </ul>
+
+  {% if has_listings %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?page=1">&laquo; first</a>
+      <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="current">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+    {% endif %}
+  </div>
+  {% else %}
+    <div class="no-listings">
+      <h2>You don't have any listings yet</h2>
+      <p>Why wait? Start creating your very first listing now! Read more in our FAQ section.</p>
+      <div class="no-listings-buttons">
+        <a href="{% url 'create_listing' %}">Create Listing</a>
+        <a href="{% url 'faq_list' %}">FAQ</a>
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}

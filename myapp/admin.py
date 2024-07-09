@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import timezone
-from datetime import datetime, timedelta, time, date
+from datetime import timedelta
 from django.utils.html import format_html
 from django.core.mail import send_mail
 from django.conf import settings
@@ -75,7 +75,7 @@ class PackageForm(forms.ModelForm):
 @admin.register(Package)
 class PackageAdmin(admin.ModelAdmin):
     form = PackageForm
-    list_display = ('name', 'normal_post_limit', 'featured_post_limit', 'price', 'duration', 'duration_unit')
+    list_display = ('name', 'normal_post_limit', 'featured_post_limit', 'price', 'duration', 'duration_unit', 'inclusions')
     list_filter = ('duration_unit',)
     search_fields = ('name', 'description')
 
@@ -85,7 +85,7 @@ class ListingPriceAdmin(admin.ModelAdmin):
 
 @admin.register(Seller)
 class SellerAdmin(admin.ModelAdmin):
-    list_display = ('user', 'company_name', 'is_approved', 'normal_post_count', 'featured_post_count', 'individual_normal_posts', 'individual_featured_posts', 'membership_expiry', 'is_auto_renew', 'send_reset_password_link')
+    list_display = ('user', 'company_name', 'is_approved', 'normal_post_count', 'featured_post_count', 'membership_expiry', 'is_auto_renew', 'send_reset_password_link')
     actions = ['approve_seller', 'disapprove_seller']
 
     def approve_seller(self, request, queryset):
@@ -94,7 +94,8 @@ class SellerAdmin(admin.ModelAdmin):
             try:
                 send_mail(
                     'Account Approved',
-                    'Your account has been approved by admin.',
+                    '''Your account has been approved by admin.
+                    Start using the website now''',
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )
@@ -108,7 +109,10 @@ class SellerAdmin(admin.ModelAdmin):
             try:
                 send_mail(
                     'Account Disapproved',
-                    'Your account has been disapproved by admin.',
+                    '''Your account has been disapproved by admin.
+                        If you have any question please contact us by email.
+                        info@greenenergyconnection.com
+                    ''',
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )
@@ -136,10 +140,9 @@ class SellerAdmin(admin.ModelAdmin):
 
         # Check if the package was changed
         if change and 'package' in form.changed_data:
-            # Apply new package details
             if obj.package:
-                obj.normal_post_count = obj.package.normal_post_limit
-                obj.featured_post_count = obj.package.featured_post_limit
+                obj.normal_post_count = max(obj.normal_post_count, obj.package.normal_post_limit)
+                obj.featured_post_count = max(obj.featured_post_count, obj.package.featured_post_limit)
                 obj.membership_expiry = timezone.now() + timedelta(minutes=obj.package.get_duration_in_minutes())
             else:
                 obj.normal_post_count = 0

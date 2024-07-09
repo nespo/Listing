@@ -2,7 +2,12 @@
 {% load static %}
 {% block extra_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'profile/styles.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intl-tel-input.min.css"/>
 {% endblock %}
 
 {% block title %}Update Profile{% endblock %}
@@ -24,16 +29,28 @@
             {{ form.company_name }}
         </div>
         <div class="profile-update-form-group">
+            <label for="id_company_phone_number">Company Phone Number</label>
+            {{ form.company_phone_number }}
+        </div>
+        <div class="profile-update-form-group">
             <label for="id_about">About</label>
             {{ form.about }}
         </div>
         <div class="profile-update-form-group">
-            <label for="id_company_address">Company Address</label>
-            {{ form.company_address }}
+            <label for="id_country">Country</label>
+            {{ form.country }}
         </div>
         <div class="profile-update-form-group">
-            <label for="id_company_phone_number">Company Phone Number</label>
-            {{ form.company_phone_number }}
+            <label for="id_state">State</label>
+            {{ form.state }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_city">City</label>
+            {{ form.city }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_company_address">Company Address</label>
+            {{ form.company_address }}
         </div>
         <div class="profile-update-form-group">
             <label for="id_first_name">First Name</label>
@@ -42,6 +59,10 @@
         <div class="profile-update-form-group">
             <label for="id_last_name">Last Name</label>
             {{ form.last_name }}
+        </div>
+        <div class="profile-update-form-group">
+            <label for="id_mobile_number">Mobile Number</label>
+            {{ form.mobile_number }}
         </div>
         <div class="profile-update-form-group">
             <label for="id_bio">Bio</label>
@@ -78,23 +99,101 @@
 
 {% block extra_js %}
 <script>
-    tinymce.init({
-        selector: 'textarea',
-        plugins: 'lists link',
-        menubar: false,
-        toolbar: 'bold italic underline | bullist numlist | link',
-        height: 300,
-        branding: false,
-        forced_root_block: false,
-        force_p_newlines: false,
-        force_br_newlines: true,
-        content_css: false,
-        content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-        valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
-        invalid_elements: 'script,iframe,object,embed'
-    });
+    $(document).ready(function() {
+        // Initialize TinyMCE
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'lists link',
+            menubar: false,
+            toolbar: 'bold italic underline | bullist numlist | link',
+            height: 300,
+            branding: false,
+            forced_root_block: 'p',
+            force_p_newlines: true,
+            force_br_newlines: false,
+            content_css: false,
+            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+            valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
+            invalid_elements: 'script,iframe,object,embed'
+        });
 
-    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Choices.js
+        const countrySelect = new Choices('#id_country', { searchEnabled: true });
+        const stateSelect = new Choices('#id_state', { searchEnabled: true });
+        const citySelect = new Choices('#id_city', { searchEnabled: true });
+
+        // Load initial data from the form instance
+        const initialCountryId = $('#id_country').val();
+        const initialStateId = '{{ form.instance.state.id }}';
+        const initialCityId = '{{ form.instance.city.id }}';
+
+        if (initialStateId) {
+            stateSelect.setChoiceByValue(initialStateId);
+        }
+
+        if (initialCityId) {
+            citySelect.setChoiceByValue(initialCityId);
+        }
+
+        // Event handler for country change
+        $('#id_country').change(function () {
+            var countryId = $(this).val();
+            $.ajax({
+                url: `/api/get_states/${countryId}/`,
+                success: function (data) {
+                    stateSelect.clearStore();
+                    stateSelect.setChoices(data.map(state => ({ value: state.id, label: state.name })), 'value', 'label', true);
+                    stateSelect.setChoiceByValue('');
+
+                    citySelect.clearStore();
+                    citySelect.setChoices([], 'value', 'label', true);
+                }
+            });
+        });
+
+        // Event handler for state change
+        $('#id_state').change(function () {
+            var stateId = $(this).val();
+            $.ajax({
+                url: `/api/get_citiess/${stateId}/`,
+                success: function (data) {
+                    citySelect.clearStore();
+                    citySelect.setChoices(data.map(city => ({ value: city.id, label: city.name })), 'value', 'label', true);
+                    citySelect.setChoiceByValue('');
+                }
+            });
+        });
+
+        // Initialize intl-tel-input for phone number fields
+        const phoneNumberFields = ['id_company_phone_number', 'id_mobile_number'];
+        phoneNumberFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const phoneInput = window.intlTelInput(field, {
+                    initialCountry: "auto",
+                    geoIpLookup: function(callback) {
+                        fetch('https://ipinfo.io/json')
+                            .then(response => response.json())
+                            .then(data => callback(data.country))
+                            .catch(() => callback('us'));
+                    },
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                    nationalMode: false // Ensures that the phone number is formatted with the international dial code
+                });
+
+                // Set initial phone number value
+                const initialPhoneNumber = field.value;
+                if (initialPhoneNumber) {
+                    phoneInput.setNumber(initialPhoneNumber);
+                }
+
+                field.addEventListener("countrychange", function () {
+                    const countryData = phoneInput.getSelectedCountryData();
+                    field.value = "+" + countryData.dialCode;
+                });
+            }
+        });
+
         var successModal = document.getElementById("profile-update-success-modal");
         var passwordModal = document.getElementById("password-confirmation-modal");
         var closeBtns = document.getElementsByClassName("profile-update-modal-close");
@@ -147,11 +246,13 @@
         document.getElementById('update-profile-btn').onclick = function() {
             passwordModal.style.display = "block";
             addZIndexCSS(); // Add z-index CSS when modal is opened
+            passwordModal.classList.add('fade-in'); // Add animation class
         }
 
         // Handle password confirmation form submission
         document.getElementById('password-confirmation-form').onsubmit = function(event) {
             event.preventDefault();
+            tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
             var password = document.getElementById('id_password').value;
             var formData = new FormData(document.getElementById('profile-update-form'));
             formData.append('password', password);
@@ -171,6 +272,7 @@
                         passwordModal.style.display = "none";
                         successModal.style.display = "block";
                     } else {
+                        passwordModal.style.display = "none"; // Hide password modal on error
                         if (response.errors) {
                             var errors = response.errors;
                             for (var field in errors) {
@@ -197,6 +299,25 @@
 
             xhr.send(formData);
         };
+
+        // Ensure TinyMCE content is saved before form submission
+        document.getElementById('profile-update-form').addEventListener('submit', function(event) {
+            tinymce.triggerSave();
+        });
     });
 </script>
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
 {% endblock %}

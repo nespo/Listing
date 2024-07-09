@@ -1,0 +1,276 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --mainColor: #64C2DB;
+    --hoverColor: #4fa6bd;
+    --baseColor: #656c7c;
+    --baseSize: 16px;
+    --baseLineHeight: 1.5;
+    --fontFamily: 'Inter', sans-serif;
+    --white: #fff;
+    --primaryColor: #4fa6bd;
+    --secondaryColor: #ffecf0;
+    --headingColor: #04436C;
+}
+
+.plans__container {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.plansHero {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.plansHero__title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--headingColor);
+}
+
+.plansHero__subtitle {
+    font-size: 1.25rem;
+    color: var(--baseColor);
+}
+
+.package-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.available-packages {
+    background-color: var(--mainColor);
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.available-packages__title {
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 1rem;
+}
+
+.packages-grid {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.planItem {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    flex: 1;
+    max-width: calc(33.333% - 1rem);
+    position: relative;
+}
+
+.card {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    background-color: var(--white);
+    position: relative;
+}
+
+.card__top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-color: var(--mainColor);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.card__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--headingColor);
+}
+
+.card__desc {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.card__desc p {
+    margin: 0.5rem 0;
+}
+
+button {
+    background-color: var(--mainColor);
+    color: var(--white);
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--hoverColor);
+}
+
+button.full-width-button {
+    width: 100%;
+}
+
+.package-type {
+    position: absolute;
+    top: -1.5rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    color: var(--primaryColor);
+    background-color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.faq-container {
+    width: 100%;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+    position: relative;
+    margin-bottom: 3rem !important;
+}
+
+.faq__top-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-color: var(--mainColor);
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+}
+
+.faq-title {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--headingColor);
+    margin-bottom: 2rem;
+}
+
+.faq-list {
+    list-style: none;
+    padding: 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+}
+
+.faq-question {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--headingColor);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: color 0.3s ease;
+}
+
+.faq-question:hover {
+    color: var(--hoverColor);
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    font-size: 1rem;
+    color: #333;
+    padding: 0 1rem;
+}
+
+.faq-answer.active {
+    padding: 1rem;
+    max-height: 1000px; /* Adjust as needed */
+}
+
+.faq-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.faq-answer.active .faq-toggle-icon {
+    transform: rotate(180deg);
+}
+
+@media screen and (max-width: 768px) {
+    .plansHero {
+        padding: 2rem 0;
+    }
+
+    .plansHero__title {
+        font-size: 2rem;
+    }
+
+    .plansHero__subtitle {
+        font-size: 1rem;
+    }
+
+    .packages-grid {
+        flex-direction: column;
+    }
+
+    .planItem {
+        max-width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .plansHero__title {
+        font-size: 1.5rem;
+    }
+
+    .plansHero__subtitle {
+        font-size: 0.875rem;
+    }
+
+    .planItem {
+        padding: 1rem;
+    }
+
+    .card__title {
+        font-size: 1.25rem;
+    }
+
+    .card__desc {
+        font-size: 0.875rem;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .faq-title {
+        font-size: 1.5rem;
+    }
+
+    .faq-question {
+        font-size: 1rem;
+    }
+
+    .faq-answer {
+        font-size: 0.875rem;
+    }
+}

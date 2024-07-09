@@ -5,82 +5,61 @@
 <link rel="stylesheet" type="text/css" href="{% static 'profile/seller.css' %}">
 {% endblock %}
 {% block content %}
-<div class="bd-profile-main">
-    <div class="bd-content bd-contact bd-desktop">
-        <div class="bd-profile-info">
+<div class="profile-main">
+    <div class="profile-header">
+        <div class="profile-photo-container">
             {% if seller.profile_image %}
-                <img class="bd-content-photo" src="{{ seller.profile_image.url }}" alt="{{ seller.user.get_full_name }}" loading="lazy">
+                <img class="profile-photo" src="{{ seller.profile_image.url }}" alt="{{ seller.user.get_full_name }}" loading="lazy">
             {% else %}
-                <img class="bd-content-photo" src="https://via.placeholder.com/150" alt="{{ seller.user.get_full_name }}" loading="lazy">
+                <img class="profile-photo" src="https://via.placeholder.com/150" alt="{{ seller.user.get_full_name }}" loading="lazy">
             {% endif %}
-            <div class="bd-contact-info">
-                <h1 class="bd-content-highlight">
-                    <span>{{ seller.user.get_full_name }}</span>
-                </h1>
-                <h2 class="bd-content-title">
-                    <span>{{ seller.company_name }}</span>
-                </h2>
-                <div class="bd-content-location">
-                    <span>{{ seller.company_address }}</span>
-                </div>
-                <div class="bd-header-modules-desktop">
-                    <div class="bd-header-modules-desktop-message bd-module">
-                        <strong>
-                            <a id="bd-send-message-id" class="ln-icon-message-curved listing-message-button" href="javascript:void(0);" data-seller-id="{{ seller.id }}"><span>Send a Message</span></a>
-                        </strong>
-                    </div>
-                    <div class="bd-header-modules-desktop-swap-for-devices">
-                        <div class="bd-header-modules-desktop-phone bd-module">
-                            <p class="bd-header-modules-desktop-all-phones">
-                                <strong>Phone</strong> <span>{{ seller.company_phone_number }}</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        <div class="profile-details">
+            <h1>{{ seller.user.get_full_name }}</h1>
+            <h2>{{ seller.company_name }}</h2>
+            <p class="contact-info">{{ seller.company_address }}</p>
+            <div class="button-group">
+                <button class="button" id="bd-send-message-id" data-seller-id="{{ seller.id }}">Send a Message</button>
+                <button class="button">Phone: {{ seller.company_phone_number }}</button>
             </div>
         </div>
     </div>
 
-    <div class="bd-content">
-        <div id="broker-profile-tabs" class="lnc-tab-container" data-hideinactivetabs="False">
-            <div id="about" class="lnc-tab lnc-tab-active" data-contentcontainerid="about-section">
-                <a href="#about-section" title="About Broker Section" class="lnc-tab-link">About Me</a>
-            </div>
-            <div id="listings" class="lnc-tab" data-contentcontainerid="listings-section">
-                <a href="#listings-section" title="Broker Listings Section" class="lnc-tab-link">Listings</a>
-            </div>
+    <div class="tabs">
+        <div id="about" class="tab tab-active" data-contentcontainerid="about-section">About Me</div>
+        <div id="listings" class="tab" data-contentcontainerid="listings-section">Listings</div>
+    </div>
+
+    <div id="about-section" class="tab-content tab-content-active">
+        <div class="bio-card">
+            <h3 class="bio-heading">Bio</h3>
+            <p class="bio-text">{{ seller.bio|safe }}</p>
         </div>
     </div>
 
-    <div id="about-section">
-        <div id="bdBioCard" class="bd-content lnc-card">
-            <div class="bd-heading">Bio</div>
-            <div id="bdBio" class="bd-bio">
-                <span>{{ seller.bio|safe }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="listings-section">
-        <div id="broker-listings" class="bd-content bd-listings lnc-card">
+    <div id="listings-section" class="tab-content">
+        <div class="listings-container">
             {% for listing in listings %}
                 <div class="listing-item">
                     <a href="{% url 'listing_detail' listing.slug %}">
-                        {% if listing.thumbnail_image %}
-                            <img src="{{ listing.thumbnail_image.url }}" alt="{{ listing.project_name }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/150" alt="{{ listing.project_name }}">
-                        {% endif %}
-                        <h3>{{ listing.project_name }}</h3>
-                        <p class="date-link-seller">
-                            {% if listing.updated_at %}
-                                Updated: {{ listing.updated_at|date:"F j, Y" }}
+                        <div class="listing-thumbnail">
+                            {% if listing.thumbnail_image %}
+                                <img src="{{ listing.thumbnail_image.url }}" alt="{{ listing.project_name }}">
                             {% else %}
-                                Created: {{ listing.created_at|date:"F j, Y" }}
+                                <img src="https://via.placeholder.com/150" alt="{{ listing.project_name }}">
                             {% endif %}
-                        </p>
+                        </div>
+                        <div class="listing-details">
+                            <h4>{{ listing.project_name }}</h4>
+                            <p class="date-link-seller">
+                                {% if listing.updated_at %}
+                                    Updated: {{ listing.updated_at|date:"F j, Y" }}
+                                {% else %}
+                                    Created: {{ listing.created_at|date:"F j, Y" }}
+                                {% endif %}
+                            </p>
+                        </div>
                     </a>
-                    <button class="listing-message-button" data-slug="{{ listing.slug }}" data-seller-id="{{ seller.id }}">Send a Message</button>
                 </div>
             {% endfor %}
         </div>
@@ -107,7 +86,7 @@
     <div id="listing-message-form-modal" class="listing-message-form-modal">
         <div class="listing-message-form-content">
             <span class="listing-message-form-close">&times;</span>
-            <h2>Contact {{ seller.company_name }}</h2>
+            <h2 style="text-align: center;">Contact {{ seller.first_name }} {{ seller.last_name }}</h2>
             <form id="listing-message-form" method="post">
                 {% csrf_token %}
                 <div class="listing-form-group">
@@ -130,7 +109,7 @@
                 </div>
                 <input type="hidden" name="slug" id="listing-slug" value="">
                 <input type="hidden" name="seller_id" id="seller-id" value="{{ seller.id }}">
-                <button type="submit" class="listing-submit-button">Send Message</button>
+                <button type="submit" class="button listing-submit-button">Send Message</button>
             </form>
         </div>
     </div>
@@ -141,19 +120,18 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function(){
-        const tabs = document.querySelectorAll('.lnc-tab');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                tabs.forEach(t => t.classList.remove('lnc-tab-active'));
-                this.classList.add('lnc-tab-active');
+                tabs.forEach(t => t.classList.remove('tab-active'));
+                this.classList.add('tab-active');
+                tabContents.forEach(tc => tc.classList.remove('tab-content-active'));
+                document.getElementById(this.dataset.contentcontainerid).classList.add('tab-content-active');
             });
         });
 
-        $('.listing-message-button').on('click', function(){
-            var slug = $(this).data('slug');
-            var sellerId = $(this).data('seller-id');
-            $('#listing-slug').val(slug || '');
-            $('#seller-id').val(sellerId || '{{ seller.id }}');
+        $('#bd-send-message-id').on('click', function(){
             $('#listing-message-form-modal').fadeIn();
         });
 

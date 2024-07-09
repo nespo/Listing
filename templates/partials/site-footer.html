@@ -1,0 +1,44 @@
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-widget-column logo-text">
+            <img class="footer-logo" src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_title }}">
+            <p>{{ site_settings.site_description }}</p>
+        </div>
+        <div class="footer-widget-column">
+            <h4>Quick Links</h4>
+            <div class="footer-widget link">
+                {% for widget in site_settings.footer_widgets.all %}
+                {% if widget.widget_type == 'link1' %}
+                {% for link in widget.links.all %}
+                <a href="{{ link.url }}">{{ link.text }}</a>
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="footer-widget-column">
+            <h4>Resources</h4>
+            <div class="footer-widget link">
+                {% for widget in site_settings.footer_widgets.all %}
+                {% if widget.widget_type == 'link2' %}
+                {% for link in widget.links.all %}
+                <a href="{{ link.url }}">{{ link.text }}</a>
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="footer-widget-column">
+            {% for widget in site_settings.footer_widgets.all %}
+            {% if widget.widget_type == 'html' %}
+            <div class="footer-widget custom-html">
+                {{ widget.custom_html|safe }}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2024 {{ site_settings.site_title }}. All rights reserved.</p>
+    </div>
+</footer>    

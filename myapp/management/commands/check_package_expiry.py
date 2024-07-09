@@ -17,6 +17,7 @@ class Command(BaseCommand):
                     elif seller.new_package:
                         seller.apply_new_package()
                     else:
+                        seller.deactivate_listings()
                         seller.package = None
                         seller.normal_post_count = 0
                         seller.featured_post_count = 0

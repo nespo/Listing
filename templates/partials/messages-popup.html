@@ -1,0 +1,22 @@
+{% if messages %}
+<div id="messages-popup" class="popup">
+    <div class="popup-content">
+        <span class="close" id="close-messages">&times;</span>
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+                <span class="closebtn" onclick="hideMessage(this)">&times;</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div id="messages-popup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <span class="close" id="close-messages">&times;</span>
+        <div class="messages-container"></div>
+    </div>
+</div>
+{% endif %}

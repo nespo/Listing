@@ -15,6 +15,7 @@
 }
 .listing-sticky-header h2 {
     margin: 0;
+    margin-top: 50px;
 }
 .listing-sticky-header p {
     margin: 5px 0 0;
@@ -39,7 +40,7 @@
     position: absolute;
     top: 10px;
     right: 30px;
-    background: #ff5733;
+    background: #4fa6bd;
     color: #fff;
     padding: 10px 15px;
     border-radius: 50%;
@@ -48,54 +49,47 @@
     font-size: 14px;
     text-align: center;
 }
-.listing-content-detail {
+.listing-main {
     display: flex;
-    flex-direction: row;
-    margin: 20px;
+    gap: 20px;
+    padding: 20px;
+}
+.listing-content-detail {
+    width: 75%;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
 }
-.listing-details-detail {
-    width: 70%;
+.listing-row {
+    margin-bottom: 20px;
+}
+.listing-section {
     padding: 20px;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-.listing-description-box {
-    position: relative;
-}
-.listing-description-header {
+.section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.listing-description-header h3 {
+.section-header h3 {
     margin: 0;
+    color: #04436C;
 }
 .listing-created-date {
     font-size: 14px;
     color: #888;
 }
-.listing-row-detail {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-.listing-column {
-    flex: 1;
-    min-width: 300px;
-}
 .listing-seller-detail {
-    width: 30%;
+    width: 25%;
     padding: 20px;
     background: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    position: -webkit-sticky;
-    position: sticky;
-    top: 20px;
-    height: max-content;
     text-align: center;
+    height: 20%;
 }
 .listing-seller-info {
     display: flex;
@@ -118,17 +112,27 @@
 .listing-seller-contact-info p {
     margin-bottom: 15px;
 }
+
+.listing-seller-contact-info h3 a{
+    text-decoration: none;
+    color:  #04436C;
+}
+.seller-contact-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
 .listing-call-button, .listing-message-button {
-    display: block;
+    display: inline-block;
     margin-bottom: 10px;
-    padding: 10px 15px;
+    padding: 10px 0;
     background: #64C2DB;
     color: #fff;
     border: none;
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
-    width: 100%;
+    width: 48%;
     text-align: center;
     box-sizing: border-box;
 }
@@ -162,6 +166,7 @@
     justify-content: center;
     align-items: center;
     overflow-y: auto; /* Allow vertical scrolling */
+    margin-top: 80px;
 }
 .listing-message-form-content {
     background: #fff;
@@ -226,13 +231,17 @@
     display: none;
 }
 @media (max-width: 768px) {
-    .listing-content-detail {
+    .listing-main {
         flex-direction: column;
     }
-    .listing-details-detail {
-        width: 88%;
+    .listing-created-date{
+        font-size: 12px;
+    }
+    .listing-content-detail {
+        width: 100%;
     }
     .listing-seller-detail {
+        width: 100%;
         display: none;
     }
     .listing-mobile-sticky-seller {
@@ -286,6 +295,10 @@
     .listing-map-section {
         margin-top: 60px; /* To avoid overlapping with the sticky seller detail section */
     }
+    .listing-message-form-modal{
+        margin-top: 64px;
+        background: transparent;
+    }
 }
 .listing-success-popup {
     position: fixed;
@@ -299,4 +312,10 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     z-index: 1002;
     text-align: center;
+}
+.section-divider {
+    border: 0;
+    height: 2px;
+    background: #64C2DB;
+    margin: 20px 0;
 }

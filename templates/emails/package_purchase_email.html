@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Package Purchased</title>
+    <title>Package Purchase Confirmation</title>
 </head>
 <body>
-    <h1>Package Purchase Confirmation</h1>
     <p>Dear {{ user.first_name }},</p>
     <p>You have successfully purchased the {{ package.name }} package. It will be active from {{ membership_expiry }}.</p>
     <p>Auto-Renewal: {{ auto_renew }}</p>

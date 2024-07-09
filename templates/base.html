@@ -5,10 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}{{ site_settings.site_title }}{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'sidebar.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'footer.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/header.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/popup-styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/sidebar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/footer.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <link rel="icon" href="{{ site_settings.site_favicon.url }}">
     <meta name="description" content="{{ site_settings.site_description }}">
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
@@ -20,196 +26,21 @@
 </head>
 
 <body id="home-page">
-    <header>
-        <div class="navbar">
-            <div class="hamburger" id="hamburger">
-                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828859.png" alt="Hamburger Menu" id="hamburger-icon">
-            </div>
-            <div class="logo">
-                <a href="{% url 'home' %}">
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_title }}">
-                </a>
-            </div>
-            <nav class="menu">
-                <ul>
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'all_listings' %}">All Listings</a></li>
-                    {% if not user.is_authenticated %}
-                    <li><a href="{% url 'public_packages' %}">Pricing</a></li>
-                    {% endif %}
-                    <li><a href="{% url 'faq_list' %}">Faqs</a></li>
-                    <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
-                </ul>
-            </nav>
-            <div class="account-icon">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M224 256a128 128 0 1 0 0-256 128 128 0 0 0 0 256zm89.6 32h-11.2a174.4 174.4 0 0 1-156.8 0h-11.2C60.8 288 0 348.8 0 425.6V464a48 48 0 0 0 48 48h352a48 48 0 0 0 48-48v-38.4c0-76.8-60.8-137.6-134.4-137.6z'/%3E%3C/svg%3E"
-                    alt="Account Icon" id="account-icon">
-                <div class="dropdown-content" id="dropdown-content">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}">Dashboard</a>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="logout-button">Logout</button>
-                    </form>
-                    {% else %}
-                    <a href="#" id="login">Login</a>
-                    <a href="#" id="signup">Sign Up</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="mobile-menu" id="mobile-menu">
-            <ul>
-                <li><a href="{% url 'home' %}"><span class="icon"><i class="fas fa-home"></i></span>Home</a></li>
-                <li><a href="{% url 'all_listings' %}"><span class="icon"><i class="fas fa-list"></i></span>All Listings</a></li>
-                {% if not user.is_authenticated %}
-                <li><a href="{% url 'public_packages' %}">Our Packages</a></li>
-                {% endif %}
-                {% if user.is_authenticated %}
-                <li><a href="{% url 'dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard</a></li>
-                <li><a href="{% url 'create_listing' %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
-                <li><a href="{% url 'buy_package_listing' %}"><span class="icon"><i class="fas fa-box-open"></i></span>Change your package</a></li>
-                <li><a href="{% url 'transaction_history' %}"><span class="icon"><i class="fas fa-history"></i></span>View your transaction history</a></li>
-                <li><a href="{% url 'seller_listings' %}"><span class="icon"><i class="fas fa-list-alt"></i></span>View your listings</a></li>
-                <li><a href="{% url 'update_profile' %}"><span class="icon"><i class="fas fa-user-edit"></i></span>Update your profile</a></li>
-                <li><a href="{% url 'change_password' %}"><span class="icon"><i class="fas fa-key"></i></span>Change your password</a></li>
-                {% endif %}
-                <li><a href="{% url 'faq_list' %}">Faqs</a></li>
-                <li><a href="{% url 'page_detail' slug='contact_us' %}">Contact Us</a></li>
-            </ul>
-        </div>
-    </header>
-
-    {% if messages %}
-    <div id="messages-popup" class="popup">
-        <div class="popup-content">
-            <span class="close" id="close-messages">&times;</span>
-            <div class="messages-container">
-                {% for message in messages %}
-                <div class="message {{ message.tags }}">
-                    {{ message }}
-                    <span class="closebtn" onclick="hideMessage(this)">&times;</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div id="messages-popup" class="popup" style="display: none;">
-        <div class="popup-content">
-            <span class="close" id="close-messages">&times;</span>
-            <div class="messages-container"></div>
-        </div>
-    </div>
-    {% endif %}
+    {% include 'partials/site-header.html' %}
+    {% include 'partials/messages-popup.html' %}
 
     {% if not user.is_authenticated %}
-    <div id="login-popup" class="popup">
-        <div class="popup-content">
-            <span class="close" id="close-login">&times;</span>
-            <h2>Login</h2>
-            <form method="post" action="{% url 'login_user' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="login_username">Username:*</label>
-                    {{ login_form.username }}
-                    <div class="error" id="error-username"></div>
-                </div>
-                <div class="form-group">
-                    <label for="login_password">Password:*</label>
-                    {{ login_form.password }}
-                    <div class="error" id="error-password"></div>
-                </div>
-                <button type="submit">Login</button>
-                <div class="error" id="error-form"></div>
-            </form>
-            <div class="popup-links">
-                <a href="#" id="show-signup">Create Account</a> |
-                <a href="#" id="show-reset">Forgot Password?</a>
-            </div>
-        </div>
-    </div>
-    
-    <div id="signup-popup" class="popup">
-        <div class="popup-content">
-            <span class="close" id="close-signup">&times;</span>
-            <h2>Sign Up</h2>
-            <form id="signup-form" method="post" action="{% url 'register_seller' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="signup_username">Username:*</label>
-                    {{ register_form.username }}
-                    <div class="error" id="error-username"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_email">Email:*</label>
-                    {{ register_form.email }}
-                    <div class="error" id="error-email"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_password">Password:*</label>
-                    {{ register_form.password }}
-                    <div class="error" id="error-password"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_company_name">Company Name:*</label>
-                    {{ register_form.company_name }}
-                    <div class="error" id="error-company_name"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_company_address">Company Address:*</label>
-                    {{ register_form.company_address }}
-                    <div class="error" id="error-company_address"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_company_phone_number">Company Phone Number:*</label>
-                    {{ register_form.company_phone_number }}
-                    <div class="error" id="error-company_phone_number"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_first_name">First Name:*</label>
-                    {{ register_form.first_name }}
-                    <div class="error" id="error-first_name"></div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_last_name">Last Name:*</label>
-                    {{ register_form.last_name }}
-                    <div class="error" id="error-last_name"></div>
-                </div>
-                <button type="submit">Sign Up</button>
-            </form>
-            <div class="popup-links">
-                <a href="#" id="show-login">Already have an account? Login</a>
-            </div>
-        </div>
-    </div>
-    <div id="reset-popup" class="popup">
-        <div class="popup-content">
-            <span class="close" id="close-reset">&times;</span>
-            <h2>Reset Password</h2>
-            <form id="reset-form" method="post" action="{% url 'password_reset' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="reset_email">Email:*</label>
-                    <input type="email" name="email" id="reset_email" required>
-                </div>
-                <button type="submit">Reset Password</button>
-            </form>
-            <div class="popup-links">
-                <a href="#" id="show-login-from-reset">Back to Login</a>
-            </div>
-            <div id="reset-message" style="display:none;"></div>
-        </div>
-    </div>
+    {% include 'partials/login-popup.html' %}
     {% endif %}
 
-    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail' %}container with-sidebar{% endif %}">
-        {% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail'%}
+    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method' %}container with-sidebar{% endif %}">
+        {% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method'%}
         <aside class="sidebar">
             <h2>Dashboard</h2>
             <p>Welcome, {{ request.user.username }}!</p>
             <ul class="dashboard-menu">
                 <li><a href="{% url 'create_listing' %}" class="{% if request.resolver_match.url_name == 'create_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
+                <li><a href="{% url 'add_payment_method' %}" class="{% if request.resolver_match.url_name == 'add_payment_method' %}active{% endif %}"><span class="icon"><i class="fas fa-credit-card"></i></span>Add Payment Method</a></li>
                 <li><a href="{% url 'buy_package_listing' %}" class="{% if request.resolver_match.url_name == 'buy_package_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-box-open"></i></span>Change your package</a></li>
                 <li><a href="{% url 'transaction_history' %}" class="{% if request.resolver_match.url_name == 'transaction_history' %}active{% endif %}"><span class="icon"><i class="fas fa-history"></i></span>View your transaction history</a></li>
                 <li><a href="{% url 'seller_listings' %}" class="{% if request.resolver_match.url_name == 'seller_listings' %}active{% endif %}"><span class="icon"><i class="fas fa-list-alt"></i></span>View your listings</a></li>
@@ -226,58 +57,21 @@
             </ul>
         </aside>
         {% endif %}
-        <main class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,all_listings,update_profile,dashboard,change_password,edit_listing,seller_messages' %} with-sidebar-content{% endif %}">
+        <main class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages' %}with-sidebar-content{% else %}container-visitor-view{% endif %}">
             {% block content %}
             {% endblock %}
-        </main>
+        </main>        
     </div>    
 
-    <footer class="site-footer">
-        <div class="footer-content">
-            <div class="footer-widget-column logo-text">
-                <img class="footer-logo" src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_title }}">
-                <p>{{ site_settings.site_description }}</p>
-            </div>
-            <div class="footer-widget-column">
-                <h4>Quick Links</h4>
-                <div class="footer-widget link">
-                    {% for widget in site_settings.footer_widgets.all %}
-                    {% if widget.widget_type == 'link1' %}
-                    {% for link in widget.links.all %}
-                    <a href="{{ link.url }}">{{ link.text }}</a>
-                    {% endfor %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="footer-widget-column">
-                <h4>Resources</h4>
-                <div class="footer-widget link">
-                    {% for widget in site_settings.footer_widgets.all %}
-                    {% if widget.widget_type == 'link2' %}
-                    {% for link in widget.links.all %}
-                    <a href="{{ link.url }}">{{ link.text }}</a>
-                    {% endfor %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="footer-widget-column">
-                {% for widget in site_settings.footer_widgets.all %}
-                {% if widget.widget_type == 'html' %}
-                <div class="footer-widget custom-html">
-                    {{ widget.custom_html|safe }}
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2024 {{ site_settings.site_title }}. All rights reserved.</p>
-        </div>
-    </footer>    
-    
-    <script src="{% static 'script.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+    {% include 'partials/site-footer.html' %}
+    <!-- <script src="{% static 'script.js' %}"></script> -->
+    <!-- <script src="{% static 'dynamic_forms.js' %}"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>   
+    {% if user.is_authenticated %}
+    <script src="{% static 'loggedin.js' %}"></script>  
+    {% endif %}               
+    {% block extra_js %}
+    {% endblock %}
 </body>
 </html>

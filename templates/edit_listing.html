@@ -4,28 +4,101 @@
 {% block title %}Edit Listing - {{ form.instance.project_name }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
+<style>
+/* Popup Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: hidden; /* Disable scroll if needed */
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+}
+
+.modal-dialog {
+    position: relative;
+    margin: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    max-width: 500px;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.modal-header, .modal-footer {
+    padding: 4px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e5e5;
+}
+
+.modal-title {
+    text-align: center;
+    font-size: 18px;
+}
+
+.modal-body {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.btn-primary, .btn-secondary {
+    background-color: #64C2DB;
+    border-color: #64C2DB;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+    border: 0px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    background-color: #4fa6bd;
+    border-color: #4fa6bd;
+}
+</style>
 {% endblock %}
 {% block content %}
 <div class="listing-create-container">
     <h2>Edit Listing - {{ form.instance.project_name }} </h2>
-    <form method="post" enctype="multipart/form-data" class="listing-create-form">
+    <form id="listing-edit-form" method="post" enctype="multipart/form-data" class="listing-create-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
-        {% for field_name in field_order %}
-            {% with form|get_field:field_name as field %}
-                <div class="listing-create-form-group {% if field_name in 'lease_term lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <small class="form-text text-muted">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endwith %}
-        {% endfor %}
+        <div id="form-content">
+            {% for field_name in field_order %}
+                {% with form|get_field:field_name as field %}
+                    <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
 
         <h3>Existing Images</h3>
         {% for image in existing_images %}
@@ -45,109 +118,293 @@
             <small class="form-text text-muted">You can select multiple images or drag and drop them here.</small>
         </div>
 
-        <button type="submit" class="listing-create-btn">Update Listing</button>
+        <button id="submit-button" type="submit" class="listing-create-btn btn btn-primary">Update Listing</button>
     </form>
+</div>
+
+<!-- Popup Message -->
+<div id="success-popup" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="popup-title"></h5>
+            </div>
+            <div class="modal-body">
+                <p id="popup-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="popup-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Message -->
+<div id="confirmation-popup" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to set the listing to inactive? Activating the listing will cost a new listing count.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirm-yes-btn">Yes</button>
+                <button type="button" class="btn btn-secondary" id="confirm-no-btn">No</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'tinymce/js/tinymce/tinymce.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    /*tinymce.init({
-        selector: 'textarea',
-        plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak',
-        toolbar_mode: 'floating',
-        height: 300
-    });*/
-    tinymce.init({
-        selector: 'textarea',
-        plugins: 'lists link',
-        menubar: false,
-        toolbar: 'bold italic underline | bullist numlist | link',
-        height: 300,
-        branding: false,
-        forced_root_block: false,
-        force_p_newlines: false,
-        force_br_newlines: true,
-        content_css: false,
-        content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-        valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
-        invalid_elements: 'script,iframe,object,embed'
-    });
+    function initializeTinyMCE() {
+        tinymce.remove(); // Removes all existing TinyMCE instances
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'lists link',
+            menubar: false,
+            toolbar: 'bold italic underline | bullist numlist | link',
+            height: 300,
+            branding: false,
+            forced_root_block: 'p',
+            force_p_newlines: true,
+            force_br_newlines: false,
+            content_css: false,
+            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+            valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
+            invalid_elements: 'script,iframe,object,embed',
+            license_key: 'gpl' // Set the license key
+        });
+    }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to toggle lease fields
-        function toggleLeaseFields() {
-            var leaseFields = document.querySelectorAll('.lease-field');
-            var propertyType = document.getElementById('id_property_type').value;
-            leaseFields.forEach(function (fieldElement) {
-                if (propertyType === 'lease') {
-                    fieldElement.style.display = 'block';
-                } else {
-                    fieldElement.style.display = 'none';
+    $(document).ready(function() {
+    // Initialize Select2
+    $('#id_project_country').select2();
+    $('#id_project_state').select2();
+    $('#id_project_city').select2();
+
+    // Function to load initial states and cities based on selected country and state
+    function loadInitialStatesAndCities() {
+        var initialCountryId = $('#id_project_country').val();
+        var initialStateId = '{{ form.instance.project_state.id }}';
+        var initialCityId = '{{ form.instance.project_city.id }}';
+
+        if (initialCountryId) {
+            $.ajax({
+                url: "{% url 'listing_load_states' %}",
+                data: {
+                    'country_id': initialCountryId
+                },
+                success: function (data) {
+                    $('#id_project_state').html('<option value="">Select a state</option>');
+                    $.each(data, function (key, value) {
+                        var selected = value.id == initialStateId ? ' selected' : '';
+                        $('#id_project_state').append('<option value="' + value.id + '"' + selected + '>' + value.name + '</option>');
+                    });
+                    $('#id_project_state').trigger('change.select2');
+
+                    if (initialStateId) {
+                        $.ajax({
+                            url: "{% url 'listing_load_cities' %}",
+                            data: {
+                                'state_id': initialStateId
+                            },
+                            success: function (data) {
+                                $('#id_project_city').html('<option value="">Select a city</option>');
+                                $.each(data, function (key, value) {
+                                    var selected = value.id == initialCityId ? ' selected' : '';
+                                    $('#id_project_city').append('<option value="' + value.id + '"' + selected + '>' + value.name + '</option>');
+                                });
+                                $('#id_project_city').trigger('change.select2');
+                            }
+                        });
+                    }
                 }
             });
         }
+    }
 
-        // Attach change event listener to property type field
-        document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
-
-        // Initial call to toggle fields based on the initial value
-        toggleLeaseFields();
-
-        // Fetch cities based on selected state
-        document.getElementById('id_project_state').addEventListener('change', function () {
-            var url = "{% url 'load_cities' %}";
-            var stateId = this.value;
-            fetch(url + '?state=' + stateId)
-                .then(response => response.json())
-                .then(data => {
-                    var citySelect = document.getElementById('id_project_city');
-                    citySelect.innerHTML = '<option value="">Select a city</option>';
-                    data.forEach(function (city) {
-                        var option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching cities:', error));
-        });
-
-        // Show or hide battery storage field based on selected categories
-        document.getElementById('id_categories').addEventListener('change', function () {
-            var batteryField = document.querySelector('.battery_storage');
-            if (batteryField) {
-                if (Array.from(this.selectedOptions).map(option => option.value).includes('BESS')) {
-                    batteryField.style.display = 'block';
-                } else {
-                    batteryField.style.display = 'none';
-                }
+    // Function to toggle lease fields visibility based on property type
+    function toggleLeaseFields() {
+        var leaseFields = document.querySelectorAll('.lease-field');
+        var propertyType = document.getElementById('id_property_type').value;
+        leaseFields.forEach(function (fieldElement) {
+            if (propertyType === 'lease') {
+                fieldElement.style.display = 'block';
+            } else {
+                fieldElement.style.display = 'none';
             }
         });
+    }
 
-        // Initialize cities if a state is already selected
-        var stateSelect = document.getElementById('id_project_state');
-        var citySelect = document.getElementById('id_project_city');
-        var selectedState = stateSelect.value;
-        if (selectedState) {
-            var url = "{% url 'load_cities' %}";
-            fetch(url + '?state=' + selectedState)
-                .then(response => response.json())
-                .then(data => {
-                    citySelect.innerHTML = '<option value="">Select a city</option>';
-                    data.forEach(function (city) {
-                        var option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
-                    });
+    // Add event listener for property type change
+    document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
 
-                    var selectedCity = "{{ form.instance.project_city.id }}";
-                    if (selectedCity) {
-                        citySelect.value = selectedCity;
-                    }
-                })
-                .catch(error => console.error('Error fetching initial cities:', error));
-        }
+    // Call toggleLeaseFields on page load
+    toggleLeaseFields();
+
+    // Event handler for country change
+    $('#id_project_country').change(function () {
+        var url = "{% url 'listing_load_states' %}";
+        var countryId = $(this).val();
+        $.ajax({
+            url: url,
+            data: {
+                'country_id': countryId
+            },
+            success: function (data) {
+                $('#id_project_state').html('<option value="">Select a state</option>');
+                $.each(data, function (key, value) {
+                    $('#id_project_state').append('<option value="' + value.id + '">' + value.name + '</option>');
+                });
+                $('#id_project_state').trigger('change.select2');
+            }
+        });
     });
+
+    // Event handler for state change
+    $('#id_project_state').change(function () {
+        var url = "{% url 'listing_load_cities' %}";
+        var stateId = $(this).val();
+        $.ajax({
+            url: url,
+            data: {
+                'state_id': stateId
+            },
+            success: function (data) {
+                $('#id_project_city').html('<option value="">Select a city</option>');
+                $.each(data, function (key, value) {
+                    $('#id_project_city').append('<option value="' + value.id + '">' + value.name + '</option>');
+                });
+                $('#id_project_city').trigger('change.select2');
+            }
+        });
+    });
+
+    // Function to toggle battery storage field based on selected categories
+    function toggleBatteryStorage() {
+        var batteryField = document.querySelector('#id_battery_storage').closest('.listing-create-form-group');
+        var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
+        if (selectedCategories.includes('BESS')) {
+            batteryField.style.display = 'block';
+        } else {
+            batteryField.style.display = 'none';
+        }
+    }
+
+    // Add event listener for categories change
+    $('#id_categories').change(function () {
+        toggleBatteryStorage();
+    });
+
+    // Call toggleBatteryStorage on page load
+    toggleBatteryStorage();
+
+    // Initialize select2 with the existing values
+    $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
+
+    // Load initial states and cities
+    loadInitialStatesAndCities();
+
+    var formSubmitting = false;
+
+    function submitForm() {
+        var formData = new FormData($('#listing-edit-form')[0]);
+
+        $('#submit-button').prop('disabled', true).html('Updating...');
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "edit_listing" form.instance.slug %}',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    $('#popup-title').text('Success');
+                    $('#popup-message').text(response.message);
+                    $('#success-popup').show();
+                } else {
+                    $('#popup-title').text(response.message_type);
+                    $('#popup-message').text(response.message);
+                    $('#success-popup').show();
+                }
+            },
+            error: function(xhr) {
+                $('#form-content').html(xhr.responseJSON.form_html || '');
+                var errors = xhr.responseJSON.errors || {};
+                var firstErrorElement = null;
+
+                console.log('Errors:', errors); // Debugging the errors returned
+
+                $.each(errors, function(field, messages) {
+                    var fieldElement = $('[name="' + field + '"]');
+                    if (fieldElement.length) {
+                        fieldElement.addClass('is-invalid');
+                        fieldElement.next('.invalid-feedback').html(messages.join(', '));
+                        if (!firstErrorElement) {
+                            firstErrorElement = fieldElement;
+                        }
+                    } else {
+                        // Handle non-field errors
+                        if (!firstErrorElement && field === '__all__') {
+                            var nonFieldErrors = messages.join(', ');
+                            $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
+                            firstErrorElement = $('.non-field-error');
+                        }
+                    }
+                });
+
+                if (firstErrorElement && firstErrorElement.length > 0) {
+                    console.log('First error element:', firstErrorElement);
+                    firstErrorElement[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.error('First error element not found.');
+                }
+
+                $('#submit-button').prop('disabled', false).html('Update Listing');
+                initializeTinyMCE();
+                $('#id_project_country').select2();
+                $('#id_project_state').select2();
+                $('#id_project_city').select2();
+            }
+        });
+    }
+
+    $('#listing-edit-form').submit(function(e) {
+        e.preventDefault();
+        tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
+
+        if (!formSubmitting && $('#id_status').val() === 'inactive') {
+            $('#confirmation-popup').show();
+            return;
+        }
+
+        formSubmitting = true;
+        submitForm();
+    });
+
+    $('#popup-close-btn').click(function() {
+        $('#success-popup').hide();
+        location.reload(); // Refresh the page
+    });
+
+    $('#confirm-yes-btn').click(function() {
+        $('#confirmation-popup').hide();
+        formSubmitting = true; // Ensure formSubmitting is true to prevent double submission
+        submitForm(); // Use the same submitForm function to handle the submission
+    });
+
+    $('#confirm-no-btn').click(function() {
+        $('#confirmation-popup').hide();
+    });
+
+    initializeTinyMCE();
+});
+
 </script>
 {% endblock %}

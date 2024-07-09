@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.core.mail import send_mail
 from django.conf import settings
+from cities_light.models import Country, Region, City
 from django.db import transaction
 from datetime import datetime, timedelta, date, time
 from tinymce.models import HTMLField
@@ -87,40 +88,44 @@ class Package(models.Model):
     duration = models.IntegerField(default=30)
     duration_unit = models.CharField(max_length=10, choices=PACKAGE_TYPE_CHOICES, default='days')
     description = models.TextField(null=True, blank=True)
+    inclusions = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
 
     def get_duration_in_minutes(self):
-        if self.duration_unit == 'minutes':
-            return self.duration
-        elif self.duration_unit == 'hours':
-            return self.duration * 60
-        elif self.duration_unit == 'days':
-            return self.duration * 1440  # 24 * 60
-        elif self.duration_unit == 'weeks':
-            return self.duration * 10080  # 7 * 24 * 60
-        elif self.duration_unit == 'months':
-            return self.duration * 43200  # 30 * 24 * 60
-        elif self.duration_unit == 'years':
-            return self.duration * 525600  # 365 * 24 * 60
-        return self.duration * 1440  # Default to days
-
+        duration_mapping = {
+            'minutes': 1,
+            'hours': 60,
+            'days': 1440,
+            'weeks': 10080,
+            'months': 43200,
+            'years': 525600
+        }
+        return self.duration * duration_mapping.get(self.duration_unit, 1440)
+    
+    
 class Seller(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=255, unique=True)
     company_address = models.TextField()
     company_phone_number = models.CharField(max_length=20)
+    mobile_number = models.CharField(max_length=20, null=True, blank=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+    state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
-    normal_post_count = models.IntegerField(default=0)
-    featured_post_count = models.IntegerField(default=0)
+    new_package = models.ForeignKey(Package, related_name='new_package_set', null=True, blank=True, on_delete=models.SET_NULL)
+    normal_post_count = models.IntegerField(default=0)  # Total normal posts allowed (package + individual)
+    featured_post_count = models.IntegerField(default=0)  # Total featured posts allowed (package + individual)
+    individual_normal_post_count = models.IntegerField(default=0)  # Tracking individual normal post
+    individual_featured_post_count = models.IntegerField(default=0)  # Tracking individual featured post
+    normal_post_used = models.IntegerField(default=0)  # Normal posts used
+    featured_post_used = models.IntegerField(default=0)  # Featured posts used
     membership_expiry = models.DateTimeField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
-    individual_normal_posts = models.IntegerField(default=0)
-    individual_featured_posts = models.IntegerField(default=0)
-    new_package = models.ForeignKey(Package, related_name='new_package_set', null=True, blank=True, on_delete=models.SET_NULL)
     is_auto_renew = models.BooleanField(default=False)
     canceled_at = models.DateTimeField(null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=255, null=True, blank=True)
@@ -159,9 +164,16 @@ class Seller(models.Model):
                             confirm=True,
                             description=f'Renewal of package {seller.package.name}',
                         )
-                        seller.membership_expiry = timezone.now() + timedelta(minutes=seller.package.get_duration_in_minutes())
+                        new_expiry = timezone.now() + timedelta(minutes=seller.package.get_duration_in_minutes())
+                        seller.membership_expiry = new_expiry
                         seller.save()
             except stripe.error.StripeError as e:
+                send_mail(
+                    'Auto-renewal Failed',
+                    'We were unable to renew your package. We will try again two more times. If it continues to fail, your package will be deactivated.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [self.user.email],
+                )
                 raise
             except Exception as e:
                 raise
@@ -171,11 +183,17 @@ class Seller(models.Model):
             try:
                 with transaction.atomic():
                     seller = Seller.objects.select_for_update().get(pk=self.pk)
+                    
+                    total_normal_posts = seller.individual_normal_post_count + seller.new_package.normal_post_limit
+                    total_featured_posts = seller.individual_featured_post_count + seller.new_package.featured_post_limit
+                    
+                    seller.normal_post_count = total_normal_posts
+                    seller.featured_post_count = total_featured_posts
+                    
                     seller.package = seller.new_package
                     seller.new_package = None
-                    seller.normal_post_count = seller.package.normal_post_limit
-                    seller.featured_post_count = seller.package.featured_post_limit
-                    seller.membership_expiry = timezone.now() + timedelta(minutes=seller.package.get_duration_in_minutes())
+                    new_expiry = timezone.now() + timedelta(minutes=seller.package.get_duration_in_minutes())
+                    seller.membership_expiry = new_expiry
                     seller.is_auto_renew = True
                     seller.canceled_at = None
                     seller.save()
@@ -196,7 +214,8 @@ class Seller(models.Model):
             if expiry_datetime <= current_time:
                 if self.new_package:
                     self.apply_new_package()
-                elif not self.is_auto_renew and not self.stripe_payment_method_id:  # Ensure the package is only removed if auto-renew is False and there's no payment method
+                elif not self.is_auto_renew and not self.stripe_payment_method_id:
+                    self.deactivate_listings()
                     self.package = None
                     self.normal_post_count = 0
                     self.featured_post_count = 0
@@ -210,6 +229,21 @@ class Seller(models.Model):
         self.is_auto_renew = False
         self.canceled_at = timezone.now()
         self.save()
+
+    def deactivate_listings(self):
+        self.listing_set.update(status='inactive')
+
+    def reactivate_listings(self):
+        self.listing_set.update(status='active', expires_on=self.membership_expiry)
+
+    def can_downgrade(self, new_package):
+        total_normal_posts = self.normal_post_count + new_package.normal_post_limit
+        total_featured_posts = self.featured_post_count + new_package.featured_post_limit
+        
+        if self.normal_post_used > total_normal_posts or self.featured_post_used > total_featured_posts:
+            return False
+        return True
+
 
 class Reminder(models.Model):
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
@@ -226,26 +260,13 @@ class ListingPrice(models.Model):
     def __str__(self):
         return f"Normal: {self.normal_listing_price}, Featured: {self.featured_listing_price}"
 
-class State(models.Model):
-    name = models.CharField(max_length=255)
-    code = models.CharField(max_length=2)
-
-    def __str__(self):
-        return self.name
-
-class City(models.Model):
-    name = models.CharField(max_length=255)
-    state = models.ForeignKey(State, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.name}, {self.state.code}"
-
 class Listing(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('contingent', 'Contingent'),
         ('pending', 'Pending'),
         ('sold', 'Sold'),
+        ('inactive', 'Inactive'),
     ]
     PROJECT_STATUS_CHOICES = [
         ('ntp', 'NTP'),
@@ -269,6 +290,7 @@ class Listing(models.Model):
     project_pto_date = models.DateField(null=True, blank=True)
     is_featured = models.BooleanField(default=False)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='active')
+    previous_status = models.CharField(max_length=50, choices=STATUS_CHOICES, null=True, blank=True)
     views = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -283,7 +305,8 @@ class Listing(models.Model):
     om_escalation_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     sales_price = models.DecimalField(max_digits=15, decimal_places=2)
     project_address = models.CharField(max_length=255, null=True, blank=True)
-    project_state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
+    project_country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    project_state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
     project_city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
     lot_size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     property_type = models.CharField(max_length=50, choices=PROPERTY_TYPE_CHOICES, null=True, blank=True)
@@ -300,22 +323,17 @@ class Listing(models.Model):
     sold_date = models.DateField(null=True, blank=True)
     thumbnail_image = models.ImageField(upload_to='listing_thumbnails/', null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
+    expires_on = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.status == 'sold' and not self.sold_date:
-            self.sold_date = timezone.now()
         if not self.slug:
             self.slug = slugify(self.project_name)
+
         super().save(*args, **kwargs)
 
-    @property
-    def is_recently_sold(self):
-        if self.sold_date:
-            return timezone.now() - self.sold_date <= timezone.timedelta(days=7)
-        return False
+        
 
-    def __str__(self):
-        return self.project_name
+
 
 class ListingImage(models.Model):
     listing = models.ForeignKey(Listing, related_name='images', on_delete=models.CASCADE)
@@ -323,7 +341,6 @@ class ListingImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.listing.project_name}"
-
 
 class Message(models.Model):
     listing = models.ForeignKey(Listing, null=True, blank=True, on_delete=models.CASCADE)
@@ -377,6 +394,7 @@ class Page(models.Model):
 class ContactUs(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
+    phone_number = models.CharField(max_length=20, blank=True)  # New field for phone number
     message = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
 
@@ -394,3 +412,4 @@ class ContactUs(models.Model):
             )
         except:
             pass
+
