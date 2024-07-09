@@ -162,7 +162,7 @@ class Seller(models.Model):
                             payment_method=seller.stripe_payment_method_id,
                             off_session=True,
                             confirm=True,
-                            description=f'Renewal of package {seller.package.name}',
+                            description=f'Renewal of Membership {seller.package.name}',
                         )
                         new_expiry = timezone.now() + timedelta(minutes=seller.package.get_duration_in_minutes())
                         seller.membership_expiry = new_expiry
@@ -170,7 +170,7 @@ class Seller(models.Model):
             except stripe.error.StripeError as e:
                 send_mail(
                     'Auto-renewal Failed',
-                    'We were unable to renew your package. We will try again two more times. If it continues to fail, your package will be deactivated.',
+                    'We were unable to renew your Memership. We will try again two more times. If it continues to fail, your package will be deactivated.',
                     settings.DEFAULT_FROM_EMAIL,
                     [self.user.email],
                 )
@@ -199,7 +199,7 @@ class Seller(models.Model):
                     seller.save()
                     send_mail(
                         'Package Updated',
-                        f'Your new package {seller.package.name} is now active.',
+                        f'Your new Membership {seller.package.name} is now active.',
                         settings.DEFAULT_FROM_EMAIL,
                         [seller.user.email],
                     )
