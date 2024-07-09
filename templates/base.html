@@ -41,7 +41,7 @@
             <ul class="dashboard-menu">
                 <li><a href="{% url 'create_listing' %}" class="{% if request.resolver_match.url_name == 'create_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
                 <li><a href="{% url 'add_payment_method' %}" class="{% if request.resolver_match.url_name == 'add_payment_method' %}active{% endif %}"><span class="icon"><i class="fas fa-credit-card"></i></span>Add Payment Method</a></li>
-                <li><a href="{% url 'buy_package_listing' %}" class="{% if request.resolver_match.url_name == 'buy_package_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-box-open"></i></span>Change your package</a></li>
+                <li><a href="{% url 'buy_package_listing' %}" class="{% if request.resolver_match.url_name == 'buy_package_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-box-open"></i></span>Manage Membership</a></li>
                 <li><a href="{% url 'transaction_history' %}" class="{% if request.resolver_match.url_name == 'transaction_history' %}active{% endif %}"><span class="icon"><i class="fas fa-history"></i></span>View your transaction history</a></li>
                 <li><a href="{% url 'seller_listings' %}" class="{% if request.resolver_match.url_name == 'seller_listings' %}active{% endif %}"><span class="icon"><i class="fas fa-list-alt"></i></span>View your listings</a></li>
                 <li><a href="{% url 'all_listings' %}" class="{% if request.resolver_match.url_name == 'all_listings' %}active{% endif %}"><span class="icon"><i class="fas fa-th-list"></i></span>View all listings</a></li>
