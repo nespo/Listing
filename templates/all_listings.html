@@ -65,50 +65,46 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
-    function setFieldValuesFromUrl() {
-    // Parse the URL parameters
-    const params = new URLSearchParams(window.location.search);
-
-    // Get the form fields
-    const countryField = document.getElementById('country');
-    const categoryField = document.getElementById('category');
-    const minPriceField = document.getElementById('min_price');
-    const maxPriceField = document.getElementById('max_price');
-    const sortByField = document.getElementById('sort_by');
-
-    // Set the form fields' values based on URL parameters
-    if (params.has('country')) {
-        const countrySelectInstance = new Choices(countryField);
-        countrySelectInstance.setChoiceByValue(params.get('country'));
-    }
-
-    if (params.has('categories[]')) {
-        const categorySelectInstance = new Choices(categoryField);
-        categorySelectInstance.setChoiceByValue(params.get('categories[]'));
-    }
-
-    if (params.has('min_price')) {
-        minPriceField.value = params.get('min_price');
-    }
-
-    if (params.has('max_price')) {
-        maxPriceField.value = params.get('max_price');
-    }
-
-    if (params.has('sort_by')) {
-        const sortBySelectInstance = new Choices(sortByField);
-        sortBySelectInstance.setChoiceByValue(params.get('sort_by'));
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     var map;
     var markers = [];
     var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
 
+    // Initialize Choices.js for the select elements
     var countrySelect = new Choices('#country');
     var categorySelect = new Choices('#category');
     var sortBySelect = new Choices('#sort_by', { removeItemButton: true });
+
+    // Function to set field values from URL
+    function setFieldValuesFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+
+        // Set values for country field
+        if (params.has('location')) {
+            countrySelect.setChoiceByValue(params.get('location'));
+        }
+
+        // Set values for category field
+        if (params.has('categories[]')) {
+            const categories = params.getAll('categories[]');
+            categories.forEach(category => {
+                categorySelect.setChoiceByValue(category);
+            });
+        }
+
+        // Set values for min and max price fields
+        if (params.has('price_min')) {
+            document.getElementById('min_price').value = params.get('price_min');
+        }
+        if (params.has('price_max')) {
+            document.getElementById('max_price').value = params.get('price_max');
+        }
+
+        // Set values for sort by field
+        if (params.has('sort_by')) {
+            sortBySelect.setChoiceByValue(params.get('sort_by'));
+        }
+    }
 
     function initMap() {
         map = L.map('map').setView([51.505, -0.09], 2);
@@ -199,8 +195,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     initMap();
-    setFieldValuesFromUrl();
+    setFieldValuesFromUrl(); // Ensure values are set after Choices.js initialization
 });
+
 </script>
 <script id="listings-data" type="application/json">
     {{ listings_data|safe }}
