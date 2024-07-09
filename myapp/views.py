@@ -111,7 +111,7 @@ def dashboard(request):
 
     # Check if the seller has an active package
     if not package_renew_date:
-        package_status = "You have zero active packages"
+        package_status = "You have zero active Membership"
     else:
         package_status = package_renew_date
 
