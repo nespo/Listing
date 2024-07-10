@@ -41,7 +41,7 @@
             <li><a href="{% url 'home' %}"><span class="icon"><i class="fas fa-home"></i></span>Home</a></li>
             <li><a href="{% url 'all_listings' %}"><span class="icon"><i class="fas fa-list"></i></span>All Listings</a></li>
             {% if not user.is_authenticated %}
-            <li><a href="{% url 'public_packages' %}"><span class="icon"><i class="fas fa-box"></i></span>Our Packages</a></li>
+            <li><a href="{% url 'public_packages' %}"><span class="icon"><i class="fas fa-box"></i></span>Our Memberships</a></li>
             {% endif %}
             {% if user.is_authenticated %}
             <li><a href="{% url 'dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Dashboard</a></li>

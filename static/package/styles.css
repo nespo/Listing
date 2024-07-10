@@ -416,3 +416,9 @@ button#unique-stripe-button:hover {
     }
 
 }
+
+@media only screen and (max-width: 600px) {
+    .faq-container {
+        width: auto;
+    }
+}
