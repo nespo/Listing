@@ -137,7 +137,7 @@ button.full-width-button {
 }
 
 .faq-container {
-    width: 100%;
+    width: auto;
     background: #fff;
     padding: 2rem;
     border-radius: 1rem;
@@ -275,8 +275,3 @@ button.full-width-button {
     }
 }
 
-@media only screen and (max-width: 600px) {
-    .faq-container {
-        width: auto;
-    }
-}
