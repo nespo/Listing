@@ -94,8 +94,7 @@ class SellerAdmin(admin.ModelAdmin):
             try:
                 send_mail(
                     'Account Approved',
-                    '''Your account has been approved by admin.
-                    Start using the website now''',
+                    'Your account has been approved by admin. Start using the website now.',
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )
@@ -109,10 +108,7 @@ class SellerAdmin(admin.ModelAdmin):
             try:
                 send_mail(
                     'Account Disapproved',
-                    '''Your account has been disapproved by admin.
-                        If you have any question please contact us by email.
-                        info@greenenergyconnection.com
-                    ''',
+                    '''Your account has been disapproved by admin. If you have any questions, please contact us at info@greenenergyconnection.com.''',
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )

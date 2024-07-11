@@ -90,6 +90,10 @@ class Package(models.Model):
     description = models.TextField(null=True, blank=True)
     inclusions = models.CharField(max_length=255, null=True, blank=True)
 
+    class Meta:
+        verbose_name = "Membership"
+        verbose_name_plural = "Memberships"
+
     def __str__(self):
         return self.name
 

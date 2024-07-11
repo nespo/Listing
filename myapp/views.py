@@ -276,7 +276,7 @@ def register_seller(request):
                 'domain': current_site.domain,
                 'uid': uid,
                 'token': token,
-                'username': user_data['username'],
+                'first_name': seller_data['first_name'],
             })
 
             try:

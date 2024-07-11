@@ -1,5 +1,7 @@
-<p>Hi {{ username }},</p>
-<p>Please click the link below to activate your account:</p>
-<p><a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">Activate your account</a></p>
-<p>If you didn't request this, you can ignore this email.</p>
-<p>Thanks!</p>
+<p>Hi {{ first_name }},</p>
+<p>Thank you for signing up with Green Energy Connection!</p>
+<p>Please click the link or the button below to activate your account:</p>
+<p><a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">Activate Account</a></p>
+<p>Once you activate your account, our admin will review and approve your request. If there are any questions, we will reach out to you for verification.</p>
+<p>Thank you,</p>
+<p>The Green Energy Connection Team</p>
