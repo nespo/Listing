@@ -60,7 +60,7 @@
                 {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.epc_name %}<p><i class="fas fa-tools"></i> <strong>EPC Name:</strong> {{ listing.epc_name }}</p>{% endif %}
                 {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> {{ listing.current_annual_om_cost|floatformat:0|intcomma }}</p>{% endif %}
-                {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate }}%</p>{% endif %}
+                {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate|floatformat:0|intcomma }}%</p>{% endif %}
                 {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> {{ listing.sales_price|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.status %}<p><i class="fas fa-info-circle"></i> <strong>Listing Status:</strong> {{ listing.get_status_display }}</p>{% endif %}
                 {% if listing.seller %}<p><i class="fas fa-user"></i> <strong>Seller's Name:</strong> {{ listing.seller.first_name }} {{ listing.seller.last_name }}</p>{% endif %}
