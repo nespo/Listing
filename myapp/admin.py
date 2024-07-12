@@ -179,3 +179,10 @@ class PageAdmin(admin.ModelAdmin):
 @admin.register(ContactUs)
 class ContactUsAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'sent_at')
+
+@admin.register(FormFieldSetting)
+class FormFieldSettingAdmin(admin.ModelAdmin):
+    list_display = ('form_name', 'field_name', 'label', 'order')
+    list_filter = ('form_name',)
+    ordering = ['form_name', 'order']
+    search_fields = ('form_name', 'field_name', 'label')

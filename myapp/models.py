@@ -417,3 +417,16 @@ class ContactUs(models.Model):
         except:
             pass
 
+
+class FormFieldSetting(models.Model):
+    form_name = models.CharField(max_length=100)
+    field_name = models.CharField(max_length=100)
+    label = models.CharField(max_length=255)
+    order = models.IntegerField()
+
+    class Meta:
+        unique_together = ('form_name', 'field_name')
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.form_name} - {self.field_name}"

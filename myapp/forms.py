@@ -159,7 +159,27 @@ class ListingForm(forms.ModelForm):
             self.fields['status'].widget = forms.HiddenInput()
         else:
             self.fields['status'].widget = forms.Select(choices=Listing.STATUS_CHOICES)
-            
+
+        # Load custom labels and order from the database
+        form_name = self.__class__.__name__
+        field_settings = FormFieldSetting.objects.filter(form_name=form_name).order_by('order')
+
+        # Apply custom labels
+        for setting in field_settings:
+            if setting.field_name in self.fields:
+                self.fields[setting.field_name].label = setting.label
+
+        # Reorder fields
+        ordered_fields = [setting.field_name for setting in field_settings]
+
+        # Insert 'is_featured' field if applicable
+        if is_creation and seller.featured_post_count > 0:
+            ordered_fields.insert(0, 'is_featured')
+        elif not is_creation and self.instance.is_featured:
+            ordered_fields.insert(0, 'is_featured')
+
+        self.order_fields(ordered_fields)
+
     def clean_sales_price(self):
         sales_price = self.cleaned_data.get('sales_price')
         if sales_price <= 0:
