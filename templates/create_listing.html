@@ -20,8 +20,7 @@
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {% if field.widget.input_type == 'number' %}
-                            <input type="text" id="formatted_{{ field.name }}" name="formatted_{{ field.name }}" value="{{ field.value|floatformat:0|intcomma }}">
-                            <input type="hidden" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value }}">
+                            <input type="text" class="number-input" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value|floatformat:0|intcomma }}" placeholder="{{ field.label }}">
                         {% else %}
                             {{ field }}
                         {% endif %}
@@ -71,54 +70,41 @@
         });
     }
 
+    function formatNumberWithCommas(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function removeCommas(number) {
+        return number.replace(/,/g, '');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        function addCommas(nStr) {
-            nStr += '';
-            let x = nStr.split('.');
-            let x1 = x[0];
-            let x2 = x.length > 1 ? '.' + x[1] : '';
-            let rgx = /(\d+)(\d{3})/;
-            while (rgx.test(x1)) {
-                x1 = x1.replace(rgx, '$1' + ',' + '$2');
-            }
-            return x1 + x2;
-        }
-
-        function removeCommas(nStr) {
-            return nStr.replace(/,/g, '');
-        }
-
-        const numberInputs = document.querySelectorAll('input[type="text"][id^="formatted_"]');
-        let typingTimer;
+        const numberInputs = document.querySelectorAll('.number-input');
 
         numberInputs.forEach(input => {
             input.addEventListener('input', function(e) {
-                clearTimeout(typingTimer);
-                let self = this;
-                typingTimer = setTimeout(function() {
-                    let value = self.value.replace(/,/g, '');
-                    if (!isNaN(value) && value !== '') {
-                        self.value = addCommas(value);
-                        document.getElementById(self.id.replace('formatted_', '')).value = value;
-                    } else {
-                        self.value = value;
-                    }
-                }, 300);
+                const cursorPosition = this.selectionStart;
+                const originalLength = this.value.length;
+                const value = removeCommas(this.value);
+                
+                if (!isNaN(value) && value !== '') {
+                    this.value = formatNumberWithCommas(value);
+                    const newLength = this.value.length;
+                    this.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
+                }
             });
 
             input.addEventListener('blur', function(e) {
-                let value = this.value.replace(/,/g, '');
+                const value = removeCommas(this.value);
                 if (!isNaN(value) && value !== '') {
-                    this.value = addCommas(value);
-                } else {
-                    this.value = value;
+                    this.value = formatNumberWithCommas(value);
                 }
             });
         });
 
         document.getElementById('listing-create-form').addEventListener('submit', function(e) {
             numberInputs.forEach(input => {
-                document.getElementById(input.id.replace('formatted_', '')).value = removeCommas(input.value);
+                input.value = removeCommas(input.value);
             });
         });
 
