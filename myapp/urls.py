@@ -52,5 +52,5 @@ urlpatterns = [
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
 
     #admin
-    path('admin/formfieldsetting/', FormFieldSettingAdmin.changelist_view),
+    path('admin/myapp/formfieldsetting/', FormFieldSettingAdmin.changelist_view),
 ]
