@@ -123,6 +123,7 @@
     width: 100%;
 }
 .listing-call-button, .listing-message-button {
+    display: block; /* Set to block to ensure full width */
     margin-bottom: 10px;
     padding: 10px 0;
     background: #64C2DB;
@@ -131,10 +132,11 @@
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
-    width: 100%; /* Changed from 48% to 100% */
+    width: 100%; /* Ensures full width */
     text-align: center;
     box-sizing: border-box;
 }
+
 
 .listing-call-button-wrapper,
 .listing-message-button-wrapper {
