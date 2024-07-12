@@ -325,6 +325,7 @@
                 }
             },
             error: function(xhr) {
+                console.log("Form submission failed:", xhr.responseJSON);
                 $('#form-content').html(xhr.responseJSON.form_html || '');
                 var errors = xhr.responseJSON.errors || {};
                 var firstErrorElement = null;
