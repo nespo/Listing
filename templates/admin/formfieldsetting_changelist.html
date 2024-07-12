@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% trans "Form Field Settings" %}</h1>
+<form method="post">{% csrf_token %}
+    <table class="admin_table">
+        <thead>
+            <tr>
+                <th>{% trans "Form Name" %}</th>
+                <th>{% trans "Field Name" %}</th>
+                <th>{% trans "Label" %}</th>
+                <th>{% trans "Order" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for setting in settings %}
+            <tr>
+                <td>{{ setting.form_name }}</td>
+                <td>{{ setting.field_name }}</td>
+                <td><input type="text" name="label_{{ setting.form_name }}_{{ setting.field_name }}" value="{{ setting.label }}" /></td>
+                <td><input type="number" name="order_{{ setting.form_name }}_{{ setting.field_name }}" value="{{ setting.order }}" /></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="button save-button">{% trans "Save changes" %}</button>
+</form>
+{% endblock %}

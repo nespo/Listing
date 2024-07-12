@@ -1164,3 +1164,29 @@ def page_detail(request, slug):
     login_form = LoginForm()
     register_form = SellerRegistrationForm()
     return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})
+
+
+class FormFieldSettingAdmin(admin.ModelAdmin):
+    list_display = ('form_name', 'field_name', 'label', 'order')
+    list_filter = ('form_name',)
+    ordering = ['form_name', 'order']
+    search_fields = ('form_name', 'field_name', 'label')
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == 'POST':
+            for key, value in request.POST.items():
+                if key.startswith('label_'):
+                    _, form_name, field_name = key.split('_')
+                    label = value
+                    order = request.POST.get(f'order_{form_name}_{field_name}', 0)
+                    setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
+                    setting.label = label
+                    setting.order = order
+                    setting.save()
+            self.message_user(request, "Form field settings have been updated.")
+            return redirect('.')
+
+        settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
+        return render(request, 'admin/formfieldsetting_changelist.html', {
+            'settings': settings,
+        })

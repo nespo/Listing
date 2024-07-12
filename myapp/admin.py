@@ -180,9 +180,29 @@ class PageAdmin(admin.ModelAdmin):
 class ContactUsAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'sent_at')
 
+class FormFieldSettingForm(forms.ModelForm):
+    class Meta:
+        model = FormFieldSetting
+        fields = ['form_name', 'field_name', 'label', 'order']
+
+class FormFieldSettingInline(admin.TabularInline):
+    model = FormFieldSetting
+    form = FormFieldSettingForm
+    extra = 0  # No extra blank fields
+    ordering = ['order']
+    fields = ['field_name', 'label', 'order']
+    readonly_fields = ['form_name', 'field_name']
+
 @admin.register(FormFieldSetting)
 class FormFieldSettingAdmin(admin.ModelAdmin):
     list_display = ('form_name', 'field_name', 'label', 'order')
     list_filter = ('form_name',)
     ordering = ['form_name', 'order']
     search_fields = ('form_name', 'field_name', 'label')
+    inlines = [FormFieldSettingInline]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['form_name'].widget.attrs['readonly'] = True
+        form.base_fields['field_name'].widget.attrs['readonly'] = True
+        return form
