@@ -1,7 +1,7 @@
 {% load humanize %}
 
 {% for listing in listings %}
-<div class="listing-box" id="listing-{{ listing.id|safe }}">
+<div class="listing-box {% if listing.is_featured %}featured-listing{% endif %}" id="listing-{{ listing.id|safe }}">
     {% if listing.is_featured %}
     <div class="featured">Featured</div>
     {% endif %}
@@ -16,6 +16,11 @@
     </div>
     <p><i class="fa fa-map-marker-alt" aria-hidden="true"></i> {{ listing.project_address|safe }}</p>
     <h2>{{ listing.project_name|safe }}</h2>
+    {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size|floatformat:0|intcomma }}</p>{% endif %}
+    {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
+    {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
+    {% if listing.project_cod_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project COD Date:</strong> {{ listing.project_cod_date }}</p>{% endif %}
+    {% if listing.project_pto_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project PTO Date:</strong> {{ listing.project_pto_date }}</p>{% endif %}
     <div class="listing-bottom">
         <p class="price">Price: {{ listing.sales_price|floatformat:0|intcomma }}</p> <!-- Ensure decimal is properly formatted and then apply intcomma -->
         <a href="{% url 'listing_detail' listing.slug %}" class="view-details-btn">View Details</a>

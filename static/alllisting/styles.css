@@ -96,6 +96,22 @@
     gap: 10px;
 }
 
+/* Styles for featured listing */
+.featured-listing {
+    background-color: #333; /* Different background color */
+    color: #fff; /* White text color */
+}
+
+.featured-listing .listing-thumbnail-image img {
+    border: 2px solid #fff; /* Add white border to the image */
+}
+
+.featured-listing .price,
+.featured-listing h2,
+.featured-listing p {
+    color: #fff; /* Ensure text inside the listing box is white */
+}
+
 /* Styles for the featured label */
 .featured {
     position: absolute;
