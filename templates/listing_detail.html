@@ -81,7 +81,7 @@
                 {% if listing.lot_size %}<p><i class="fas fa-tree"></i> <strong>Lot Size (acres):</strong> {{ listing.lot_size }}</p>{% endif %}
                 {% if listing.get_project_status_display %}<p><i class="fas fa-info-circle"></i> <strong>Project Status:</strong> {{ listing.get_project_status_display }}</p>{% endif %}
                 {% if listing.get_property_type_display %}<p><i class="fas fa-home"></i> <strong>Property Type:</strong> {{ listing.get_property_type_display }}</p>{% endif %}
-                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre }}</p>{% endif %}
+                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.lease_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>Lease Escalation Rate:</strong> {{ listing.lease_escalation_rate }}%</p>{% endif %}
                 {% if listing.lease_term %}<p><i class="fas fa-file-contract"></i> <strong>Lease Term:</strong> {{ listing.lease_term|safe }}</p>{% endif %}
             </div>
