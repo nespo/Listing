@@ -516,6 +516,7 @@ def edit_listing(request, slug):
     listing = get_object_or_404(Listing, slug=slug)
     seller = request.user.seller
     original_status = listing.status
+    print(f"Membership expiry: {seller.membership_expiry}, Timezone: {timezone.now()}")
 
     if seller.membership_expiry <= timezone.now():
         messages.error(request, 'Your package has expired. Please renew your package to edit listings.')
@@ -525,17 +526,18 @@ def edit_listing(request, slug):
     field_settings = FormFieldSetting.objects.filter(form_name=form_name).order_by('order')
     field_order = [setting.field_name for setting in field_settings]
 
-    if listing.is_featured:
-        field_order.insert(0, 'is_featured')
-
     if request.method == 'POST':
+        print("Form submitted with POST method")
+        print("POST data:", request.POST)
         form = ListingForm(request.POST, request.FILES, instance=listing, user=request.user)
         existing_images = ListingImage.objects.filter(listing=listing)
 
         if form.is_valid():
+            print("Form is valid")
             updated_listing = form.save(commit=False)
             updated_listing.seller = seller
             new_status = request.POST.getlist('status')[0]
+            print(f"Original status: {original_status}, New status: {new_status}, Update listing: {updated_listing.status}")
 
             if original_status == 'inactive' and new_status in ['contingent', 'pending']:
                 message = "You can't change the status from inactive to any other thing except Active"
@@ -544,6 +546,7 @@ def edit_listing(request, slug):
 
             try:
                 with transaction.atomic():
+                    # Store the previous status
                     updated_listing.previous_status = original_status
                     
                     if seller.membership_expiry > timezone.now():
@@ -555,14 +558,18 @@ def edit_listing(request, slug):
                         updated_listing.status = 'inactive'
                     else:
                         if new_status == 'active':
+                            print("Attempting to activate listing")
                             if original_status != 'active':
                                 if updated_listing.is_featured:
+                                    print(f"Featured listing, current featured post count: {seller.featured_post_count}")
                                     if seller.featured_post_count > 0:
                                         seller.featured_post_count -= 1
                                         seller.featured_post_used += 1
-                                        seller.save()  
+                                        seller.save()  # Explicitly save the seller object
+                                        print(f"Decremented featured post count, new count: {seller.featured_post_count}")
                                     else:
                                         updated_listing.status = 'inactive'
+                                        print("No more featured posts available, deactivating listing")
                                         send_mail(
                                             'Listing Deactivated',
                                             'Your listing has been deactivated because you have reached your featured post limit.',
@@ -570,12 +577,15 @@ def edit_listing(request, slug):
                                             [seller.user.email],
                                         )
                                 else:
+                                    print(f"Normal listing, current normal post count: {seller.normal_post_count}")
                                     if seller.normal_post_count > 0:
                                         seller.normal_post_count -= 1
                                         seller.normal_post_used += 1
-                                        seller.save()  
+                                        seller.save()  # Explicitly save the seller object
+                                        print(f"Decremented normal post count, new count: {seller.normal_post_count}")
                                     else:
                                         updated_listing.status = 'inactive'
+                                        print("No more normal posts available, deactivating listing")
                                         send_mail(
                                             'Listing Deactivated',
                                             'Your listing has been deactivated because you have reached your normal post limit.',
@@ -586,34 +596,42 @@ def edit_listing(request, slug):
                             updated_listing.status = new_status
 
                     updated_listing.save()
+                    print(f"Listing status updated to {updated_listing.status}")
                     form.save_m2m()
 
                     images_to_delete = request.POST.getlist('delete_images')
                     for image_id in images_to_delete:
                         image = ListingImage.objects.get(id=image_id)
                         image.delete()
+                        print(f"Deleted image with ID {image_id}")
 
                     images = request.FILES.getlist('images')
                     for image in images:
                         photo = ListingImage(listing=updated_listing, image=image)
                         photo.save()
+                        print(f"Added new image to listing with ID {photo.id}")
 
                     try:
                         send_custom_email(
                             subject='Listing Updated',
                             template_name='emails/listing_updated_email.html',
-                            context={'user': {'first_name': seller.first_name}, 'listing': updated_listing},
+                            context={'user': {'first_name': seller.first_name},
+                                     'listing': updated_listing},
                             recipient_list=[request.user.email]
                         )
+                        print("Email notification sent.")
                     except Exception as e:
+                        print(f"Failed to send email: {e}")
                         pass
 
                 messages.success(request, 'Listing updated successfully')
                 return JsonResponse({'success': True, 'message': 'Listing updated successfully', 'message_type': 'success'})
             except Exception as e:
+                print(f"Transaction error: {e}")
                 return JsonResponse({'errors': {'__all__': ['An error occurred while updating the listing. Please try again.']}, 'message': 'An error occurred while updating the listing. Please try again.', 'message_type': 'error'}, status=500)
 
         else:
+            print("Form errors:", form.errors)
             form_html = render_to_string('edit_listing.html', {'form': form, 'field_order': field_order, 'existing_images': existing_images}, request=request)
             return JsonResponse({'errors': form.errors, 'form_html': form_html}, status=400)
 
