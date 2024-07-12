@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django import forms
 from .forms import FAQForm, PageForm
+from django.shortcuts import render, redirect
 from .models import *
 
 class FooterWidgetLinkInline(admin.TabularInline):
@@ -193,16 +194,31 @@ class FormFieldSettingInline(admin.TabularInline):
     fields = ['field_name', 'label', 'order']
     readonly_fields = ['form_name', 'field_name']
 
-@admin.register(FormFieldSetting)
 class FormFieldSettingAdmin(admin.ModelAdmin):
     list_display = ('form_name', 'field_name', 'label', 'order')
     list_filter = ('form_name',)
     ordering = ['form_name', 'order']
     search_fields = ('form_name', 'field_name', 'label')
-    inlines = [FormFieldSettingInline]
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        form.base_fields['form_name'].widget.attrs['readonly'] = True
-        form.base_fields['field_name'].widget.attrs['readonly'] = True
-        return form
+    def changelist_view(self, request, extra_context=None):
+        if request.method == 'POST':
+            for key, value in request.POST.items():
+                if key.startswith('label_'):
+                    _, form_name, field_name = key.split('_')
+                    label = value
+                    order = request.POST.get(f'order_{form_name}_{field_name}', 0)
+                    setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
+                    setting.label = label
+                    setting.order = int(order)
+                    setting.save()
+            self.message_user(request, "Form field settings have been updated.")
+            return redirect(request.path)
+
+        settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
+        context = {
+            'settings': settings,
+            **(extra_context or {}),
+        }
+        return render(request, 'admin/formfieldsetting_changelist.html', context)
+
+admin.site.register(FormFieldSetting, FormFieldSettingAdmin)

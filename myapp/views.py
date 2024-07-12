@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
 from django.urls import reverse
 from django.contrib import admin
@@ -1167,37 +1168,19 @@ def page_detail(request, slug):
     return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})
 
 
-# Unregister FormFieldSetting if it is already registered
-try:
-    admin.site.unregister(FormFieldSetting)
-except admin.sites.NotRegistered:
-    pass
+@staff_member_required
+def form_field_setting_changelist(request):
+    if request.method == 'POST':
+        for key, value in request.POST.items():
+            if key.startswith('label_'):
+                _, form_name, field_name = key.split('_')
+                label = value
+                order = request.POST.get(f'order_{form_name}_{field_name}', 0)
+                setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
+                setting.label = label
+                setting.order = int(order)
+                setting.save()
+        return redirect(request.path)
 
-class FormFieldSettingAdmin(admin.ModelAdmin):
-    list_display = ('form_name', 'field_name', 'label', 'order')
-    list_filter = ('form_name',)
-    ordering = ['form_name', 'order']
-    search_fields = ('form_name', 'field_name', 'label')
-
-    def changelist_view(self, request, extra_context=None):
-        if request.method == 'POST':
-            for key, value in request.POST.items():
-                if key.startswith('label_'):
-                    _, form_name, field_name = key.split('_')
-                    label = value
-                    order = request.POST.get(f'order_{form_name}_{field_name}', 0)
-                    setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
-                    setting.label = label
-                    setting.order = int(order)
-                    setting.save()
-            self.message_user(request, "Form field settings have been updated.")
-            return redirect(request.path)
-
-        settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
-        context = {
-            'settings': settings,
-            **(extra_context or {}),
-        }
-        return render(request, 'admin/formfieldsetting_changelist.html', context)
-
-admin.site.register(FormFieldSetting, FormFieldSettingAdmin)
+    settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
+    return render(request, 'admin/formfieldsetting_changelist.html', {'settings': settings})
