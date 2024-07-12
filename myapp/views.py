@@ -1188,6 +1188,10 @@ class FormFieldSettingAdmin(admin.ModelAdmin):
             return redirect('.')
 
         settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
-        return render(request, 'admin/formfieldsetting_changelist.html', {
+        context = {
             'settings': settings,
-        })
+            **(extra_context or {}),
+        }
+        return render(request, 'admin/formfieldsetting_changelist.html', context)
+
+admin.site.register(FormFieldSetting, FormFieldSettingAdmin)
