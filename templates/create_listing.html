@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load form_filters %}
-{% load humanize %}
 {% load static %}
+{% load humanize %}
 {% block title %}Create Listing{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
@@ -20,7 +20,7 @@
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {% if field.widget.input_type == 'number' %}
-                            <input type="text" id="formatted_{{ field.name }}" name="formatted_{{ field.name }}" value="{{ field.value|stringformat:0|intcomma }}">
+                            <input type="text" id="formatted_{{ field.name }}" name="formatted_{{ field.name }}" value="{{ field.value|floatformat:0|intcomma }}">
                             <input type="hidden" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value }}">
                         {% else %}
                             {{ field }}
