@@ -1167,9 +1167,20 @@ def page_detail(request, slug):
     register_form = SellerRegistrationForm()
     return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})
 
-
+#Custom admin code
 @staff_member_required
 def form_field_setting_changelist(request):
+    # Get fields from ListingForm
+    form_fields = ListingForm().fields
+
+    # Create or update FormFieldSetting entries based on ListingForm fields
+    for field_name, field in form_fields.items():
+        FormFieldSetting.objects.get_or_create(
+            form_name='ListingForm',
+            field_name=field_name,
+            defaults={'label': field.label, 'order': 0}  # Defaults, can be updated later
+        )
+
     if request.method == 'POST':
         for key, value in request.POST.items():
             if key.startswith('label_'):
@@ -1182,5 +1193,8 @@ def form_field_setting_changelist(request):
                 setting.save()
         return redirect(request.path)
 
-    settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
-    return render(request, 'admin/formfieldsetting_changelist.html', {'settings': settings})
+    settings = FormFieldSetting.objects.filter(form_name='ListingForm').order_by('order')
+    context = {
+        'settings': settings,
+    }
+    return render(request, 'admin/formfieldsetting_changelist.html', context)
