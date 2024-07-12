@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load form_filters %}
 {% load static %}
-{% load humanize %}
 {% block title %}Create Listing{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
@@ -19,11 +18,7 @@
                 {% with form|get_field:field_name as field %}
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {% if field.widget.input_type == 'number' %}
-                            <input type="text" class="number-input" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value|floatformat:0|intcomma }}" placeholder="{{ field.label }}">
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
+                        {{ field }}
                         {% if field.help_text %}
                             <small class="form-text text-muted">{{ field.help_text }}</small>
                         {% endif %}
@@ -70,44 +65,7 @@
         });
     }
 
-    function formatNumberWithCommas(number) {
-        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
-    function removeCommas(number) {
-        return number.replace(/,/g, '');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const numberInputs = document.querySelectorAll('.number-input');
-
-        numberInputs.forEach(input => {
-            input.addEventListener('input', function(e) {
-                const cursorPosition = this.selectionStart;
-                const originalLength = this.value.length;
-                const value = removeCommas(this.value);
-                
-                if (!isNaN(value) && value !== '') {
-                    this.value = formatNumberWithCommas(value);
-                    const newLength = this.value.length;
-                    this.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
-                }
-            });
-
-            input.addEventListener('blur', function(e) {
-                const value = removeCommas(this.value);
-                if (!isNaN(value) && value !== '') {
-                    this.value = formatNumberWithCommas(value);
-                }
-            });
-        });
-
-        document.getElementById('listing-create-form').addEventListener('submit', function(e) {
-            numberInputs.forEach(input => {
-                input.value = removeCommas(input.value);
-            });
-        });
-
+    $(document).ready(function() {
         $('#id_project_country').select2();
         $('#id_project_state').select2();
         $('#id_project_city').select2();
@@ -146,6 +104,30 @@
                 }
             });
         });
+
+        function updateTextView(_obj){
+            var num = getNumber(_obj.val());
+            if(num==0){
+                _obj.val('');
+            }else{
+                _obj.val(num.toLocaleString());
+            }
+            }
+            function getNumber(_str){
+            var arr = _str.split('');
+            var out = new Array();
+            for(var cnt=0;cnt<arr.length;cnt++){
+                if(isNaN(arr[cnt])==false){
+                out.push(arr[cnt]);
+                }
+            }
+            return Number(out.join(''));
+            }
+            
+        $('input[type=number]').on('keyup',function(){
+                updateTextView($(this));
+            });
+           
 
         $('#id_project_state').change(function () {
             var url = "{% url 'listing_load_cities' %}";
