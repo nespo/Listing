@@ -1,16 +1,22 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}{{ sellet.user.get_full_name }} -  All Messages{% endblock %}
+{% block title %}{{ seller.user.get_full_name }} -  All Messages{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'profile/messageall.css' %}">
 {% endblock %}
 {% block content %}
   <div class="messages-containerx">
     <h2>Messages</h2>
+    <div class="top-right">
+      <div class="message-icon">
+        <i class="fa fa-envelope"></i>
+        <span class="message-count">{{ unread_messages_count }}</span>
+      </div>    
+    </div>
     {% if page_obj.object_list %}
       <ul>
         {% for message in page_obj.object_list %}
-          <li class="message-item">
+          <li class="message-item {% if not message.is_read %}unread{% endif %}">
             <a href="{% url 'message_detail' message.id %}">
               <strong>{{ message.first_name }} {{ message.last_name }}</strong> ({{ message.email }} - {{ message.phone }})
             </a>

@@ -108,16 +108,14 @@ def home(request):
 @login_required
 def dashboard(request):
     seller = Seller.objects.get(user=request.user)
-    messages_count = Message.objects.filter(seller=seller).count()
+    messages_count = Message.objects.filter(seller=seller, is_read=False).count()
     package_renew_date = seller.membership_expiry
 
-    # Check if the seller has an active package
     if not package_renew_date:
         package_status = "You have zero active Membership"
     else:
         package_status = package_renew_date
 
-    # Get views analytics for the seller's listings
     listings = seller.listing_set.all()
     views_data = {
         'dates': [listing.created_at.strftime('%Y-%m-%d') for listing in listings],
@@ -984,23 +982,34 @@ def category_detail(request, slug):
 def seller_messages(request):
     seller = get_object_or_404(Seller, user=request.user)
     message_list = Message.objects.filter(seller=seller).order_by('-sent_at')
-    paginator = Paginator(message_list, 3)  # Show 4 messages per page
+    paginator = Paginator(message_list, 3)  # Show 3 messages per page
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    unread_messages_count = message_list.filter(is_read=False).count()
+
     context = {
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'unread_messages_count': unread_messages_count
     }
     return render(request, 'seller_messages.html', context)
 
 @login_required
 def message_detail(request, message_id):
     message = get_object_or_404(Message, id=message_id, seller__user=request.user)
+    
+    if not message.is_read:
+        message.is_read = True
+        message.save()
+
+    unread_messages_count = Message.objects.filter(seller__user=request.user, is_read=False).count()
+
     listing_url = reverse('listing_detail', args=[message.listing.slug]) if message.listing else None
     context = {
         'message': message,
-        'listing_url': listing_url
+        'listing_url': listing_url,
+        'unread_messages_count': unread_messages_count
     }
     return render(request, 'message_detail.html', context)
 

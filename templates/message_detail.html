@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
   <style>
     main {
@@ -71,6 +70,7 @@
       {% endif %}
       <br>
       <a class="back-to-messages" href="{% url 'seller_messages' %}">Back to Messages</a>
+      <p><strong>Unread Messages:</strong> {{ unread_messages_count }}</p>
     </div>
   </main>
 {% endblock %}
