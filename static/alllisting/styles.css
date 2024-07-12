@@ -5,7 +5,7 @@
 
 /* Styles for the top bar */
 .top-bar {
-    background-color: #64C2DB;
+    background-color:  #04436C;
     color: #fff;
     padding: 20px;
     text-align: center;
@@ -48,7 +48,7 @@
     gap: 10px;
     margin-bottom: 20px;
     padding: 15px;
-    background-color: #64C2DB;
+    background-color:  #04436C;
     /*box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);*/
     padding-bottom: 28px;
 }
@@ -98,7 +98,7 @@
 
 /* Styles for featured listing */
 .featured-listing {
-    background-color: #333 !important; /* Different background color */
+    background-color:  #04436C !important; /* Different background color */
     color: #fff !important; /* White text color */
 }
 
