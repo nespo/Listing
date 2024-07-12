@@ -27,7 +27,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 SECRET_KEY = 'django-insecure-e9jtkc4bn1g%ao8%bbq21m1jl^+#=2--#wc5q613^o64bz^tzl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['coderalnaim.pythonanywhere.com', '127.0.0.1', 'localhost']
 
