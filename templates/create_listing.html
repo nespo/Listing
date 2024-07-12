@@ -105,28 +105,31 @@
             });
         });
 
-        function updateTextView(_obj){
-            var num = getNumber(_obj.val());
-            if(num==0){
-                _obj.val('');
-            }else{
-                _obj.val(num.toLocaleString());
-            }
-            }
-            function getNumber(_str){
-            var arr = _str.split('');
-            var out = new Array();
-            for(var cnt=0;cnt<arr.length;cnt++){
-                if(isNaN(arr[cnt])==false){
-                out.push(arr[cnt]);
-                }
-            }
-            return Number(out.join(''));
-            }
-            
-        $('input[type=number]').on('keyup',function(){
-                updateTextView($(this));
-            });
+        function formatNumberWithCommas(number) {
+            return number.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function stripCommas(numberString) {
+            return numberString.replace(/,/g, '');
+        }
+
+        // On input, unformat the number if it's not purely numerical (fallback for manual edits)
+        $('input[type="number"]').on('input', function () {
+            const plainNumber = stripCommas($(this).val());
+            $(this).val(plainNumber);
+        });
+
+        // On focus, remove commas so the user can edit the raw number
+        $('input[type="number"]').on('focus', function () {
+            const plainNumber = stripCommas($(this).val());
+            $(this).val(plainNumber);
+        });
+
+        // On blur, format the text field to show commas for thousands
+        $('input[type="number"]').on('blur', function () {
+            const formattedNumber = formatNumberWithCommas($(this).val());
+            $(this).val(formattedNumber);
+        });
            
 
         $('#id_project_state').change(function () {
@@ -178,6 +181,14 @@
         $('#listing-create-form').submit(function(e) {
             e.preventDefault();
             tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
+
+            $('form').on('submit', function() {
+                $('input[type="number"]').each(function () {
+                    const plainNumber = stripCommas($(this).val());
+                    $(this).val(plainNumber);
+                });
+            });
+            
             var formData = new FormData(this);
 
             $('#submit-button').prop('disabled', true).html('Creating...');
