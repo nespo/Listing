@@ -34,7 +34,7 @@ li.message-item.unread a {
 li.message-item a{
   text-decoration: none;
   font-weight: bold;
-  columns: black;
+  color: black;
 }
 
 .message-item a:hover {
