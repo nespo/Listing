@@ -119,11 +119,10 @@
 }
 .seller-contact-buttons {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     width: 100%;
 }
 .listing-call-button, .listing-message-button {
-    display: inline-block;
     margin-bottom: 10px;
     padding: 10px 0;
     background: #64C2DB;
@@ -132,9 +131,15 @@
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
-    width: 48%;
+    width: 100%; /* Changed from 48% to 100% */
     text-align: center;
     box-sizing: border-box;
+}
+
+.listing-call-button-wrapper,
+.listing-message-button-wrapper {
+    width: 100%;
+    margin-bottom: 10px;
 }
 .listing-call-button:hover, .listing-message-button:hover {
     background: #4fa6bd;
