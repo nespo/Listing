@@ -24,7 +24,7 @@
             <i class="fa-regular fa-circle-user fa-2xl" id="account-icon" style="cursor: pointer; color: #04436C;"></i>
             <div class="dropdown-content" id="dropdown-content">
                 {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'dashboard' %}">Account Settings</a>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="logout-button">Logout</button>

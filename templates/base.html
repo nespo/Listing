@@ -33,12 +33,13 @@
     {% include 'partials/login-popup.html' %}
     {% endif %}
 
-    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method' %}container with-sidebar{% endif %}">
-        {% if user.is_authenticated and request.resolver_match.url_name in 'create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method'%}
+    <div class="{% if user.is_authenticated and request.resolver_match.url_name in 'dashboard,create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method' %}container with-sidebar{% endif %}">
+        {% if user.is_authenticated and request.resolver_match.url_name in 'dashboard,create_listing,buy_package_listing,transaction_history,seller_listings,update_profile,dashboard,change_password,edit_listing,seller_messages,message_detail,add_payment_method'%}
         <aside class="sidebar">
-            <h2>Dashboard</h2>
+            <h2>Account Settings</h2>
             <p>Welcome, {{ request.user.username }}!</p>
             <ul class="dashboard-menu">
+                <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><span class="icon"><i class="fa-solid fa-bars"></i></span>Dashboard</a></li>
                 <li><a href="{% url 'create_listing' %}" class="{% if request.resolver_match.url_name == 'create_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-plus-circle"></i></span>Create a new listing</a></li>
                 <li><a href="{% url 'add_payment_method' %}" class="{% if request.resolver_match.url_name == 'add_payment_method' %}active{% endif %}"><span class="icon"><i class="fas fa-credit-card"></i></span>Add Payment Method</a></li>
                 <li><a href="{% url 'buy_package_listing' %}" class="{% if request.resolver_match.url_name == 'buy_package_listing' %}active{% endif %}"><span class="icon"><i class="fas fa-box-open"></i></span>Manage Membership</a></li>
