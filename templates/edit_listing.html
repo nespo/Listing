@@ -162,7 +162,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     function initializeTinyMCE() {
-        tinymce.remove(); // Removes all existing TinyMCE instances
+        tinymce.remove();
         tinymce.init({
             selector: 'textarea',
             plugins: 'lists link',
@@ -177,7 +177,7 @@
             content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
             invalid_elements: 'script,iframe,object,embed',
-            license_key: 'gpl' // Set the license key
+            license_key: 'gpl'
         });
     }
 
@@ -228,7 +228,6 @@
         }
     }
 
-    // Function to toggle lease fields visibility based on property type
     function toggleLeaseFields() {
         var leaseFields = document.querySelectorAll('.lease-field');
         var propertyType = document.getElementById('id_property_type').value;
@@ -241,13 +240,10 @@
         });
     }
 
-    // Add event listener for property type change
     document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
 
-    // Call toggleLeaseFields on page load
     toggleLeaseFields();
 
-    // Event handler for country change
     $('#id_project_country').change(function () {
         var url = "{% url 'listing_load_states' %}";
         var countryId = $(this).val();
@@ -266,7 +262,6 @@
         });
     });
 
-    // Event handler for state change
     $('#id_project_state').change(function () {
         var url = "{% url 'listing_load_cities' %}";
         var stateId = $(this).val();
@@ -285,7 +280,6 @@
         });
     });
 
-    // Function to toggle battery storage field based on selected categories
     function toggleBatteryStorage() {
         var batteryField = document.querySelector('#id_battery_storage').closest('.listing-create-form-group');
         var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
@@ -296,18 +290,14 @@
         }
     }
 
-    // Add event listener for categories change
     $('#id_categories').change(function () {
         toggleBatteryStorage();
     });
 
-    // Call toggleBatteryStorage on page load
     toggleBatteryStorage();
 
-    // Initialize select2 with the existing values
     $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
 
-    // Load initial states and cities
     loadInitialStatesAndCities();
 
     var formSubmitting = false;
@@ -339,8 +329,6 @@
                 var errors = xhr.responseJSON.errors || {};
                 var firstErrorElement = null;
 
-                console.log('Errors:', errors); // Debugging the errors returned
-
                 $.each(errors, function(field, messages) {
                     var fieldElement = $('[name="' + field + '"]');
                     if (fieldElement.length) {
@@ -350,7 +338,6 @@
                             firstErrorElement = fieldElement;
                         }
                     } else {
-                        // Handle non-field errors
                         if (!firstErrorElement && field === '__all__') {
                             var nonFieldErrors = messages.join(', ');
                             $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
@@ -360,10 +347,7 @@
                 });
 
                 if (firstErrorElement && firstErrorElement.length > 0) {
-                    console.log('First error element:', firstErrorElement);
                     firstErrorElement[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    console.error('First error element not found.');
                 }
 
                 $('#submit-button').prop('disabled', false).html('Update Listing');
@@ -377,7 +361,7 @@
 
     $('#listing-edit-form').submit(function(e) {
         e.preventDefault();
-        tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
+        tinymce.triggerSave();
 
         if (!formSubmitting && $('#id_status').val() === 'inactive') {
             $('#confirmation-popup').show();
@@ -390,13 +374,13 @@
 
     $('#popup-close-btn').click(function() {
         $('#success-popup').hide();
-        location.reload(); // Refresh the page
+        location.reload();
     });
 
     $('#confirm-yes-btn').click(function() {
         $('#confirmation-popup').hide();
-        formSubmitting = true; // Ensure formSubmitting is true to prevent double submission
-        submitForm(); // Use the same submitForm function to handle the submission
+        formSubmitting = true;
+        submitForm();
     });
 
     $('#confirm-no-btn').click(function() {
@@ -405,6 +389,5 @@
 
     initializeTinyMCE();
 });
-
 </script>
 {% endblock %}
