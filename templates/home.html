@@ -87,7 +87,11 @@
             </div>
             <div class="listing-thumbnail-image">
                 <a href="{% url 'listing_detail' listing.slug %}" class="listing-popup-link">
-                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
+                    {% if listing.thumbnail_image %}
+                        <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name|safe }}">
+                    {% else %}
+                        <img src="https://www.contentviewspro.com/wp-content/uploads/2017/07/default_image.png" alt="Default image">
+                    {% endif %}
                 </a>
             </div>
             <h2>{{ listing.project_name|truncatewords:5 }}</h2>
@@ -114,7 +118,11 @@
             </div>
             <div class="listing-thumbnail-image">
                 <a href="{% url 'listing_detail' listing.slug %}" class="listing-popup-link">
-                    <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name }}">
+                    {% if listing.thumbnail_image %}
+                        <img src="{{ listing.thumbnail_image.url }}" alt="Image for {{ listing.project_name|safe }}">
+                    {% else %}
+                        <img src="https://www.contentviewspro.com/wp-content/uploads/2017/07/default_image.png" alt="Default image">
+                    {% endif %}
                 </a>
             </div>
             <h2>{{ listing.project_name|truncatewords:5 }}</h2>
