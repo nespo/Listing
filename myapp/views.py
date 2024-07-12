@@ -1167,6 +1167,11 @@ def page_detail(request, slug):
     return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})
 
 
+try:
+    admin.site.unregister(FormFieldSetting)
+except admin.sites.NotRegistered:
+    pass
+
 class FormFieldSettingAdmin(admin.ModelAdmin):
     list_display = ('form_name', 'field_name', 'label', 'order')
     list_filter = ('form_name',)
@@ -1182,10 +1187,10 @@ class FormFieldSettingAdmin(admin.ModelAdmin):
                     order = request.POST.get(f'order_{form_name}_{field_name}', 0)
                     setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
                     setting.label = label
-                    setting.order = order
+                    setting.order = int(order)
                     setting.save()
             self.message_user(request, "Form field settings have been updated.")
-            return redirect('.')
+            return redirect(request.path)
 
         settings = FormFieldSetting.objects.all().order_by('form_name', 'order')
         context = {
