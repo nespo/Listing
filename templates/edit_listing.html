@@ -88,15 +88,7 @@
                 {% with form|get_field:field_name as field %}
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {% if field.field.widget.input_type == 'number' and field_name|not_in_list:'latitude,longitude' %}
-                            <!-- Visible text input for formatted number -->
-                            <input type="text" id="formatted_{{ field.id_for_label }}" placeholder="{{ field.label }}" 
-                                class="form-control">
-                            <!-- Hidden input to actually submit data -->
-                            {{ field.as_hidden }}
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
+                        {{ field }}
                         {% if field.help_text %}
                             <small class="form-text text-muted">{{ field.help_text }}</small>
                         {% endif %}
@@ -250,7 +242,6 @@
 
         toggleLeaseFields();
 
-
         $('#id_project_country').change(function () {
             var url = "{% url 'listing_load_states' %}";
             var countryId = $(this).val();
@@ -267,30 +258,6 @@
                     $('#id_project_state').trigger('change.select2');
                 }
             });
-        });
-
-        function formatNumberWithCommas(number) {
-            return number.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        function stripCommas(numberString) {
-            return numberString.replace(/,/g, '');
-        }
-
-        // Attach event listeners for formatting numbers
-        $('input[type="text"][id^="formatted_"]').on('input', function () {
-            var value = stripCommas(this.value);
-            this.value = formatNumberWithCommas(value);
-            var hiddenInput = document.getElementById(this.id.replace('formatted_', ''));
-            if (hiddenInput) {
-                hiddenInput.value = value;
-            }
-        }).on('focus', function () {
-            var value = stripCommas(this.value);
-            this.value = value;
-        }).on('blur', function () {
-            var value = stripCommas(this.value);
-            this.value = formatNumberWithCommas(value);
         });
 
         $('#id_project_state').change(function () {
