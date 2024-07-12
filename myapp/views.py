@@ -612,7 +612,7 @@ def edit_listing(request, slug):
                 return JsonResponse({'errors': {'__all__': ['An error occurred while updating the listing. Please try again.']}, 'message': 'An error occurred while updating the listing. Please try again.', 'message_type': 'error'}, status=500)
 
         else:
-            form_html = render_to_string('edit_listing.html', {'form': form, 'field_order': field_order, 'existing_images': existing_images}, request=request)
+            form_html = render_to_string('edit_listing_form.html', {'form': form, 'field_order': field_order, 'existing_images': existing_images}, request=request)
             return JsonResponse({'errors': form.errors, 'form_html': form_html}, status=400)
 
     else:
