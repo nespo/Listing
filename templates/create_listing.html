@@ -18,7 +18,15 @@
                 {% with form|get_field:field_name as field %}
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
+                        {% if field.field.widget.input_type == 'number' and field_name not in ['latitude', 'longitude'] %}
+                            <!-- Visible text input for formatted number -->
+                            <input type="text" id="formatted_{{ field.id_for_label }}" placeholder="{{ field.label }}" 
+                                class="form-control">
+                            <!-- Hidden input to actually submit data -->
+                            {{ field.as_hidden }}
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
                         {% if field.help_text %}
                             <small class="form-text text-muted">{{ field.help_text }}</small>
                         {% endif %}
@@ -113,22 +121,20 @@
             return numberString.replace(/,/g, '');
         }
 
-        // On input, unformat the number if it's not purely numerical (fallback for manual edits)
-        $('input[type="number"]').on('input', function () {
-            const plainNumber = stripCommas($(this).val());
-            $(this).val(plainNumber);
-        });
-
-        // On focus, remove commas so the user can edit the raw number
-        $('input[type="number"]').on('focus', function () {
-            const plainNumber = stripCommas($(this).val());
-            $(this).val(plainNumber);
-        });
-
-        // On blur, format the text field to show commas for thousands
-        $('input[type="number"]').on('blur', function () {
-            const formattedNumber = formatNumberWithCommas($(this).val());
-            $(this).val(formattedNumber);
+        // Attach event listeners for formatting numbers
+        $('input[type="text"][id^="formatted_"]').on('input', function () {
+            var value = stripCommas(this.value);
+            this.value = formatNumberWithCommas(value);
+            var hiddenInput = document.getElementById(this.id.replace('formatted_', ''));
+            if (hiddenInput) {
+                hiddenInput.value = value;
+            }
+        }).on('focus', function () {
+            var value = stripCommas(this.value);
+            this.value = value;
+        }).on('blur', function () {
+            var value = stripCommas(this.value);
+            this.value = formatNumberWithCommas(value);
         });
            
 
@@ -182,13 +188,6 @@
             e.preventDefault();
             tinymce.triggerSave(); // Save TinyMCE content to the underlying textarea
 
-            $('form').on('submit', function() {
-                $('input[type="number"]').each(function () {
-                    const plainNumber = stripCommas($(this).val());
-                    $(this).val(plainNumber);
-                });
-            });
-            
             var formData = new FormData(this);
 
             $('#submit-button').prop('disabled', true).html('Creating...');
