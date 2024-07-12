@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.urls import reverse
+from django.contrib import admin
 from .models import *
 from .forms import *
 from django.contrib.auth import authenticate, login, logout
