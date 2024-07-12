@@ -25,9 +25,14 @@
   background-color: #f9f9f9;
 }
 
-.message-item a {
+li.message-item.unread a {
   text-decoration: none;
   color: #64C2DB;
+  font-weight: bold;
+}
+
+li.message-item a{
+  text-decoration: none;
   font-weight: bold;
 }
 
