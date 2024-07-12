@@ -203,8 +203,16 @@ class FormFieldSettingAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         if request.method == 'POST':
             for key, value in request.POST.items():
+                # Log the keys for debugging
+                print(f"Processing key: {key}")
+                
                 if key.startswith('label_'):
-                    _, form_name, field_name = key.split('_')
+                    try:
+                        _, form_name, field_name = key.split('_', 2)  # Only split into 3 parts
+                    except ValueError:
+                        print(f"Skipping key: {key}")
+                        continue
+
                     label = value
                     order = request.POST.get(f'order_{form_name}_{field_name}', 0)
                     setting, created = FormFieldSetting.objects.get_or_create(form_name=form_name, field_name=field_name)
