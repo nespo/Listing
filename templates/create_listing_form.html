@@ -3,7 +3,18 @@
     {% with form|get_field:field_name as field %}
         <div class="listing-create-form-group {% if field_name in 'lease_term lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
+            {% if field.field.widget.input_type == 'number' and field_name|not_in_list:'latitude,longitude' %}
+                <!-- Visible text input for formatted number -->
+                <input type="text" id="formatted_{{ field.id_for_label }}" placeholder="{{ field.label }}" 
+                    class="form-control">
+                <!-- Hidden input to actually submit data -->
+                {{ field.as_hidden }}
+                {% else %}
+                    {{ field }}
+                {% endif %}
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
             {% if field.help_text %}
                 <small class="form-text text-muted">{{ field.help_text }}</small>
             {% endif %}
