@@ -65,7 +65,51 @@
         });
     }
 
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        function addCommas(nStr) {
+            nStr += '';
+            let x = nStr.split('.');
+            let x1 = x[0];
+            let x2 = x.length > 1 ? '.' + x[1] : '';
+            let rgx = /(\d+)(\d{3})/;
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            return x1 + x2;
+        }
+
+        function removeCommas(nStr) {
+            return nStr.replace(/,/g, '');
+        }
+
+        const numberInputs = document.querySelectorAll('input[type="number"]:not(#id_latitude):not(#id_longitude)');
+
+        numberInputs.forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = this.value.replace(/,/g, '');
+                if (!isNaN(value) && value !== '') {
+                    this.value = addCommas(value);
+                } else {
+                    this.value = value;
+                }
+            });
+
+            input.addEventListener('blur', function(e) {
+                let value = this.value.replace(/,/g, '');
+                if (!isNaN(value) && value !== '') {
+                    this.value = addCommas(value);
+                } else {
+                    this.value = value;
+                }
+            });
+        });
+
+        document.getElementById('listing-create-form').addEventListener('submit', function(e) {
+            numberInputs.forEach(input => {
+                input.value = removeCommas(input.value);
+            });
+        });
+
         $('#id_project_country').select2();
         $('#id_project_state').select2();
         $('#id_project_city').select2();
