@@ -1,6 +1,7 @@
 # urls.py
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from .admin import FormFieldSettingAdmin
 from .views import *
 
 urlpatterns = [
@@ -52,5 +53,5 @@ urlpatterns = [
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
 
     #admin
-    path('admin/myapp/formfieldsetting/', FormFieldSettingAdmin.changelist_view),
+    path('admin/formfieldsetting/', FormFieldSettingAdmin.changelist_view),
 ]
