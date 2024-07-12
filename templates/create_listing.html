@@ -18,7 +18,12 @@
                 {% with form|get_field:field_name as field %}
                     <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
+                        {% if field.widget.input_type == 'number' %}
+                            <input type="text" id="formatted_{{ field.name }}" name="formatted_{{ field.name }}" value="{{ field.value|stringformat:"0"|intcomma }}">
+                            <input type="hidden" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value }}">
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
                         {% if field.help_text %}
                             <small class="form-text text-muted">{{ field.help_text }}</small>
                         {% endif %}
@@ -82,16 +87,22 @@
             return nStr.replace(/,/g, '');
         }
 
-        const numberInputs = document.querySelectorAll('input[type="number"]:not(#id_latitude):not(#id_longitude)');
+        const numberInputs = document.querySelectorAll('input[type="text"][id^="formatted_"]');
+        let typingTimer;
 
         numberInputs.forEach(input => {
             input.addEventListener('input', function(e) {
-                let value = this.value.replace(/,/g, '');
-                if (!isNaN(value) && value !== '') {
-                    this.value = addCommas(value);
-                } else {
-                    this.value = value;
-                }
+                clearTimeout(typingTimer);
+                let self = this;
+                typingTimer = setTimeout(function() {
+                    let value = self.value.replace(/,/g, '');
+                    if (!isNaN(value) && value !== '') {
+                        self.value = addCommas(value);
+                        document.getElementById(self.id.replace('formatted_', '')).value = value;
+                    } else {
+                        self.value = value;
+                    }
+                }, 300);
             });
 
             input.addEventListener('blur', function(e) {
@@ -106,7 +117,7 @@
 
         document.getElementById('listing-create-form').addEventListener('submit', function(e) {
             numberInputs.forEach(input => {
-                input.value = removeCommas(input.value);
+                document.getElementById(input.id.replace('formatted_', '')).value = removeCommas(input.value);
             });
         });
 
