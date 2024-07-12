@@ -135,8 +135,8 @@
     width: 100%; /* Ensures full width */
     text-align: center;
     box-sizing: border-box;
+    height: 40px;
 }
-
 
 .listing-call-button-wrapper,
 .listing-message-button-wrapper {
