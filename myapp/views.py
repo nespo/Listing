@@ -1167,6 +1167,7 @@ def page_detail(request, slug):
     return render(request, 'page_detail.html', {'page': page,'login_form': login_form, 'register_form': register_form,})
 
 
+# Unregister FormFieldSetting if it is already registered
 try:
     admin.site.unregister(FormFieldSetting)
 except admin.sites.NotRegistered:
