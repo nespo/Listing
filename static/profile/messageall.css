@@ -1,74 +1,81 @@
 .messages-containerx {
-    width: 80%;
-    margin: 0 auto;
-    font-family: Arial, sans-serif;
-  }
+  width: 80%;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
 
-  .messages-containerx h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
+.messages-containerx h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.message-item {
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-item.unread {
+  background-color: #e6f7ff;
+}
+
+.message-item.read {
+  background-color: #f9f9f9;
+}
+
+.message-item a {
+  text-decoration: none;
+  color: #64C2DB;
+  font-weight: bold;
+}
+
+.message-item a:hover {
+  text-decoration: underline;
+}
+
+.message-item em {
+  color: #666;
+}
+
+.no-messages {
+  text-align: center;
+  color: #777;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination a, .pagination span {
+  margin: 0 5px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #64C2DB;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.pagination .current {
+  background-color: #64C2DB;
+  color: #fff;
+  border-color: #64C2DB;
+}
+
+.pagination .disabled {
+  color: #ccc;
+  border-color: #ddd;
+}
+
+@media (max-width: 768px) {
+  .messages-containerx {
+      width: 95%;
   }
 
   .message-item {
-    background-color: #f9f9f9;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .message-item a {
-    text-decoration: none;
-    color: #64C2DB;
-    font-weight: bold;
-  }
-
-  .message-item a:hover {
-    text-decoration: underline;
-  }
-
-  .message-item em {
-    color: #666;
-  }
-
-  .no-messages {
-    text-align: center;
-    color: #777;
-  }
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-
-  .pagination a, .pagination span {
-    margin: 0 5px;
-    padding: 8px 12px;
-    text-decoration: none;
-    color: #64C2DB;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-
-  .pagination .current {
-    background-color: #64C2DB;
-    color: #fff;
-    border-color: #64C2DB;
-  }
-
-  .pagination .disabled {
-    color: #ccc;
-    border-color: #ddd;
-  }
-
-  @media (max-width: 768px) {
-    .messages-containerx {
-      width: 95%;
-    }
-
-    .message-item {
       padding: 10px;
-    }
   }
+}
