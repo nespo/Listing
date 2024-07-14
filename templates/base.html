@@ -12,11 +12,14 @@
     <link rel="stylesheet" type="text/css" href="{% static 'base/footer.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <link rel="icon" href="{{ site_settings.site_favicon.url }}">
+    <!-- Include jQuery and Choices JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/choices.js/9.0.1/styles/choices.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/choices.js/9.0.1/scripts/choices.min.js"></script>
     <meta name="description" content="{{ site_settings.site_description }}">
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     {% for key, value in site_settings.meta_data.items %}
@@ -68,7 +71,6 @@
     {% include 'partials/site-footer.html' %}
     <!-- <script src="{% static 'script.js' %}"></script> -->
     <!-- <script src="{% static 'dynamic_forms.js' %}"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>   
     {% if user.is_authenticated %}
     <script src="{% static 'loggedin.js' %}"></script>  
