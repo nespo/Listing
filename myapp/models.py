@@ -9,6 +9,7 @@ from django.db import transaction
 from datetime import datetime, timedelta, date, time
 from django.core.validators import MaxValueValidator
 from tinymce.models import HTMLField
+from decimal import Decimal
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -90,11 +91,11 @@ class Category(models.Model):
 class Package(models.Model):
     PACKAGE_TYPE_CHOICES = [
         ('minutes', 'Minutes'),
-        ('hours', 'Hours'),
-        ('days', 'Days'),
-        ('weeks', 'Weeks'),
-        ('months', 'Months'),
-        ('years', 'Years')
+        ('hours', 'Hourly'),
+        ('days', 'Daily'),
+        ('weeks', 'Weekly'),
+        ('months', 'Monthly'),
+        ('years', 'Yearly')
     ]
     name = models.CharField(max_length=255)
     normal_post_limit = models.IntegerField()
@@ -322,7 +323,7 @@ class Listing(models.Model):
     
     contractor_name = models.CharField(max_length=255)
     project_size = models.PositiveIntegerField(validators=[MaxValueValidator(10000000000000000)])
-    battery_storage = models.PositiveIntegerField(null=True, blank=True)
+    battery_storage = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     projected_annual_income = models.PositiveIntegerField(
         validators=[MaxValueValidator(100000000000000000000000)], null=True, blank=True)
     epc_name = models.CharField(max_length=255, null=True, blank=True)
@@ -338,8 +339,7 @@ class Listing(models.Model):
     project_state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
     project_city = models.CharField(max_length=255, null=True, blank=True)
     
-    lot_size = models.PositiveIntegerField(
-        validators=[MaxValueValidator(10000000000000000000000)], null=True, blank=True)
+    lot_size = models.DecimalField(max_digits=30, decimal_places=2, validators=[MaxValueValidator(Decimal('10000000000000000000000'))], null=True, blank=True)
     property_type = models.CharField(max_length=50, choices=PROPERTY_TYPE_CHOICES, null=True, blank=True)
     lease_term = HTMLField(null=True, blank=True)
     current_lease_rate_per_acre = models.PositiveIntegerField(

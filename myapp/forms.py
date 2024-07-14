@@ -25,7 +25,7 @@ class SellerRegistrationForm(forms.ModelForm):
         max_length=20,
         validators=[RegexValidator(
             regex=r'^\+?1?\d{10}$',
-            message="Phone number must be a valid US number in the format: '+9999999999'."
+            message="Invalid Phone Number"
         )]
     )
     first_name = forms.CharField(max_length=255)
