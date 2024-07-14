@@ -121,15 +121,15 @@
                                         <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                                     </div>
                                     <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
+                                        {% if seller.package %}
                                         {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
-                                            {% if seller.package %}    
                                             Switch Membership
-                                            {% else %}
-                                            Buy Membership
-                                            {% endif %}
                                         {% else %}
                                             Buy Membership
                                         {% endif %}
+                                        {% else %}
+                                            Buy Membership
+                                        {% endif %}                                    
                                     </button>
                                 </div>
                             </div>
