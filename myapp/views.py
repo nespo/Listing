@@ -146,30 +146,23 @@ def remove_payment_method(request):
 def update_profile(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=request.user.seller)
-        print("POST data:", request.POST)
-        print("FILES data:", request.FILES)
+        print("Received POST data:", request.POST)
         
         if form.is_valid():
-            print("Form is valid")
-            if form.has_changed():
-                form.save()
-                print("Form data saved")
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': True, 'message': 'Profile updated successfully.'})
-                else:
-                    messages.success(request, 'Profile updated successfully')
-                    return render(request, 'update_profile.html', {'form': form, 'show_modal': True})
+            form.save()
+            print("Form data saved")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': 'Profile updated successfully.'})
             else:
-                print("No changes detected in the form")
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': 'No changes detected.'})
-                else:
-                    messages.info(request, 'No changes detected.')
+                messages.success(request, 'Profile updated successfully')
+                return redirect('update_profile')
         else:
             print("Form is not valid:", form.errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                errors = {field: error[0] for field, error in form.errors.items()}
+                errors = {field: form.errors[field][0] for field in form.errors}
                 return JsonResponse({'success': False, 'errors': errors})
+            else:
+                messages.error(request, 'Please correct the errors below.')
     else:
         form = UserProfileForm(instance=request.user.seller)
         print("Initial form data:", form.initial)
@@ -261,8 +254,8 @@ def register_seller(request):
                 'first_name': form.cleaned_data.get('first_name'),
                 'last_name': form.cleaned_data.get('last_name'),
                 'country': form.cleaned_data.get('country').id,
-                'state': form.cleaned_data.get('state').id,
-                'city': form.cleaned_data.get('city').id,
+                'state': form.cleaned_data.get('state').id if form.cleaned_data.get('state') else None,
+                'city': form.cleaned_data.get('city'),
                 'mobile_number': form.cleaned_data.get('mobile_number'),
             }
             uid = urlsafe_base64_encode(force_bytes(email))
@@ -317,6 +310,10 @@ def activate(request, uidb64, token):
                 password=user_data['password'],
                 is_active=True  # Activate user upon creation
             )
+
+            # Check if state is present
+            state = Region.objects.get(id=seller_data['state']) if seller_data['state'] else None
+
             seller = Seller.objects.create(
                 user=user,
                 company_name=seller_data['company_name'],
@@ -325,8 +322,8 @@ def activate(request, uidb64, token):
                 first_name=seller_data['first_name'],
                 last_name=seller_data['last_name'],
                 country=Country.objects.get(id=seller_data['country']),
-                state=Region.objects.get(id=seller_data['state']),
-                city=City.objects.get(id=seller_data['city']),
+                state=state,
+                city=seller_data['city'],
                 mobile_number=seller_data['mobile_number'],
                 is_approved=False
             )
@@ -389,10 +386,6 @@ def load_states(request, country_id):
     states = Region.objects.filter(country_id=country_id).order_by('name')
     return JsonResponse(list(states.values('id', 'name')), safe=False)
 
-def load_citiess(request, state_id):
-    cities = City.objects.filter(region_id=state_id).order_by('name')
-    return JsonResponse(list(cities.values('id', 'name')), safe=False)
-
 def get_country_code(request, country_id):
     country = Country.objects.get(id=country_id)
     return JsonResponse({'country_code': country.code2})  # Using the correct field name
@@ -430,11 +423,6 @@ def listing_load_states(request):
     states = Region.objects.filter(country_id=country_id).order_by('name')
     return JsonResponse(list(states.values('id', 'name')), safe=False)
 
-@login_required
-def listing_load_cities(request):
-    state_id = request.GET.get('state_id')
-    cities = City.objects.filter(region_id=state_id).order_by('name')
-    return JsonResponse(list(cities.values('id', 'name')), safe=False)
 
 @login_required
 def create_listing(request):
@@ -500,7 +488,7 @@ def create_listing(request):
             except:
                 pass
             messages.success(request, 'Listing created successfully')
-            return JsonResponse({'success': True, 'redirect_url': redirect('dashboard').url})
+            return JsonResponse({'success': True, 'redirect_url': redirect('seller_listings').url})
         else:
             form_html = render_to_string('create_listing_form.html', {'form': form, 'field_order': field_order})
             return JsonResponse({'errors': form.errors, 'form_html': form_html}, status=400)
@@ -1038,14 +1026,6 @@ def state_autocomplete(request):
         states = list(Region.objects.values_list('name', flat=True))
         return JsonResponse(states, safe=False)
 
-def city_autocomplete(request):
-    if 'term' in request.GET:
-        qs = City.objects.filter(name__icontains=request.GET.get('term'))
-        cities = list(qs.values_list('name', flat=True))
-        return JsonResponse(cities, safe=False)
-    else:
-        cities = list(City.objects.values_list('name', flat=True))
-        return JsonResponse(cities, safe=False)
 
 # Custom JSON Encoder to handle Decimal serialization
 class DecimalEncoder(DjangoJSONEncoder):
@@ -1108,6 +1088,7 @@ def all_listings(request):
             'project_name': listing.project_name,
             'latitude': listing.latitude,
             'longitude': listing.longitude,
+            'project_city' : listing.project_city,
         } for listing in listings], cls=DecimalEncoder)
 
         return JsonResponse({
@@ -1128,6 +1109,7 @@ def all_listings(request):
             'project_name': listing.project_name,
             'latitude': listing.latitude,
             'longitude': listing.longitude,
+            'project_city' : listing.project_city,
         } for listing in listings], cls=DecimalEncoder)
     })
 

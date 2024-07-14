@@ -5,14 +5,29 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.core.mail import send_mail
 from django.conf import settings
-from cities_light.models import Country, Region, City
 from django.db import transaction
 from datetime import datetime, timedelta, date, time
+from django.core.validators import MaxValueValidator
 from tinymce.models import HTMLField
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
+class Country(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=3, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Region(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=3)
+    country = models.ForeignKey(Country, related_name='regions', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 class FooterMenuItem(models.Model):
     name = models.CharField(max_length=255)
     url = models.URLField()
@@ -119,7 +134,7 @@ class Seller(models.Model):
     last_name = models.CharField(max_length=255)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
     state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True)
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
     new_package = models.ForeignKey(Package, related_name='new_package_set', null=True, blank=True, on_delete=models.SET_NULL)
     normal_post_count = models.IntegerField(default=0)  # Total normal posts allowed (package + individual)
@@ -258,8 +273,8 @@ class Reminder(models.Model):
         return f"Reminder for {self.seller.user.username} on {self.reminder_date}"
 
 class ListingPrice(models.Model):
-    normal_listing_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.00)
-    featured_listing_price = models.DecimalField(max_digits=10, decimal_places=2, default=3.00)
+    normal_listing_price = models.PositiveIntegerField(default=1250)
+    featured_listing_price = models.PositiveIntegerField(default=1650)
 
     def __str__(self):
         return f"Normal: {self.normal_listing_price}, Featured: {self.featured_listing_price}"
@@ -289,41 +304,59 @@ class Listing(models.Model):
 
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     categories = models.ManyToManyField(Category, blank=True)
+    
+    project_name = models.CharField(max_length=255)
+    project_description = HTMLField(null=True, blank=True)
+    
     project_ntp_date = models.DateField(null=True, blank=True)
     project_cod_date = models.DateField(null=True, blank=True)
     project_pto_date = models.DateField(null=True, blank=True)
+    
     is_featured = models.BooleanField(default=False)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='active')
     previous_status = models.CharField(max_length=50, choices=STATUS_CHOICES, null=True, blank=True)
+    
     views = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    project_name = models.CharField(max_length=255)
-    project_description = HTMLField(null=True, blank=True)
+    
     contractor_name = models.CharField(max_length=255)
-    project_size = models.DecimalField(max_digits=10, decimal_places=2)
-    battery_storage = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    projected_annual_income = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    project_size = models.PositiveIntegerField(validators=[MaxValueValidator(10000000000000000)])
+    battery_storage = models.PositiveIntegerField(null=True, blank=True)
+    projected_annual_income = models.PositiveIntegerField(
+        validators=[MaxValueValidator(100000000000000000000000)], null=True, blank=True)
     epc_name = models.CharField(max_length=255, null=True, blank=True)
-    current_annual_om_cost = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    om_escalation_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    sales_price = models.DecimalField(max_digits=15, decimal_places=2)
+    current_annual_om_cost = models.PositiveIntegerField(
+        validators=[MaxValueValidator(1000000000000000000000)], null=True, blank=True)
+    om_escalation_rate = models.PositiveIntegerField(
+        validators=[MaxValueValidator(100)], null=True, blank=True)
+    sales_price = models.PositiveIntegerField(
+        validators=[MaxValueValidator(10000000000000000000000)])
+    
     project_address = models.CharField(max_length=255, null=True, blank=True)
     project_country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     project_state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
-    project_city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
-    lot_size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    project_city = models.CharField(max_length=255, null=True, blank=True)
+    
+    lot_size = models.PositiveIntegerField(
+        validators=[MaxValueValidator(10000000000000000000000)], null=True, blank=True)
     property_type = models.CharField(max_length=50, choices=PROPERTY_TYPE_CHOICES, null=True, blank=True)
     lease_term = HTMLField(null=True, blank=True)
-    current_lease_rate_per_acre = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    lease_escalation_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    current_lease_rate_per_acre = models.PositiveIntegerField(
+        validators=[MaxValueValidator(1000000000000000000000)], null=True, blank=True)
+    lease_escalation_rate = models.PositiveIntegerField(
+        validators=[MaxValueValidator(100)], null=True, blank=True)
+    
     project_status = models.CharField(max_length=50, choices=PROJECT_STATUS_CHOICES, null=True, blank=True)
     tax_credit_type = models.CharField(max_length=50, choices=TAX_CREDIT_TYPE_CHOICES, null=True, blank=True)
-    total_tax_credit_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    total_tax_credit_percentage = models.PositiveIntegerField(
+        validators=[MaxValueValidator(100)], null=True, blank=True)
     remarks = HTMLField(null=True, blank=True)
     buyer_protections = HTMLField(null=True, blank=True)
+    
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    
     sold_date = models.DateField(null=True, blank=True)
     thumbnail_image = models.ImageField(upload_to='listing_thumbnails/', null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True, null=True)

@@ -1,3 +1,5 @@
+{% load form_filters %}
+
 {% if not user.is_authenticated %}
 <div id="login-popup" class="popup">
     <div class="popup-content">
@@ -143,15 +145,15 @@
                     <label for="signup_country">Country:*</label>
                     <div class="input-icon">
                         <i class="fa fa-globe"></i>
-                        {{ register_form.country }}
+                        {{ register_form.country|add_class:"chosen-select" }}
                     </div>
                     <div class="error" id="error-country"></div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="state-group" style="display: none;">
                     <label for="signup_state">State:*</label>
                     <div class="input-icon">
                         <i class="fa fa-map"></i>
-                        {{ register_form.state }}
+                        {{ register_form.state|add_class:"chosen-select" }}
                     </div>
                     <div class="error" id="error-state"></div>
                 </div>
@@ -197,9 +199,12 @@
 </div>
 {% endif %}
 
-
-
 {% block extra_js %}
+<!-- Include jQuery and Choices JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/choices.js/9.0.1/styles/choices.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/choices.js/9.0.1/scripts/choices.min.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM fully loaded and parsed");
@@ -226,6 +231,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (index === step) {
                 stepContent.style.display = 'block';
                 stepContent.classList.add(direction === 'next' ? 'slide-in-right' : 'slide-in-left');
+                // Initialize Choices for dynamically added select fields
+                new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' });
             } else {
                 stepContent.style.display = 'none';
             }
@@ -244,7 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         });
-        
+
         formData.append('step', step);
         formData.append('csrfmiddlewaretoken', document.querySelector('input[name="csrfmiddlewaretoken"]').value);
 
@@ -256,19 +263,19 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            let valid = true;
-            if (data.errors) {
-                valid = false;
-                displayErrors(data.errors);
-            }
-            callback(valid);
-        })
-        .catch(error => {
-            console.error('An error occurred:', error);
-            callback(false);
-        });
+            .then(response => response.json())
+            .then(data => {
+                let valid = true;
+                if (data.errors) {
+                    valid = false;
+                    displayErrors(data.errors);
+                }
+                callback(valid);
+            })
+            .catch(error => {
+                console.error('An error occurred:', error);
+                callback(false);
+            });
     }
 
     function displayErrors(errors) {
@@ -283,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     nextButtons.forEach((button, index) => {
         button.addEventListener("click", function () {
-            validateStep(currentStep, function(valid) {
+            validateStep(currentStep, function (valid) {
                 if (valid) {
                     currentStep++;
                     showStep(currentStep, 'next');
@@ -305,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
         isSubmitting = true;
         submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
 
-        validateStep(currentStep, function(valid) {
+        validateStep(currentStep, function (valid) {
             if (valid) {
                 const formData = new FormData(signupForm);
                 fetch(signupForm.action, {
@@ -316,15 +323,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                     body: formData
                 })
-                .then(response => response.json())
-                .then(data => {
-                    isSubmitting = false; // Reset flag
-                    if (data.success) {
-                        signupPopup.style.display = "none";
-                        signupForm.reset(); // Reset the form data
-                        let messagesPopupContent = document.querySelector("#messages-popup .messages-container");
-                        if (!messagesPopupContent) {
-                            messagesPopup.innerHTML = `
+                    .then(response => response.json())
+                    .then(data => {
+                        isSubmitting = false; // Reset flag
+                        if (data.success) {
+                            signupPopup.style.display = "none";
+                            signupForm.reset(); // Reset the form data
+                            let messagesPopupContent = document.querySelector("#messages-popup .messages-container");
+                            if (!messagesPopupContent) {
+                                messagesPopup.innerHTML = `
                             <div class="popup-content" style="
                             background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
                             border-radius: 15px;
@@ -350,20 +357,20 @@ document.addEventListener("DOMContentLoaded", function () {
                             </div>
                         </div>
                             `;
-                            messagesPopupContent = document.querySelector("#messages-popup .messages-container");
+                                messagesPopupContent = document.querySelector("#messages-popup .messages-container");
+                            }
+                            messagesPopupContent.innerHTML = `<div class="message success">We have sent you an Email. Please Verify Your Email.</div>`;
+                            messagesPopup.style.display = "block";
+                        } else {
+                            displayErrors(data.errors);
+                            submitButton.innerHTML = 'Submit'; // Reset button text
                         }
-                        messagesPopupContent.innerHTML = `<div class="message success">We have sent you an Email. Please Verify Your Email.</div>`;
-                        messagesPopup.style.display = "block";
-                    } else {
-                        displayErrors(data.errors);
+                    })
+                    .catch(error => {
+                        console.error('An error occurred:', error);
+                        isSubmitting = false; // Reset flag
                         submitButton.innerHTML = 'Submit'; // Reset button text
-                    }
-                })
-                .catch(error => {
-                    console.error('An error occurred:', error);
-                    isSubmitting = false; // Reset flag
-                    submitButton.innerHTML = 'Submit'; // Reset button text
-                });
+                    });
             } else {
                 isSubmitting = false; // Reset flag
                 submitButton.innerHTML = 'Submit'; // Reset button text
@@ -409,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (field) {
             const phoneInput = window.intlTelInput(field, {
                 initialCountry: "auto",
-                geoIpLookup: function(callback) {
+                geoIpLookup: function (callback) {
                     fetch('https://ipinfo.io/json')
                         .then(response => response.json())
                         .then(data => callback(data.country))
@@ -429,10 +436,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const countryField = document.getElementById('id_country');
     const stateField = document.getElementById('id_state');
     const cityField = document.getElementById('id_city');
+    const stateGroup = document.getElementById('state-group');
+
+    // Function to toggle the state field visibility and required attribute
+    function toggleStateField() {
+        const selectedCountry = countryField.value;
+        if (selectedCountry === '39' || selectedCountry === '230') {  // Assuming these are the country IDs for US and Canada
+            stateGroup.style.display = 'block';
+            stateField.required = true;
+        } else {
+            stateGroup.style.display = 'none';
+            stateField.required = false;
+        }
+    }
 
     if (countryField) {
-        countryField.addEventListener('change', function() {
+        countryField.addEventListener('change', function () {
             const countryId = this.value;
+            toggleStateField();
             if (countryId) {
                 fetch(`/api/get_states/${countryId}/`)
                     .then(response => response.json())
@@ -449,34 +470,14 @@ document.addEventListener("DOMContentLoaded", function () {
                             option.textContent = state.name;
                             stateField.appendChild(option);
                         });
+
+                        new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' }); // Update Choices
                     });
             }
         });
     }
 
-    if (stateField) {
-        stateField.addEventListener('change', function() {
-            const stateId = this.value;
-            if (stateId) {
-                fetch(`/api/get_citiess/${stateId}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        cityField.innerHTML = '';
-                        const defaultOption = document.createElement('option');
-                        defaultOption.textContent = 'Select City';
-                        defaultOption.value = '';
-                        cityField.appendChild(defaultOption);
-
-                        data.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.id;
-                            option.textContent = city.name;
-                            cityField.appendChild(option);
-                        });
-                    });
-            }
-        });
-    }
+    toggleStateField(); // Initial call to set the correct state of the state field
 
     // Toggle dropdown content visibility
     const accountIcon = document.getElementById("account-icon");
@@ -626,21 +627,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '/dashboard';
-                } else {
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        const formErrorDiv = document.getElementById('error-login_form');
+                        formErrorDiv.textContent = data.errors.form;
+                        formErrorDiv.style.display = 'block';
+                    }
+                })
+                .catch(error => {
                     const formErrorDiv = document.getElementById('error-login_form');
-                    formErrorDiv.textContent = data.errors.form;
+                    formErrorDiv.textContent = 'An error occurred while trying to log in. Please try again.';
                     formErrorDiv.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                const formErrorDiv = document.getElementById('error-login_form');
-                formErrorDiv.textContent = 'An error occurred while trying to log in. Please try again.';
-                formErrorDiv.style.display = 'block';
-            });
+                });
         });
     }
 
@@ -656,27 +657,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                const resetMessage = document.getElementById("reset-message");
-                if (data.message) {
-                    resetMessage.style.display = "block";
-                    resetMessage.textContent = data.message;
-                    resetMessage.className = 'message success';
-                    setTimeout(() => {
-                        resetMessage.style.display = "none";
-                        document.getElementById("reset-popup").style.display = "none";
-                    }, 5000);
-                } else if (data.error) {
-                    resetMessage.style.display = "block";
-                    resetMessage.textContent = data.error;
-                    resetMessage.className = 'message error';
-                    setTimeout(() => {
-                        resetMessage.style.display = "none";
-                    }, 5000);
-                }
-            })
-            .catch(error => console.error('An error occurred:', error));
+                .then(response => response.json())
+                .then(data => {
+                    const resetMessage = document.getElementById("reset-message");
+                    if (data.message) {
+                        resetMessage.style.display = "block";
+                        resetMessage.textContent = data.message;
+                        resetMessage.className = 'message success';
+                        setTimeout(() => {
+                            resetMessage.style.display = "none";
+                            document.getElementById("reset-popup").style.display = "none";
+                        }, 5000);
+                    } else if (data.error) {
+                        resetMessage.style.display = "block";
+                        resetMessage.textContent = data.error;
+                        resetMessage.className = 'message error';
+                        setTimeout(() => {
+                            resetMessage.style.display = "none";
+                        }, 5000);
+                    }
+                })
+                .catch(error => console.error('An error occurred:', error));
         });
     }
 });

@@ -4,76 +4,89 @@
 {% block title %}Edit Listing - {{ form.instance.project_name }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'listing/styles.css' %}">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 <style>
-/* Popup Modal Styles */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1050; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: hidden; /* Disable scroll if needed */
-    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-}
+    /* Popup Modal Styles */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1050; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: hidden; /* Disable scroll if needed */
+        background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+    }
 
-.modal-dialog {
-    position: relative;
-    margin: auto;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
-    max-width: 500px;
-}
+    .modal-dialog {
+        position: relative;
+        margin: auto;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        max-width: 500px;
+    }
 
-.modal-content {
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    text-align: center;
-}
+    .modal-content {
+        background-color: #fff;
+        padding: 20px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        text-align: center;
+    }
 
-.modal-header, .modal-footer {
-    padding: 4px;
-}
+    .modal-header, .modal-footer {
+        padding: 4px;
+    }
 
-.modal-header {
-    border-bottom: 1px solid #e5e5e5;
-}
+    .modal-header {
+        border-bottom: 1px solid #e5e5e5;
+    }
 
-.modal-footer {
-    border-top: 1px solid #e5e5e5;
-}
+    .modal-footer {
+        border-top: 1px solid #e5e5e5;
+    }
 
-.modal-title {
-    text-align: center;
-    font-size: 18px;
-}
+    .modal-title {
+        text-align: center;
+        font-size: 18px;
+    }
 
-.modal-body {
-    text-align: center;
-    margin: 15px 0;
-}
+    .modal-body {
+        text-align: center;
+        margin: 15px 0;
+    }
 
-.btn-primary, .btn-secondary {
-    background-color: #64C2DB;
-    border-color: #64C2DB;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-    width: 100%;
-    border: 0px;
-    margin-top: 10px;
-    cursor: pointer;
-}
+    .btn-primary, .btn-secondary {
+        background-color: #64C2DB;
+        border-color: #64C2DB;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        width: 100%;
+        border: 0px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
 
-.btn-primary:hover, .btn-secondary:hover {
-    background-color: #4fa6bd;
-    border-color: #4fa6bd;
-}
+    .btn-primary:hover, .btn-secondary:hover {
+        background-color: #4fa6bd;
+        border-color: #4fa6bd;
+    }
+
+    .jconfirm {
+        z-index: 10000 !important;
+    }
+    .jconfirm-box {
+        margin: 0 auto;
+        top: 50% !important;
+    }
+
+    .jc-bs3-row.row.justify-content-md-center.justify-content-sm-center.justify-content-xs-center.justify-content-lg-center{
+        margin: 0 auto;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -86,7 +99,7 @@
         <div id="form-content">
             {% for field_name in field_order %}
                 {% with form|get_field:field_name as field %}
-                    <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}">
+                <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.help_text %}
@@ -159,7 +172,7 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'tinymce/js/tinymce/tinymce.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
 <script>
     function initializeTinyMCE() {
         tinymce.remove();
@@ -181,53 +194,6 @@
         });
     }
 
-    $(document).ready(function() {
-    // Initialize Select2
-    $('#id_project_country').select2();
-    $('#id_project_state').select2();
-    $('#id_project_city').select2();
-
-    // Function to load initial states and cities based on selected country and state
-    function loadInitialStatesAndCities() {
-        var initialCountryId = $('#id_project_country').val();
-        var initialStateId = '{{ form.instance.project_state.id }}';
-        var initialCityId = '{{ form.instance.project_city.id }}';
-
-        if (initialCountryId) {
-            $.ajax({
-                url: "{% url 'listing_load_states' %}",
-                data: {
-                    'country_id': initialCountryId
-                },
-                success: function (data) {
-                    $('#id_project_state').html('<option value="">Select a state</option>');
-                    $.each(data, function (key, value) {
-                        var selected = value.id == initialStateId ? ' selected' : '';
-                        $('#id_project_state').append('<option value="' + value.id + '"' + selected + '>' + value.name + '</option>');
-                    });
-                    $('#id_project_state').trigger('change.select2');
-
-                    if (initialStateId) {
-                        $.ajax({
-                            url: "{% url 'listing_load_cities' %}",
-                            data: {
-                                'state_id': initialStateId
-                            },
-                            success: function (data) {
-                                $('#id_project_city').html('<option value="">Select a city</option>');
-                                $.each(data, function (key, value) {
-                                    var selected = value.id == initialCityId ? ' selected' : '';
-                                    $('#id_project_city').append('<option value="' + value.id + '"' + selected + '>' + value.name + '</option>');
-                                });
-                                $('#id_project_city').trigger('change.select2');
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    }
-
     function toggleLeaseFields() {
         var leaseFields = document.querySelectorAll('.lease-field');
         var propertyType = document.getElementById('id_property_type').value;
@@ -240,48 +206,8 @@
         });
     }
 
-    document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
-
-    toggleLeaseFields();
-
-    $('#id_project_country').change(function () {
-        var url = "{% url 'listing_load_states' %}";
-        var countryId = $(this).val();
-        $.ajax({
-            url: url,
-            data: {
-                'country_id': countryId
-            },
-            success: function (data) {
-                $('#id_project_state').html('<option value="">Select a state</option>');
-                $.each(data, function (key, value) {
-                    $('#id_project_state').append('<option value="' + value.id + '">' + value.name + '</option>');
-                });
-                $('#id_project_state').trigger('change.select2');
-            }
-        });
-    });
-
-    $('#id_project_state').change(function () {
-        var url = "{% url 'listing_load_cities' %}";
-        var stateId = $(this).val();
-        $.ajax({
-            url: url,
-            data: {
-                'state_id': stateId
-            },
-            success: function (data) {
-                $('#id_project_city').html('<option value="">Select a city</option>');
-                $.each(data, function (key, value) {
-                    $('#id_project_city').append('<option value="' + value.id + '">' + value.name + '</option>');
-                });
-                $('#id_project_city').trigger('change.select2');
-            }
-        });
-    });
-
     function toggleBatteryStorage() {
-        var batteryField = document.querySelector('#id_battery_storage').closest('.listing-create-form-group');
+        var batteryField = document.querySelector('.battery-storage');
         var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
         if (selectedCategories.includes('BESS')) {
             batteryField.style.display = 'block';
@@ -290,105 +216,156 @@
         }
     }
 
-    $('#id_categories').change(function () {
-        toggleBatteryStorage();
-    });
+    function handleStateFieldLogic() {
+        var countryId = $('#id_project_country').val();
+        var stateFieldWrapper = $('.listing-create-form-group:has(#id_project_state)');
 
-    toggleBatteryStorage();
-
-    $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
-
-    loadInitialStatesAndCities();
-
-    var formSubmitting = false;
-
-    function submitForm() {
-        var formData = new FormData($('#listing-edit-form')[0]);
-
-        $('#submit-button').prop('disabled', true).html('Updating...');
-
-        $.ajax({
-            type: 'POST',
-            url: '{% url "edit_listing" form.instance.slug %}',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    $('#popup-title').text('Success');
-                    $('#popup-message').text(response.message);
-                    $('#success-popup').show();
-                } else {
-                    $('#popup-title').text(response.message_type);
-                    $('#popup-message').text(response.message);
-                    $('#success-popup').show();
+        if (countryId === "{{ 230 }}" || countryId === "{{ 39 }}") {
+            stateFieldWrapper.show();
+            var url = "{% url 'listing_load_states' %}";
+            $.ajax({
+                url: url,
+                data: {
+                    'country_id': countryId
+                },
+                success: function (data) {
+                    var stateSelect = $('#id_project_state');
+                    stateSelect.html('<option value="">Select a state</option>');
+                    $.each(data, function (key, value) {
+                        stateSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                    stateSelect.val('{{ form.instance.project_state.id }}');
                 }
-            },
-            error: function(xhr) {
-                console.log("Form submission failed:", xhr.responseJSON);
-                $('#form-content').html(xhr.responseJSON.form_html || '');
-                var errors = xhr.responseJSON.errors || {};
-                var firstErrorElement = null;
-
-                $.each(errors, function(field, messages) {
-                    var fieldElement = $('[name="' + field + '"]');
-                    if (fieldElement.length) {
-                        fieldElement.addClass('is-invalid');
-                        fieldElement.next('.invalid-feedback').html(messages.join(', '));
-                        if (!firstErrorElement) {
-                            firstErrorElement = fieldElement;
-                        }
-                    } else {
-                        if (!firstErrorElement && field === '__all__') {
-                            var nonFieldErrors = messages.join(', ');
-                            $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
-                            firstErrorElement = $('.non-field-error');
-                        }
-                    }
-                });
-
-                if (firstErrorElement && firstErrorElement.length > 0) {
-                    firstErrorElement[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-
-                $('#submit-button').prop('disabled', false).html('Update Listing');
-                initializeTinyMCE();
-                $('#id_project_country').select2();
-                $('#id_project_state').select2();
-                $('#id_project_city').select2();
-            }
-        });
+            });
+        } else {
+            stateFieldWrapper.hide();
+            $('#id_project_state').html('<option value="">Not applicable</option>');
+        }
     }
 
-    $('#listing-edit-form').submit(function(e) {
-        e.preventDefault();
-        tinymce.triggerSave();
+    function scrollToFirstError() {
+        var firstErrorElement = $('.is-invalid').first();
+        if (firstErrorElement.length) {
+            $('html, body').animate({
+                scrollTop: firstErrorElement.offset().top - 100
+            }, 1000);
+        }
+    }
 
-        if (!formSubmitting && $('#id_status').val() === 'inactive') {
-            $('#confirmation-popup').show();
-            return;
+    function reinitializeFormElements() {
+        initializeTinyMCE();
+        toggleLeaseFields();
+        toggleBatteryStorage();
+        handleStateFieldLogic();
+    }
+
+    $(document).ready(function() {
+        document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
+        $('#id_categories').change(toggleBatteryStorage);
+
+        toggleLeaseFields();
+        toggleBatteryStorage();
+
+        $('#id_project_country').change(handleStateFieldLogic);
+
+        var countrySelect = document.getElementById('id_project_country');
+        var selectedCountry = countrySelect.value;
+        if (selectedCountry) {
+            $(countrySelect).trigger('change');
         }
 
-        formSubmitting = true;
-        submitForm();
-    });
+        $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
 
-    $('#popup-close-btn').click(function() {
-        $('#success-popup').hide();
-        location.reload();
-    });
+        function submitForm() {
+            var formData = new FormData($('#listing-edit-form')[0]);
 
-    $('#confirm-yes-btn').click(function() {
-        $('#confirmation-popup').hide();
-        formSubmitting = true;
-        submitForm();
-    });
+            $('#submit-button').prop('disabled', true).html('Updating...');
 
-    $('#confirm-no-btn').click(function() {
-        $('#confirmation-popup').hide();
-    });
+            $.ajax({
+                type: 'POST',
+                url: '{% url "edit_listing" form.instance.slug %}',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#popup-title').text('Success');
+                        $('#popup-message').text(response.message);
+                        $('#success-popup').show();
+                    } else {
+                        $('#popup-title').text(response.message_type);
+                        $('#popup-message').text(response.message);
+                        $('#success-popup').show();
+                    }
+                },
+                error: function(xhr) {
+                    console.log("Form submission failed:", xhr.responseJSON);
+                    $('#form-content').html(xhr.responseJSON.form_html || '');
+                    var errors = xhr.responseJSON.errors || {};
+                    var firstErrorElement = null;
 
-    initializeTinyMCE();
-});
+                    $.each(errors, function(field, messages) {
+                        var fieldElement = $('[name="' + field + '"]').closest('.listing-create-form-group');
+                        if (fieldElement.length) {
+                            fieldElement.addClass('is-invalid');
+                            fieldElement.find('.invalid-feedback').html(messages.join(', '));
+                            if (!firstErrorElement) {
+                                firstErrorElement = fieldElement[0];
+                            }
+                        } else {
+                            if (!firstErrorElement && field === '__all__') {
+                                var nonFieldErrors = messages.join(', ');
+                                $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
+                                firstErrorElement = $('.non-field-error')[0];
+                            }
+                        }
+                    });
+
+                    $.alert({
+                        title: 'Error',
+                        content: 'Please fix the highlighted errors and try again.',
+                        onClose: function () {
+                            scrollToFirstError();
+                            reinitializeFormElements();
+                        }
+                    });
+
+                    $('#submit-button').prop('disabled', false).html('Update Listing');
+                }
+            });
+        }
+
+        var formSubmitting = false;
+
+        $('#listing-edit-form').submit(function(e) {
+            e.preventDefault();
+            tinymce.triggerSave();
+
+            if (!formSubmitting && $('#id_status').val() === 'inactive') {
+                $('#confirmation-popup').show();
+                return;
+            }
+
+            formSubmitting = true;
+            submitForm();
+        });
+
+        $('#popup-close-btn').click(function() {
+            $('#success-popup').hide();
+            location.reload();
+        });
+
+        $('#confirm-yes-btn').click(function() {
+            $('#confirmation-popup').hide();
+            formSubmitting = true;
+            submitForm();
+        });
+
+        $('#confirm-no-btn').click(function() {
+            $('#confirmation-popup').hide();
+        });
+
+        reinitializeFormElements();
+    });
 </script>
 {% endblock %}

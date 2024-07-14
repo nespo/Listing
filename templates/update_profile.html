@@ -40,7 +40,7 @@
             <label for="id_country">Country</label>
             {{ form.country }}
         </div>
-        <div class="profile-update-form-group">
+        <div class="profile-update-form-group" id="state-group" style="display: none;">
             <label for="id_state">State</label>
             {{ form.state }}
         </div>
@@ -120,48 +120,50 @@
         // Initialize Choices.js
         const countrySelect = new Choices('#id_country', { searchEnabled: true });
         const stateSelect = new Choices('#id_state', { searchEnabled: true });
-        const citySelect = new Choices('#id_city', { searchEnabled: true });
 
         // Load initial data from the form instance
         const initialCountryId = $('#id_country').val();
         const initialStateId = '{{ form.instance.state.id }}';
-        const initialCityId = '{{ form.instance.city.id }}';
 
-        if (initialStateId) {
-            stateSelect.setChoiceByValue(initialStateId);
+        console.log("Initial Country ID:", initialCountryId);
+        console.log("Initial State ID:", initialStateId);
+
+        // Function to toggle state field visibility and populate states
+        function toggleStateField(countryId, initialStateId = null) {
+            console.log("Toggling state field for country ID:", countryId);
+            if (countryId == '230' || countryId == '39') {
+                $('#state-group').show();
+                $('#id_state').prop('disabled', false);
+                stateSelect.clearChoices();
+                $.ajax({
+                    url: `/api/get_states/${countryId}/`,
+                    success: function (data) {
+                        console.log("States fetched for country ID", countryId, ":", data);
+                        stateSelect.setChoices(data.map(state => ({ value: state.id, label: state.name })), 'value', 'label', true);
+                        if (initialStateId) {
+                            console.log("Setting initial state ID:", initialStateId);
+                            stateSelect.setChoiceByValue(initialStateId.toString());
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error fetching states for country ID", countryId, ":", error);
+                    }
+                });
+            } else {
+                $('#state-group').hide();
+                $('#id_state').prop('disabled', true);
+                stateSelect.clearChoices();
+            }
         }
 
-        if (initialCityId) {
-            citySelect.setChoiceByValue(initialCityId);
-        }
+        // Initial state field visibility based on initial country
+        toggleStateField(initialCountryId, initialStateId);
 
         // Event handler for country change
         $('#id_country').change(function () {
             var countryId = $(this).val();
-            $.ajax({
-                url: `/api/get_states/${countryId}/`,
-                success: function (data) {
-                    stateSelect.clearStore();
-                    stateSelect.setChoices(data.map(state => ({ value: state.id, label: state.name })), 'value', 'label', true);
-                    stateSelect.setChoiceByValue('');
-
-                    citySelect.clearStore();
-                    citySelect.setChoices([], 'value', 'label', true);
-                }
-            });
-        });
-
-        // Event handler for state change
-        $('#id_state').change(function () {
-            var stateId = $(this).val();
-            $.ajax({
-                url: `/api/get_citiess/${stateId}/`,
-                success: function (data) {
-                    citySelect.clearStore();
-                    citySelect.setChoices(data.map(city => ({ value: city.id, label: city.name })), 'value', 'label', true);
-                    citySelect.setChoiceByValue('');
-                }
-            });
+            console.log("Country changed to:", countryId);
+            toggleStateField(countryId);
         });
 
         // Initialize intl-tel-input for phone number fields

@@ -4,7 +4,7 @@
             <img class="footer-logo" src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_title }}">
             <p>{{ site_settings.site_description }}</p>
         </div>
-        <div class="footer-widget-column">
+        <div class="footer-widget-column middle-1">
             <h4>Quick Links</h4>
             <div class="footer-widget link">
                 {% for widget in site_settings.footer_widgets.all %}
@@ -16,7 +16,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="footer-widget-column">
+        <div class="footer-widget-column middle-2">
             <h4>Resources</h4>
             <div class="footer-widget link">
                 {% for widget in site_settings.footer_widgets.all %}
@@ -28,7 +28,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="footer-widget-column">
+        <div class="footer-widget-column last">
             {% for widget in site_settings.footer_widgets.all %}
             {% if widget.widget_type == 'html' %}
             <div class="footer-widget custom-html">
@@ -41,4 +41,4 @@
     <div class="footer-bottom">
         <p>&copy; 2024 {{ site_settings.site_title }}. All rights reserved.</p>
     </div>
-</footer>    
+</footer>

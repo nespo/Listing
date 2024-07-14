@@ -1,7 +1,7 @@
 {% load form_filters %}
 {% for field_name in field_order %}
     {% with form|get_field:field_name as field %}
-        <div class="listing-create-form-group {% if field_name in 'lease_term lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
+    <div class="listing-create-form-group {% if field_name in 'lease_term current_lease_rate_per_acre lease_escalation_rate' %}lease-field{% endif %}{% if field_name == 'battery_storage' %} battery-storage{% endif %}" {% if field_name == 'battery_storage' %}style="display: none;"{% endif %}>
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field }}
             {% if field.help_text %}

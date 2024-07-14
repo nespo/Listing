@@ -66,138 +66,161 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    var map;
-    var markers = [];
-    var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
+        var map;
+        var markers = [];
+        var listingsData = JSON.parse(document.getElementById('listings-data').textContent);
+        //console.log('listingsData:', listingsData);
 
-    // Initialize Choices.js for the select elements
-    var countrySelect = new Choices('#country');
-    var categorySelect = new Choices('#category');
-    var sortBySelect = new Choices('#sort_by', { removeItemButton: true });
+        // Initialize Choices.js for the select elements
+        var countrySelect = new Choices('#country');
+        var categorySelect = new Choices('#category');
+        var sortBySelect = new Choices('#sort_by', { removeItemButton: true });
 
-    // Function to set field values from URL
-    function setFieldValuesFromUrl() {
-        const params = new URLSearchParams(window.location.search);
+        // Function to set field values from URL
+        function setFieldValuesFromUrl() {
+            const params = new URLSearchParams(window.location.search);
 
-        // Set values for country field
-        if (params.has('location')) {
-            countrySelect.setChoiceByValue(params.get('location'));
+            // Set values for country field
+            if (params.has('location')) {
+                countrySelect.setChoiceByValue(params.get('location'));
+            }
+
+            // Set values for category field
+            if (params.has('categories[]')) {
+                const categories = params.getAll('categories[]');
+                categories.forEach(category => {
+                    categorySelect.setChoiceByValue(category);
+                });
+            }
+
+            // Set values for min and max price fields
+            if (params.has('price_min')) {
+                document.getElementById('min_price').value = params.get('price_min');
+            }
+            if (params.has('price_max')) {
+                document.getElementById('max_price').value = params.get('price_max');
+            }
+
+            // Set values for sort by field
+            if (params.has('sort_by')) {
+                sortBySelect.setChoiceByValue(params.get('sort_by'));
+            }
         }
 
-        // Set values for category field
-        if (params.has('categories[]')) {
-            const categories = params.getAll('categories[]');
-            categories.forEach(category => {
-                categorySelect.setChoiceByValue(category);
+        function initMap() {
+            map = L.map('map').setView([51.505, -0.09], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            updateMarkers(listingsData);
+        }
+
+        function updateMarkers(listings) {
+            console.log('updateMarkers called with:', listings);
+
+            if (!Array.isArray(listings)) {
+                console.error('Listings data is not an array:', listings);
+                return;
+            }
+
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            listings.forEach(listing => {
+                if (listing.latitude && listing.longitude) {
+                    addMarker(listing.latitude, listing.longitude, listing.project_name, listing.id);
+                } else if (listing.project_city) {
+                    fetchCoordinatesAndAddMarker(listing.project_city, listing.project_name, listing.id);
+                }
             });
         }
 
-        // Set values for min and max price fields
-        if (params.has('price_min')) {
-            document.getElementById('min_price').value = params.get('price_min');
-        }
-        if (params.has('price_max')) {
-            document.getElementById('max_price').value = params.get('price_max');
-        }
-
-        // Set values for sort by field
-        if (params.has('sort_by')) {
-            sortBySelect.setChoiceByValue(params.get('sort_by'));
-        }
-    }
-
-    function initMap() {
-        map = L.map('map').setView([51.505, -0.09], 2);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        updateMarkers(listingsData);
-    }
-
-    function updateMarkers(listings) {
-        console.log('updateMarkers called with:', listings);
-        
-        if (!Array.isArray(listings)) {
-            console.error('Listings data is not an array:', listings);
-            return;
-        }
-
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = [];
-
-        listings.forEach(listing => {
-            var marker = L.marker([listing.latitude, listing.longitude]).addTo(map)
-                .bindPopup(listing.project_name);
+        function addMarker(lat, lon, projectName, listingId) {
+            var marker = L.marker([lat, lon]).addTo(map).bindPopup(projectName);
             markers.push(marker);
 
             marker.on('click', function() {
-                scrollToListing(listing.id);
+                scrollToListing(listingId);
             });
-        });
-    }
-
-    function scrollToListing(id) {
-        var listingElement = document.getElementById('listing-' + id);
-        if (listingElement) {
-            $('.listing-box').removeClass('highlighted');
-            listingElement.scrollIntoView({behavior: 'smooth', block: 'center'});
-            listingElement.classList.add('highlighted');
         }
-    }
 
-    function fetchListings() {
-        var country = $('#country').val();
-        var category = $('#category').val();
-        var min_price = $('#min_price').val();
-        var max_price = $('#max_price').val();
-        var sort_by = sortBySelect.getValue().value; // Get value using Choices.js API
-
-        $.ajax({
-            url: '{% url "all_listings" %}',
-            data: {
-                'country': country,
-                'categories[]': category,
-                'min_price': min_price,
-                'max_price': max_price,
-                'sort_by': sort_by
-            },
-            success: function(response) {
-                console.log('AJAX success response:', response);
-                $('#listings').html(response.html);
-                $('#total-results').text(response.total_results);
-
-                try {
-                    var listings = JSON.parse(response.listings);
-                    if (Array.isArray(listings)) {
-                        updateMarkers(listings);
-                    } else {
-                        console.error('Listings data is not an array after parsing:', listings);
+        function fetchCoordinatesAndAddMarker(city, projectName, listingId) {
+            $.ajax({
+                url: `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`,
+                success: function(data) {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+                        addMarker(lat, lon, projectName, listingId);
                     }
-                } catch (e) {
-                    console.error('Error parsing listings data:', e);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Geocoding request failed:", status, error);
                 }
-            },
-            error: function(xhr, status, error) {
-                console.log("AJAX request failed:");
-                console.log("Status:", status);
-                console.log("Error:", error);
-            }
-        });
-    }
-
-    $('#country, #category, #min_price, #max_price, #sort_by').on('change', function(e) {
-        if (this.id === 'sort_by') {
-            sort_by = sortBySelect.getValue().value; // Update on change using Choices.js API
+            });
         }
-        fetchListings();
+
+        function scrollToListing(id) {
+            var listingElement = document.getElementById('listing-' + id);
+            if (listingElement) {
+                $('.listing-box').removeClass('highlighted');
+                listingElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+                listingElement.classList.add('highlighted');
+            }
+        }
+
+        function fetchListings() {
+            var country = $('#country').val();
+            var category = $('#category').val();
+            var min_price = $('#min_price').val();
+            var max_price = $('#max_price').val();
+            var sort_by = sortBySelect.getValue().value; // Get value using Choices.js API
+
+            $.ajax({
+                url: '{% url "all_listings" %}',
+                data: {
+                    'country': country,
+                    'categories[]': category,
+                    'min_price': min_price,
+                    'max_price': max_price,
+                    'sort_by': sort_by
+                },
+                success: function(response) {
+                    console.log('AJAX success response:', response);
+                    $('#listings').html(response.html);
+                    $('#total-results').text(response.total_results);
+
+                    try {
+                        var listings = JSON.parse(response.listings);
+                        if (Array.isArray(listings)) {
+                            updateMarkers(listings);
+                        } else {
+                            console.error('Listings data is not an array after parsing:', listings);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing listings data:', e);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log("AJAX request failed:");
+                    console.log("Status:", status);
+                    console.log("Error:", error);
+                }
+            });
+        }
+
+        $('#country, #category, #min_price, #max_price, #sort_by').on('change', function(e) {
+            if (this.id === 'sort_by') {
+                sort_by = sortBySelect.getValue().value; // Update on change using Choices.js API
+            }
+            fetchListings();
+        });
+
+        initMap();
+        setFieldValuesFromUrl(); // Ensure values are set after Choices.js initialization
     });
-
-    initMap();
-    setFieldValuesFromUrl(); // Ensure values are set after Choices.js initialization
-});
-
 </script>
 <script id="listings-data" type="application/json">
     {{ listings_data|safe }}
