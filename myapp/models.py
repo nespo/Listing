@@ -341,7 +341,7 @@ class Listing(models.Model):
     
     lot_size = models.DecimalField(max_digits=30, decimal_places=2, validators=[MaxValueValidator(Decimal('10000000000000000000000'))], null=True, blank=True)
     property_type = models.CharField(max_length=50, choices=PROPERTY_TYPE_CHOICES, null=True, blank=True)
-    lease_term = HTMLField(null=True, blank=True)
+    lease_term = models.PositiveIntegerField(validators=[MaxValueValidator(500)], null=True, blank=True)
     current_lease_rate_per_acre = models.PositiveIntegerField(
         validators=[MaxValueValidator(1000000000000000000000)], null=True, blank=True)
     lease_escalation_rate = models.PositiveIntegerField(
