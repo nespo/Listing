@@ -119,8 +119,10 @@
             <div class="listing-seller-contact-info">
                 <h3><a href="{% url 'seller_profile' seller_id=seller.id %}">{{ seller.first_name }} {{ seller.last_name }}</a></h3>
                 <p><i class="fas fa-building"></i> {{ seller.company_name }}</p>
-                <p><i class="fas fa-map-marker-alt"></i> {{ seller.company_address }}</p>
                 <p><i class="fas fa-globe"></i> {{ seller.country }}</p>
+                {% if seller.state %}
+                    <p><i class="fas fa-map"></i> {{ seller.state }}</p>
+                {% endif %}
             </div>
             <div class="seller-contact-buttons">
                 <div class="listing-call-button-wrapper">
