@@ -200,6 +200,9 @@
 {% endif %}
 
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM fully loaded and parsed");
@@ -220,12 +223,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentStep = 0;
     let isSubmitting = false; // Flag to prevent multiple submissions
 
-    function initializeChoices() {
-        document.querySelectorAll('.chosen-select').forEach((element) => {
-            new Choices(element, { searchEnabled: true, itemSelectText: '' });
-        });
-    }
-
     function showStep(step, direction = 'next') {
         steps.forEach((stepContent, index) => {
             stepContent.classList.remove('slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
@@ -233,9 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 stepContent.style.display = 'block';
                 stepContent.classList.add(direction === 'next' ? 'slide-in-right' : 'slide-in-left');
                 // Initialize Choices for dynamically added select fields
-                if (window.Choices) {
-                    initializeChoices();
-                }
+                new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' });
             } else {
                 stepContent.style.display = 'none';
             }
@@ -474,7 +469,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             stateField.appendChild(option);
                         });
 
-                        initializeChoices(); // Update Choices
+                        new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' }); // Update Choices
                     });
             }
         });
@@ -683,11 +678,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 .catch(error => console.error('An error occurred:', error));
         });
     }
-});
-
-window.addEventListener("load", function() {
-    // Initialize Choices for all select elements with class 'chosen-select'
-    initializeChoices();
 });
 </script>
 {% endblock %}
