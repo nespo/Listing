@@ -220,6 +220,12 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentStep = 0;
     let isSubmitting = false; // Flag to prevent multiple submissions
 
+    function initializeChoices() {
+        document.querySelectorAll('.chosen-select').forEach((element) => {
+            new Choices(element, { searchEnabled: true, itemSelectText: '' });
+        });
+    }
+
     function showStep(step, direction = 'next') {
         steps.forEach((stepContent, index) => {
             stepContent.classList.remove('slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
@@ -227,7 +233,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 stepContent.style.display = 'block';
                 stepContent.classList.add(direction === 'next' ? 'slide-in-right' : 'slide-in-left');
                 // Initialize Choices for dynamically added select fields
-                new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' });
+                if (window.Choices) {
+                    initializeChoices();
+                }
             } else {
                 stepContent.style.display = 'none';
             }
@@ -466,7 +474,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             stateField.appendChild(option);
                         });
 
-                        new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' }); // Update Choices
+                        initializeChoices(); // Update Choices
                     });
             }
         });
@@ -679,7 +687,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 window.addEventListener("load", function() {
     // Initialize Choices for all select elements with class 'chosen-select'
-    new Choices('.chosen-select', { searchEnabled: true, itemSelectText: '' });
+    initializeChoices();
 });
 </script>
 {% endblock %}
