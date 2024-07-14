@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 {% block title %}Buy Packages or Listings{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'package/styles.css' %}">
@@ -80,7 +81,7 @@
                                 <input type="range" id="unique-individual-normal-posts" name="normal_listings" min="0" max="10" value="0" class="range-slider">
                                 <div class="range-output">
                                     <span id="unique-normal-listings-count">0</span>
-                                    <span class="price">Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price }}</span>/Listing</span>
+                                    <span class="price">Price: $<span id="unique-normal-listing-price">{{ listing_price.normal_listing_price|floatformat:0|intcomma }}</span>/Listing</span>
                                     <span class="total-price">Total Price: $<span id="unique-total-normal-listing-price">0.00</span></span>
                                 </div>
                             </div>
@@ -89,7 +90,7 @@
                                 <input type="range" id="unique-individual-featured-posts" name="featured_listings" min="0" max="5" value="0" class="range-slider">
                                 <div class="range-output">
                                     <span id="unique-featured-listings-count">0</span>
-                                    <span class="price">Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price }}</span>/Listing</span>
+                                    <span class="price">Price: $<span id="unique-featured-listing-price">{{ listing_price.featured_listing_price|floatformat:0|intcomma }}</span>/Listing</span>
                                     <span class="total-price">Total Price: $<span id="unique-total-featured-listing-price">0.00</span></span>
                                 </div>
                             </div>
@@ -117,15 +118,15 @@
                                     <div class="card__desc">
                                         <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
                                         <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
-                                        <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                                        <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                                     </div>
                                     <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
                                         {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
-                                        {% if seller.package %}    
-                                        Switch Membership
-                                        {% else %}
-                                        Buy Membership
-                                        {% endif %}
+                                            {% if seller.package %}    
+                                            Switch Membership
+                                            {% else %}
+                                            Buy Membership
+                                            {% endif %}
                                         {% else %}
                                             Buy Membership
                                         {% endif %}
