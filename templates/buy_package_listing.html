@@ -120,16 +120,24 @@
                                         <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
                                         <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                                     </div>
+
+                                    <p>Normal Post Limit: {{ package.normal_post_limit }}</p>
+                                    <p>Individual Normal Post Count: {{ user.seller.individual_normal_post_count }}</p>
+                                    <p>Normal Post Used: {{ user.seller.normal_post_used }}</p>
+                                    <p>Featured Post Limit: {{ package.featured_post_limit }}</p>
+                                    <p>Individual Featured Post Count: {{ user.seller.individual_featured_post_count }}</p>
+                                    <p>Featured Post Used: {{ user.seller.featured_post_used }}</p>
                                     <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
                                         {% if seller.package %}
-                                        {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
-                                            Switch Membership
+                                            <p>Seller Package: {{ seller.package }}</p>
+                                            {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
+                                                <p>Switch Membership</p>
+                                            {% else %}
+                                                <p>Buy Membership</p>
+                                            {% endif %}
                                         {% else %}
-                                            Buy Membership
-                                        {% endif %}
-                                        {% else %}
-                                            Buy Membership
-                                        {% endif %}                                    
+                                            <p>Buy Membership</p>
+                                        {% endif %}                                  
                                     </button>
                                 </div>
                             </div>
