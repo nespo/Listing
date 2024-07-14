@@ -322,7 +322,7 @@ class Listing(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     contractor_name = models.CharField(max_length=255)
-    project_size = models.PositiveIntegerField(validators=[MaxValueValidator(10000000000000000)])
+    project_size = models.DecimalField(max_digits=17, decimal_places=2, validators=[MaxValueValidator(Decimal('10000000000000000'))], null=True, blank=True)
     battery_storage = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     projected_annual_income = models.PositiveIntegerField(
         validators=[MaxValueValidator(100000000000000000000000)], null=True, blank=True)
