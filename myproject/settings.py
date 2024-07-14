@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'tinymce',
-    'cities_light',
     'myapp',
 ]
 
