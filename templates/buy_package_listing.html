@@ -121,23 +121,35 @@
                                         <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                                     </div>
 
-                                    <p>Normal Post Limit: {{ package.normal_post_limit }}</p>
-                                    <p>Individual Normal Post Count: {{ user.seller.individual_normal_post_count }}</p>
-                                    <p>Normal Post Used: {{ user.seller.normal_post_used }}</p>
-                                    <p>Featured Post Limit: {{ package.featured_post_limit }}</p>
-                                    <p>Individual Featured Post Count: {{ user.seller.individual_featured_post_count }}</p>
-                                    <p>Featured Post Used: {{ user.seller.featured_post_used }}</p>
+                                    <p>Normal Post Limit: {{ package.normal_post_limit|default_if_none:0 }}</p>
+                                    <p>Individual Normal Post Count: {{ user.seller.individual_normal_post_count|default_if_none:0 }}</p>
+                                    <p>Normal Post Used: {{ user.seller.normal_post_used|default_if_none:0 }}</p>
+                                    <p>Featured Post Limit: {{ package.featured_post_limit|default_if_none:0 }}</p>
+                                    <p>Individual Featured Post Count: {{ user.seller.individual_featured_post_count|default_if_none:0 }}</p>
+                                    <p>Featured Post Used: {{ user.seller.featured_post_used|default_if_none:0 }}</p>
                                     <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
                                         {% if seller.package %}
-                                            <p>Seller Package: {{ seller.package }}</p>
-                                            {% if package.normal_post_limit|add:user.seller.individual_normal_post_count >= user.seller.normal_post_used and package.featured_post_limit|add:user.seller.individual_featured_post_count >= user.seller.featured_post_used %}
-                                                <p>Switch Membership</p>
-                                            {% else %}
-                                                <p>Buy Membership</p>
-                                            {% endif %}
-                                        {% else %}
-                                            <p>Buy Membership</p>
-                                        {% endif %}                                  
+                                        <p>Seller Package: {{ seller.package }}</p>
+    {% with package.normal_post_limit|default_if_none:0 as normal_limit %}
+    {% with user.seller.individual_normal_post_count|default_if_none:0 as individual_normal_count %}
+    {% with user.seller.normal_post_used|default_if_none:0 as normal_used %}
+    {% with package.featured_post_limit|default_if_none:0 as featured_limit %}
+    {% with user.seller.individual_featured_post_count|default_if_none:0 as individual_featured_count %}
+    {% with user.seller.featured_post_used|default_if_none:0 as featured_used %}
+    {% if normal_limit|add:individual_normal_count >= normal_used and featured_limit|add:individual_featured_count >= featured_used %}
+        <p>Switch Membership</p>
+    {% else %}
+        <p>Buy Membership</p>
+    {% endif %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+{% else %}
+    <p>Buy Membership</p>
+{% endif %}                               
                                     </button>
                                 </div>
                             </div>
