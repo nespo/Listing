@@ -41,7 +41,6 @@
             <span class="step active">1</span>
             <span class="step">2</span>
             <span class="step">3</span>
-            <span class="step">4</span>
         </div>
         <form id="signup-form" method="post" action="{% url 'register_seller' %}">
             {% csrf_token %}
@@ -113,7 +112,7 @@
             </div>
             <!-- Step 3 -->
             <div class="step-content">
-                <h2 class="heading-text-signup">Step 3: Company Information</h2>
+                <h2 class="heading-text-signup">Step 3: Company and Location Information</h2>
                 <div class="form-group">
                     <label for="signup_company_name">Company Name:*</label>
                     <div class="input-icon">
@@ -135,12 +134,6 @@
                     {{ register_form.company_phone_number }}
                     <div class="error" id="error-company_phone_number"></div>
                 </div>
-                <button type="button" class="prev-step">Previous</button>
-                <button type="button" class="next-step">Next</button>
-            </div>
-            <!-- Step 4 -->
-            <div class="step-content">
-                <h2 class="heading-text-signup">Step 4: Location Information</h2>
                 <div class="form-group">
                     <label for="signup_country">Country:*</label>
                     <div class="input-icon">
@@ -174,6 +167,7 @@
         </div>
     </div>
 </div>
+
 
 <div id="reset-popup" class="popup">
     <div class="popup-content">
