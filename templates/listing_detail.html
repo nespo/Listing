@@ -57,11 +57,11 @@
                 {% if listing.project_pto_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project PTO Date:</strong> {{ listing.project_pto_date }}</p>{% endif %}
                 {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.battery_storage %}<p><i class="fas fa-battery-full"></i> <strong>Battery Storage (mWh):</strong> {{ listing.battery_storage|floatformat:0|intcomma }}</p>{% endif %}
-                {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> $ {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.epc_name %}<p><i class="fas fa-tools"></i> <strong>EPC Name:</strong> {{ listing.epc_name }}</p>{% endif %}
-                {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> {{ listing.current_annual_om_cost|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.current_annual_om_cost %}<p><i class="fas fa-money-bill-wave"></i> <strong>Current Annual O&M Cost:</strong> $ {{ listing.current_annual_om_cost|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.om_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>O&M Escalation Rate:</strong> {{ listing.om_escalation_rate|floatformat:0|intcomma }}%</p>{% endif %}
-                {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> {{ listing.sales_price|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.sales_price %}<p><i class="fas fa-dollar-sign"></i> <strong>Sales Price:</strong> $ {{ listing.sales_price|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.status %}<p><i class="fas fa-info-circle"></i> <strong>Listing Status:</strong> {{ listing.get_status_display }}</p>{% endif %}
                 {% if listing.seller %}<p><i class="fas fa-user"></i> <strong>Seller's Name:</strong> {{ listing.seller.first_name }} {{ listing.seller.last_name }}</p>{% endif %}
                 {% if listing.contractor_name %}<p><i class="fas fa-hard-hat"></i> <strong>Contractor Name:</strong> {{ listing.contractor_name }}</p>{% endif %}
@@ -81,7 +81,7 @@
                 {% if listing.lot_size %}<p><i class="fas fa-tree"></i> <strong>Lot Size (acres):</strong> {{ listing.lot_size|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.get_project_status_display %}<p><i class="fas fa-info-circle"></i> <strong>Project Status:</strong> {{ listing.get_project_status_display }}</p>{% endif %}
                 {% if listing.get_property_type_display %}<p><i class="fas fa-home"></i> <strong>Property Type:</strong> {{ listing.get_property_type_display }}</p>{% endif %}
-                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> {{ listing.current_lease_rate_per_acre|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.current_lease_rate_per_acre %}<p><i class="fas fa-dollar-sign"></i> <strong>Current Lease Rate Per Acre:</strong> $ {{ listing.current_lease_rate_per_acre|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.lease_escalation_rate %}<p><i class="fas fa-percentage"></i> <strong>Lease Escalation Rate:</strong> {{ listing.lease_escalation_rate|floatformat:0|intcomma }}%</p>{% endif %}
                 {% if listing.lease_term %}<p><i class="fas fa-file-contract"></i> <strong>Lease Term:</strong> {{ listing.lease_term|safe }}</p>{% endif %}
             </div>

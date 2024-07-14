@@ -158,7 +158,7 @@
         var countryId = $('#id_project_country').val();
         var stateFieldWrapper = $('.listing-create-form-group:has(#id_project_state)');
 
-        if (countryId === "{{ country_us_id }}" || countryId === "{{ country_ca_id }}") {
+        if (countryId === "{{ 230 }}" || countryId === "{{ 39 }}") {
             stateFieldWrapper.show();
             var url = "{% url 'listing_load_states' %}";
             $.ajax({
