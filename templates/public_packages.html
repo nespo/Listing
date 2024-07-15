@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Available Packages{% endblock %}
+{% load humanize %}
+{% block title %}Available Memberships{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'Public_package/styles.css' %}">
 {% endblock %}
@@ -26,7 +27,7 @@
                             <div class="card__desc">
                                 <p><i class="fas fa-thumbtack"></i> Normal Posts: {{ package.normal_post_limit }}</p>
                                 <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
-                                <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price }}</p>
+                                <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                             </div>
                             <button type="button" class="button package-button full-width-button" onclick="showSignUpForm()">Buy Membership</button>
                         </div>
