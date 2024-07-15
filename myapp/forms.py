@@ -124,7 +124,6 @@ class ListingForm(forms.ModelForm):
         required=True
     )
     project_description = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}))
-    lease_term = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}), required=False)
     remarks = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}), required=False)
     buyer_protections = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}), required=False)
 
