@@ -124,24 +124,31 @@
     }
 
     function attachNumberFieldListeners() {
+        var exclusionList = ['id_project_size', 'id_battery_storage', 'id_lot_size', 'id_latitude', 'id_longitude'];
         $('input[type="text"][id^="formatted_"]').each(function() {
             var originalInput = $(this).next('input[type="hidden"]');
-            if (originalInput.length) {
+            if (originalInput.length && !exclusionList.includes(originalInput.attr('id'))) {
                 this.value = formatNumberWithCommas(originalInput.val());
             }
         }).on('input', function () {
-            var value = stripCommas(this.value);
-            this.value = formatNumberWithCommas(value);
             var hiddenInput = document.getElementById(this.id.replace('formatted_', ''));
-            if (hiddenInput) {
+            if (hiddenInput && !exclusionList.includes(hiddenInput.id)) {
+                var value = stripCommas(this.value);
+                this.value = formatNumberWithCommas(value);
                 hiddenInput.value = value;
             }
         }).on('focus', function () {
-            var value = stripCommas(this.value);
-            this.value = value;
+            var hiddenInput = document.getElementById(this.id.replace('formatted_', ''));
+            if (hiddenInput && !exclusionList.includes(hiddenInput.id)) {
+                var value = stripCommas(this.value);
+                this.value = value;
+            }
         }).on('blur', function () {
-            var value = stripCommas(this.value);
-            this.value = formatNumberWithCommas(value);
+            var hiddenInput = document.getElementById(this.id.replace('formatted_', ''));
+            if (hiddenInput && !exclusionList.includes(hiddenInput.id)) {
+                var value = stripCommas(this.value);
+                this.value = formatNumberWithCommas(value);
+            }
         });
     }
 
