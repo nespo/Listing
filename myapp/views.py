@@ -37,6 +37,7 @@ from django.views import View
 from django.contrib.humanize.templatetags.humanize import intcomma
 import json
 import stripe
+import traceback
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -601,7 +602,9 @@ def edit_listing(request, slug):
 
                 messages.success(request, 'Listing updated successfully')
                 return JsonResponse({'success': True, 'message': 'Listing updated successfully', 'message_type': 'success'})
-            except:
+            except Exception as e:
+                error_details = traceback.format_exc()
+                print("Error occurred:", error_details)  # This will print the error details to the console
                 return JsonResponse({'errors': {'__all__': ['An error occurred while updating the listing. Please try again.']}, 'message': 'An error occurred while updating the listing. Please try again.', 'message_type': 'error'}, status=500)
 
         else:
