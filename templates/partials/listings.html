@@ -16,7 +16,13 @@
     </div>
     <p><i class="fa fa-map-marker-alt" aria-hidden="true"></i> {{ listing.project_address|safe }}</p>
     <h2>{{ listing.project_name|safe }}</h2>
-    {% if listing.categories %}<p><i class="fa fa-list-alt"></i> <strong>Category:</strong> {{ listing.categories }}</p>{% endif %}
+    {% if listing.categories.all %}
+    <p><i class="fa fa-list-alt"></i> <strong>Category:</strong>
+    {% for category in listing.categories.all %}
+        {{ category.name }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    </p>
+    {% endif %}
     {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size|floatformat:0|intcomma }}</p>{% endif %}
     {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> $ {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
     {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
