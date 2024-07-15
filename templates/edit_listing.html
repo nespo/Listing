@@ -184,8 +184,6 @@
             height: 300,
             branding: false,
             forced_root_block: 'p',
-            force_p_newlines: true,
-            force_br_newlines: false,
             content_css: false,
             content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
@@ -202,7 +200,7 @@
         }
         var leaseFields = document.querySelectorAll('.lease-field');
         var propertyType = propertyTypeElement.value;
-        console.log('Property Type:', propertyType);  // Add this line for debugging
+        console.log('Property Type:', propertyType);
         leaseFields.forEach(function (fieldElement) {
             if (propertyType === 'lease') {
                 fieldElement.style.display = 'block';
@@ -263,7 +261,7 @@
     }
 
     function reinitializeFormElements() {
-        console.log('Reinitializing form elements');  // Add this line for debugging
+        console.log('Reinitializing form elements');
         initializeTinyMCE();
         toggleLeaseFields();
         toggleBatteryStorage();
@@ -271,8 +269,10 @@
     }
 
     $(document).ready(function() {
-        console.log('Document is ready');  // Add this line for debugging
-        document.getElementById('id_property_type')?.addEventListener('change', toggleLeaseFields);
+        console.log('Document is ready');
+        if (document.getElementById('id_property_type')) {
+            document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
+        }
         $('#id_categories').change(toggleBatteryStorage);
 
         toggleLeaseFields();
