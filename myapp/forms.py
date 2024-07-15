@@ -248,7 +248,7 @@ class ListingForm(forms.ModelForm):
             'project_city': forms.TextInput(attrs={'placeholder': 'Project City'}),
             'lot_size': forms.NumberInput(attrs={'placeholder': 'Lot Size'}),
             'property_type': forms.Select(attrs={'placeholder': 'Property Type'}),
-            'lease_term': forms.TextInput(attrs={'placeholder': 'Lease Term'}),
+            'lease_term': forms.NumberInput(attrs={'placeholder': 'Lease Term'}),
             'current_lease_rate_per_acre': forms.NumberInput(attrs={'placeholder': 'Current Lease Rate per Acre'}),
             'lease_escalation_rate': forms.NumberInput(attrs={'placeholder': 'Lease Escalation Rate'}),
             'project_status': forms.Select(attrs={'placeholder': 'Project Status'}),
