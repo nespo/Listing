@@ -214,6 +214,10 @@
 
     function toggleBatteryStorage() {
         var batteryField = document.querySelector('.battery-storage');
+        if (!batteryField) {
+            console.error('Element with class battery-storage not found.');
+            return;
+        }
         var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
         if (selectedCategories.includes('BESS')) {
             batteryField.style.display = 'block';
@@ -268,7 +272,7 @@
 
     $(document).ready(function() {
         console.log('Document is ready');  // Add this line for debugging
-        document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
+        document.getElementById('id_property_type')?.addEventListener('change', toggleLeaseFields);
         $('#id_categories').change(toggleBatteryStorage);
 
         toggleLeaseFields();
@@ -373,8 +377,12 @@
             $('#confirmation-popup').hide();
         });
 
+        // Ensure reinitializeFormElements is called after content is replaced
+        $(document).ajaxComplete(function() {
+            reinitializeFormElements();
+        });
+
         reinitializeFormElements();
     });
 </script>
-
 {% endblock %}
