@@ -412,7 +412,7 @@
             document.body.appendChild(form); // Append the form to the body
             addCsrfTokenToForm(form); // Ensure CSRF token is added to the form
 
-            openModal('unique-payment-modal', 'Buy Package', 'You are about to purchase a package for $' + packagePrice);
+            openModal('unique-payment-modal', 'Buy Membership', 'You are about to purchase a Membership for $' + packagePrice);
             if (stripeButton) {
                 stripeButton.onclick = function (e) {
                     handlePayment(e, packagePrice, 'Purchase Package ID: ' + packageId);
