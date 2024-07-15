@@ -30,12 +30,17 @@
             </div>
         </div>
         {% endif %}
+
         {% if all_listings_used %}
-        <div class="alert alert-warning">
-            <p>You have used all your allowed listings. Please buy more packages or individual listings.</p>
-            <a href="{% url 'buy_package_listing' %}" class="btn btn-primary">Buy More Listings</a>
+        <div class="planItem planItem--free">
+            <div class="card">
+                <div class="card__top-bar"></div>
+                <h2 class="card__title">You have used all your allowed listings. Please buy more packages or individual listings.</h2>
+                <p class="card__desc">Buy More Listings.</p>
+            </div>
         </div>
         {% endif %}
+
         <div class="planItem__container">
             {% if show_package_container %}
             <div class="planItem">
@@ -126,7 +131,7 @@
                                         <p><i class="fas fa-star"></i> Featured Posts: {{ package.featured_post_limit }}</p>
                                         <p><i class="fas fa-dollar-sign"></i> Price: ${{ package.price|floatformat:0|intcomma }}</p>
                                     </div>
-                                    <p>{{user.seller.package}}</p>
+                                    <p>{{seller.package}}</p>
                                     <button type="button" class="button package-button full-width-button" data-package-id="{{ package.id }}" data-package-price="{{ package.price }}">
                                         {% if user.seller.package %}
                                             {% if user.seller.package.id != package.id %}

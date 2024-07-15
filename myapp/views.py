@@ -435,9 +435,8 @@ def create_listing(request):
 
     # Check if the seller has used all their allowed listings
     if seller.normal_post_used >= seller.normal_post_count and seller.featured_post_used >= seller.featured_post_count:
-        all_listings_used = True
-    else:
-        all_listings_used = False
+        messages.error(request, 'You have used all your allowed listings. Please buy more packages or individual listings.')
+        return redirect('buy_package_listing')
 
     form_name = 'ListingForm'
     field_settings = FormFieldSetting.objects.filter(form_name=form_name).order_by('order')
@@ -503,7 +502,7 @@ def create_listing(request):
     else:
         form = ListingForm(user=request.user, is_creation=True)
 
-    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order, 'all_listings_used': all_listings_used})
+    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order})
 
 @login_required
 def edit_listing(request, slug):
@@ -734,7 +733,7 @@ def buy_package_listing(request):
                     'address': seller.company_address,
                     'site_title': 'Green Energy Connection',
                     'site_logo_url': request.build_absolute_uri(site_settings.site_logo.url) if site_settings and site_settings.site_logo else '',
-                    'site_phone': '+123456789',
+                    'site_phone': '+1',
                     'site_email': 'info@greenenergyconnection.com',
                 })
                 send_custom_email(
@@ -806,6 +805,9 @@ def buy_package_listing(request):
     normal_posts_used = seller.normal_post_used
     featured_posts_used = seller.featured_post_used
 
+     # Check if all listings are used
+    all_listings_used = normal_posts_used >= total_normal_posts and featured_posts_used >= total_featured_posts
+
     context = {
         'packages': packages,
         'listing_price': listing_price,
@@ -816,7 +818,8 @@ def buy_package_listing(request):
         'featured_posts_used': featured_posts_used,
         'show_package_container': seller.package or seller.new_package,
         'show_available_packages': not seller.is_auto_renew and (not seller.package or not seller.new_package),
-        'show_individual_listings': True if seller.package else False  # Always true in this example, adjust as necessary
+        'show_individual_listings': True if seller.package else False , # Always true in this example, adjust as necessary
+        'all_listings_used': all_listings_used  # Pass this to the template
     }
     return render(request, 'buy_package_listing.html', context)
 
