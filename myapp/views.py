@@ -733,7 +733,7 @@ def buy_package_listing(request):
                     'address': seller.company_address,
                     'site_title': 'Green Energy Connection',
                     'site_logo_url': request.build_absolute_uri(site_settings.site_logo.url) if site_settings and site_settings.site_logo else '',
-                    'site_phone': '+1',
+                    'site_phone': '+1 214 699 7895',
                     'site_email': 'info@greenenergyconnection.com',
                 })
                 send_custom_email(
