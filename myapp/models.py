@@ -124,6 +124,17 @@ class Package(models.Model):
         }
         return self.duration * duration_mapping.get(self.duration_unit, 1440)
     
+    def get_duration_in_days(self):
+        duration_mapping = {
+            'minutes': 1 / 1440,
+            'hours': 1 / 24,
+            'days': 1,
+            'weeks': 7,
+            'months': 30,  # Assuming 30 days in a month
+            'years': 365  # Assuming 365 days in a year
+        }
+        return self.duration * duration_mapping.get(self.duration_unit, 1)
+    
     
 class Seller(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -140,8 +151,8 @@ class Seller(models.Model):
     new_package = models.ForeignKey(Package, related_name='new_package_set', null=True, blank=True, on_delete=models.SET_NULL)
     normal_post_count = models.IntegerField(default=0)  # Total normal posts allowed (package + individual)
     featured_post_count = models.IntegerField(default=0)  # Total featured posts allowed (package + individual)
-    individual_normal_post_count = models.IntegerField(default=0)  # Tracking individual normal post
-    individual_featured_post_count = models.IntegerField(default=0)  # Tracking individual featured post
+    #individual_normal_post_count = models.IntegerField(default=0)  # Tracking individual normal post
+    #individual_featured_post_count = models.IntegerField(default=0)  # Tracking individual featured post
     normal_post_used = models.IntegerField(default=0)  # Normal posts used
     featured_post_used = models.IntegerField(default=0)  # Featured posts used
     membership_expiry = models.DateTimeField(null=True, blank=True)
@@ -204,11 +215,8 @@ class Seller(models.Model):
                 with transaction.atomic():
                     seller = Seller.objects.select_for_update().get(pk=self.pk)
                     
-                    total_normal_posts = seller.individual_normal_post_count + seller.new_package.normal_post_limit
-                    total_featured_posts = seller.individual_featured_post_count + seller.new_package.featured_post_limit
-                    
-                    seller.normal_post_count = total_normal_posts
-                    seller.featured_post_count = total_featured_posts
+                    seller.normal_post_count = seller.new_package.normal_post_limit
+                    seller.featured_post_count = seller.new_package.featured_post_limit
                     
                     seller.package = seller.new_package
                     seller.new_package = None
@@ -218,7 +226,7 @@ class Seller(models.Model):
                     seller.canceled_at = None
                     seller.save()
                     send_mail(
-                        'Package Updated',
+                        'Membership Updated',
                         f'Your new Membership {seller.package.name} is now active.',
                         settings.DEFAULT_FROM_EMAIL,
                         [seller.user.email],
@@ -257,8 +265,8 @@ class Seller(models.Model):
         self.listing_set.update(status='active', expires_on=self.membership_expiry)
 
     def can_downgrade(self, new_package):
-        total_normal_posts = self.normal_post_count + new_package.normal_post_limit
-        total_featured_posts = self.featured_post_count + new_package.featured_post_limit
+        total_normal_posts = self.normal_post_count 
+        total_featured_posts = self.featured_post_count
         
         if self.normal_post_used > total_normal_posts or self.featured_post_used > total_featured_posts:
             return False

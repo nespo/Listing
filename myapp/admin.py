@@ -92,10 +92,20 @@ class SellerAdmin(admin.ModelAdmin):
     def approve_seller(self, request, queryset):
         queryset.update(is_approved=True)
         for seller in queryset:
+            first_name = seller.user.first_name
+            email_content = f"""
+            Hello {first_name},
+
+            Your account has been approved by the admin. You may proceed to your account settings to purchase a membership and start listing your projects.
+
+            Thank you,
+
+            Green Energy Connection Team
+            """
             try:
                 send_mail(
                     'Account Approved',
-                    'Your account has been approved by admin. Start using the website now.',
+                    email_content,
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )
@@ -106,10 +116,20 @@ class SellerAdmin(admin.ModelAdmin):
     def disapprove_seller(self, request, queryset):
         queryset.update(is_approved=False)
         for seller in queryset:
+            first_name = seller.user.first_name
+            email_content = f"""
+            Hello {first_name},
+
+            Your account has been disapproved by the admin. If you have any questions, please contact us at info@greenenergyconnection.com.
+
+            Thank you,
+
+            Green Energy Connection Team
+            """
             try:
                 send_mail(
                     'Account Disapproved',
-                    '''Your account has been disapproved by admin. If you have any questions, please contact us at info@greenenergyconnection.com.''',
+                    email_content,
                     settings.DEFAULT_FROM_EMAIL,
                     [seller.user.email],
                 )

@@ -12,6 +12,15 @@
     </div>
     <div class="header-text">Find Your Perfect Energy Project Here</div>
 </div>
+
+{% if messages %}
+<div id="popup-message" class="popup-message">
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="search-container">
     <h1>Find New Projects</h1>
     <form id="search-form" action="{% url 'all_listings' %}" method="GET">
@@ -148,6 +157,25 @@
     .slider-container.categories-slider.multiple-categories.slick-initialized.slick-slider.slick-dotted {
         margin-left: 0;
     }
+
+    .popup-message {
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 1000;
+        width: 80%;
+        max-width: 600px;
+        text-align: center;
+    }
+    .popup-message p {
+        margin: 10px 0;
+        line-height: 1.5;
+        font-size: 1.1em;
+    }
 </style>
 {% endblock %}
 
@@ -258,6 +286,15 @@
 
             window.location.href = url;
         });
+
+        // Show popup message
+        if ($('#popup-message').length) {
+            setTimeout(function() {
+                $('#popup-message').fadeOut('slow', function() {
+                    location.reload();
+                });
+            }, 15000); // Hide the popup after 15 seconds and reload the page
+        }
     });
 </script>
 {% endblock %}

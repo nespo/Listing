@@ -353,6 +353,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                             messagesPopupContent.innerHTML = `<div class="message success">We have sent you an Email. Please Verify Your Email.</div>`;
                             messagesPopup.style.display = "block";
+                            // Reload the page after 100 seconds (100000 milliseconds)
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 20000);
                         } else {
                             displayErrors(data.errors);
                             submitButton.innerHTML = 'Submit'; // Reset button text

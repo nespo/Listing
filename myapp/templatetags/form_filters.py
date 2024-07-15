@@ -14,3 +14,7 @@ def not_in_list(value, arg):
 @register.filter(name='add_class')
 def add_class(field, css_class):
     return field.as_widget(attrs={'class': css_class})
+
+@register.filter(name='gte')
+def gte(value, arg):
+    return value >= arg

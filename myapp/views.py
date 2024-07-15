@@ -333,7 +333,23 @@ def activate(request, uidb64, token):
             seller.stripe_customer_id = stripe_customer.id
             seller.save()
 
-            messages.success(request, 'Thank you for your email confirmation. Now you can login to your account.')
+            try:
+                # Get admin user emails
+                admin_emails = User.objects.filter(is_superuser=True).values_list('email', flat=True)
+                # Send email to admin about new user registration
+                send_mail(
+                    'New Seller Registration',
+                    f'A new seller has registered:\n\n'
+                    f'Username: {user.username}\n'
+                    f'Email: {user.email}\n'
+                    f'Company Name: {seller.company_name}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    admin_emails,
+                )
+            except:
+                pass
+
+            messages.success(request, 'Thank you for confirming your email address. Your account will be reviewed by our admin team. You will receive an email once your account is approved, after which you will be able to log in.')
             del request.session['user_data']
             del request.session['seller_data']
             return redirect('home')
@@ -488,7 +504,7 @@ def create_listing(request):
 
             try:
                 send_custom_email(
-                    subject='Listing Created',
+                    subject='Your listing has been successfully created.',
                     template_name='emails/listing_created_email.html',
                     context={'user': {'first_name': seller.first_name}, 'listing': listing},
                     recipient_list=[request.user.email]
@@ -555,10 +571,13 @@ def edit_listing(request, slug):
                                     else:
                                         updated_listing.status = 'inactive'
                                         send_mail(
-                                            'Listing Deactivated',
-                                            'Your listing has been deactivated because you have reached your featured post limit.',
-                                            settings.DEFAULT_FROM_EMAIL,
-                                            [seller.user.email],
+                                        'Your Listing has been Deactivated',
+                                        f'Hello {seller.user.first_name},\n\n'
+                                        f'Your listing {listing.name} has been Deactivated. You current status of the listing: Inactive.\n\n'
+                                        'Thank you!\n\n'
+                                        'Green Energy Connection Team',
+                                        settings.DEFAULT_FROM_EMAIL,
+                                        [seller.user.email],
                                         )
                                 else:
                                     if seller.normal_post_count > 0:
@@ -568,11 +587,15 @@ def edit_listing(request, slug):
                                     else:
                                         updated_listing.status = 'inactive'
                                         send_mail(
-                                            'Listing Deactivated',
-                                            'Your listing has been deactivated because you have reached your normal post limit.',
-                                            settings.DEFAULT_FROM_EMAIL,
-                                            [seller.user.email],
+                                        'Your Listing has been Deactivated',
+                                        f'Hello {seller.user.first_name},\n\n'
+                                        f'Your listing {listing.name} has been Deactivated. You don\'t have enough Listing.\n\n'
+                                        'Thank you!\n\n'
+                                        'Green Energy Connection Team',
+                                        settings.DEFAULT_FROM_EMAIL,
+                                        [seller.user.email],
                                         )
+
                         else:
                             updated_listing.status = new_status
 
@@ -591,7 +614,7 @@ def edit_listing(request, slug):
 
                     try:
                         send_custom_email(
-                            subject='Listing Updated',
+                            subject='Your Listing has been Updated',
                             template_name='emails/listing_updated_email.html',
                             context={'user': {'first_name': seller.first_name},
                                      'listing': updated_listing},
@@ -655,7 +678,7 @@ def buy_package_listing(request):
     if request.method == 'POST':
         try:
             stripe_token = request.POST.get('stripeToken', None)
-            amount = float(request.POST.get('amount'))
+            amount = Decimal(request.POST.get('amount'))
             description = request.POST.get('description')
             package_id = request.POST.get('package_id', None)
             normal_listings = int(request.POST.get('normal_listings', 0))
@@ -670,6 +693,15 @@ def buy_package_listing(request):
 
         amount_in_cents = int(amount * 100)
 
+        original_seller_data = {
+            "package": seller.package,
+            "new_package": seller.new_package,
+            "normal_post_count": seller.normal_post_count,
+            "featured_post_count": seller.featured_post_count,
+            "membership_expiry": seller.membership_expiry,
+            "is_auto_renew": seller.is_auto_renew
+        }
+
         try:
             if stripe_token:
                 customer = stripe.Customer.retrieve(seller.stripe_customer_id)
@@ -681,6 +713,39 @@ def buy_package_listing(request):
                 seller.stripe_payment_method_id = payment_method.id
                 seller.save()
 
+            if package_id:
+                package = get_object_or_404(Package, id=package_id)
+                if seller.package and seller.new_package:
+                    messages.error(request, 'You cannot purchase another package while you have an upcoming package.')
+                    return redirect('buy_package_listing')
+
+                if seller.package:
+                    current_package = seller.package
+                    current_package_price = current_package.price
+
+                    # Check if the new package price is less than the current package price
+                    if package.price < current_package_price:
+                        seller.new_package = package
+                        seller.membership_expiry = seller.membership_expiry
+                        seller.save()
+                    else:
+                        current_package_duration = current_package.get_duration_in_days()
+                        current_package_per_day_cost = current_package_price / Decimal(current_package_duration)
+
+                        # Calculate days left until package expiry
+                        current_time = timezone.now()
+                        expiry_time = seller.membership_expiry
+                        days_left = (expiry_time - current_time).days
+
+                        # Ensure days_left is a positive integer or zero
+                        days_left = max(days_left, 0)
+
+                        # Calculate the new chargeable amount based on remaining days
+                        adjusted_amount = amount - (current_package_per_day_cost * Decimal(days_left))
+                        print(f"Adjusted amount: {adjusted_amount}")
+                        amount_in_cents = int(adjusted_amount * 100)
+                        seller.new_package = package
+
             payment_intent = stripe.PaymentIntent.create(
                 customer=seller.stripe_customer_id,
                 amount=amount_in_cents,
@@ -690,36 +755,30 @@ def buy_package_listing(request):
                 confirm=True,
                 description=description,
             )
-        except stripe.error.StripeError as e:
-            print(f"Stripe Error: {e}")
-            messages.error(request, f'Error processing payment: {str(e)}')
-            return redirect('buy_package_listing')
 
-        transaction = None
-        if package_id:
-            package = get_object_or_404(Package, id=package_id)
-            if seller.package and seller.new_package:
-                messages.error(request, 'You cannot purchase another package while you have an upcoming package.')
-                return redirect('buy_package_listing')
+            # Payment is successful, update seller's data accordingly
+            if package_id:
+                if not seller.package:
+                    seller.package = package
+                    seller.normal_post_count = package.normal_post_limit
+                    seller.featured_post_count = package.featured_post_limit
+                    seller.membership_expiry = timezone.now() + timedelta(minutes=package.get_duration_in_minutes())
+                    seller.is_auto_renew = True
+                seller.save()
 
-            if seller.package:
-                seller.new_package = package
-                seller.membership_expiry = seller.membership_expiry
-            else:
-                seller.package = package
-                seller.normal_post_count = package.normal_post_limit
-                seller.featured_post_count = package.featured_post_limit
-                seller.membership_expiry = timezone.now() + timedelta(minutes=package.get_duration_in_minutes())
-                seller.is_auto_renew = True
+            elif normal_listings > 0 or featured_listings > 0:
+                if normal_listings > 0:
+                    seller.normal_post_count += normal_listings
+                if featured_listings > 0:
+                    seller.featured_post_count += featured_listings
+                seller.save()
 
-            seller.save()
-            print(f"Package {package.name} assigned to seller {seller.user.username}")
-
+            # Create transaction
             transaction = Transaction.objects.create(
                 seller=seller,
                 amount=amount,
-                description=f'{package.name}',
-                transaction_type='Membership',
+                description=f'{package.name if package_id else description}',
+                transaction_type='Membership' if package_id else 'Individual Listing',
                 transaction_id=payment_intent.id
             )
 
@@ -728,7 +787,7 @@ def buy_package_listing(request):
                 invoice_pdf = generate_invoice_pdf({
                     'invoice_id': transaction.transaction_id,
                     'invoice_date': timezone.now(),
-                    'package': package,
+                    'package': package if package_id else None,
                     'amount': amount,
                     'user': request.user,
                     'first_name': seller.first_name,
@@ -740,75 +799,48 @@ def buy_package_listing(request):
                     'site_email': 'info@greenenergyconnection.com',
                 })
                 send_custom_email(
-                    subject='Package Purchase Confirmation',
-                    template_name='emails/package_purchase_email.html',
+                    subject='Membership Purchase Confirmation',
+                    template_name='emails/package_purchase_email.html' if package_id else 'emails/listings_purchase_email.html',
                     context={
                         'user': {
-                                'first_name': seller.first_name,
-                            },
-                        'package': package,
+                            'first_name': seller.first_name,
+                        },
+                        'package': package if package_id else None,
                         'membership_expiry': seller.membership_expiry,
                         'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
+                    } if package_id else {
+                        'user': {
+                            'first_name': seller.first_name,
+                        },
+                        'description': description
                     },
                     recipient_list=[request.user.email],
                     attachment={
                         'filename': invoice_pdf['filename'],
                         'content': invoice_pdf['content'],
                         'mimetype': invoice_pdf['mimetype']
-                    }
+                    } if package_id else None
                 )
             except Exception as e:
                 print(f"Email sending error: {e}")
 
-        elif normal_listings > 0 or featured_listings > 0:
-            if normal_listings > 0:
-                seller.normal_post_count += normal_listings
-                seller.individual_normal_post_count += normal_listings
-            if featured_listings > 0:
-                seller.featured_post_count += featured_listings
-                seller.individual_featured_post_count += featured_listings
+            messages.success(request, 'Purchase successful')
+            return redirect('dashboard')
+
+        except stripe.error.StripeError as e:
+            print(f"Stripe Error: {e}")
+            # Reset seller's data to original state if payment fails
+            for key, value in original_seller_data.items():
+                setattr(seller, key, value)
             seller.save()
-            print(f"Listings updated for seller {seller.user.username}")
-
-            transaction = Transaction.objects.create(
-                seller=seller,
-                amount=amount,
-                description=f'{description}',
-                transaction_type='Individual Listing',
-                transaction_id=payment_intent.id
-            )
-
-            user = request.user
-            if isinstance(user, SimpleLazyObject):
-                user = user._wrapped
-
-            context = {
-                'user': {
-                    'first_name': seller.first_name,
-                },
-                'description': description
-            }
-            print(context)
-    
-            try:
-                send_custom_email(
-                    subject='Listings Purchased',
-                    template_name='emails/listings_purchase_email.html',
-                    context=context,
-                    recipient_list=[request.user.email]
-                )
-            except Exception as e:
-                print(f"Email sending error: {e}")
-
-        messages.success(request, 'Purchase successful')
-        return redirect('dashboard')
+            messages.error(request, f'Error processing payment: {str(e)}')
+            return redirect('buy_package_listing')
 
     total_normal_posts = seller.normal_post_count + seller.normal_post_used
     total_featured_posts = seller.featured_post_count + seller.featured_post_used
     normal_posts_used = seller.normal_post_used
     featured_posts_used = seller.featured_post_used
 
-     # Check if all listings are used
     all_listings_used = normal_posts_used >= total_normal_posts and featured_posts_used >= total_featured_posts
 
     context = {
@@ -821,10 +853,12 @@ def buy_package_listing(request):
         'featured_posts_used': featured_posts_used,
         'show_package_container': seller.package or seller.new_package,
         'show_available_packages': not seller.is_auto_renew and (not seller.package or not seller.new_package),
-        'show_individual_listings': True if seller.package else False , # Always true in this example, adjust as necessary
-        'all_listings_used': all_listings_used  # Pass this to the template
+        'show_individual_listings': False,
+        'all_listings_used': all_listings_used
     }
     return render(request, 'buy_package_listing.html', context)
+
+
 
 def get_site_settings():
     try:
