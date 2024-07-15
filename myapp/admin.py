@@ -92,7 +92,7 @@ class SellerAdmin(admin.ModelAdmin):
     def approve_seller(self, request, queryset):
         queryset.update(is_approved=True)
         for seller in queryset:
-            first_name = seller.user.first_name
+            first_name = seller.first_name
             email_content = f"""
             Hello {first_name},
 
@@ -116,7 +116,7 @@ class SellerAdmin(admin.ModelAdmin):
     def disapprove_seller(self, request, queryset):
         queryset.update(is_approved=False)
         for seller in queryset:
-            first_name = seller.user.first_name
+            first_name = seller.first_name
             email_content = f"""
             Hello {first_name},
 
