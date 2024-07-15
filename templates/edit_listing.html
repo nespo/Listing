@@ -184,6 +184,8 @@
             height: 300,
             branding: false,
             forced_root_block: 'p',
+            force_p_newlines: true,
+            force_br_newlines: false,
             content_css: false,
             content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
             valid_elements: 'p,b,strong,i,em,a[href],ul,ol,li',
@@ -193,34 +195,29 @@
     }
 
     function toggleLeaseFields() {
-        var propertyTypeElement = document.getElementById('id_property_type');
-        if (!propertyTypeElement) {
-            console.error('Element with ID id_property_type not found.');
-            return;
-        }
         var leaseFields = document.querySelectorAll('.lease-field');
-        var propertyType = propertyTypeElement.value;
-        console.log('Property Type:', propertyType);
-        leaseFields.forEach(function (fieldElement) {
-            if (propertyType === 'lease') {
-                fieldElement.style.display = 'block';
-            } else {
-                fieldElement.style.display = 'none';
-            }
-        });
+        var propertyTypeElement = document.getElementById('id_property_type');
+        if (propertyTypeElement) {
+            var propertyType = propertyTypeElement.value;
+            leaseFields.forEach(function (fieldElement) {
+                if (propertyType === 'lease') {
+                    fieldElement.style.display = 'block';
+                } else {
+                    fieldElement.style.display = 'none';
+                }
+            });
+        }
     }
 
     function toggleBatteryStorage() {
         var batteryField = document.querySelector('.battery-storage');
-        if (!batteryField) {
-            console.error('Element with class battery-storage not found.');
-            return;
-        }
-        var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
-        if (selectedCategories.includes('BESS')) {
-            batteryField.style.display = 'block';
-        } else {
-            batteryField.style.display = 'none';
+        if (batteryField) {
+            var selectedCategories = Array.from(document.querySelectorAll('#id_categories input[type="checkbox"]:checked')).map(cb => cb.labels[0].textContent.trim());
+            if (selectedCategories.includes('BESS')) {
+                batteryField.style.display = 'block';
+            } else {
+                batteryField.style.display = 'none';
+            }
         }
     }
 
@@ -241,8 +238,8 @@
                     stateSelect.html('<option value="">Select a state</option>');
                     $.each(data, function (key, value) {
                         stateSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
-                        stateSelect.val('{{ form.instance.project_state.id }}');
                     });
+                    stateSelect.val('{{ form.instance.project_state.id }}');
                 }
             });
         } else {
@@ -261,23 +258,14 @@
     }
 
     function reinitializeFormElements() {
-        console.log('Reinitializing form elements');
-
-        if (document.getElementById('id_property_type')) {
-            initializeTinyMCE();
-            toggleLeaseFields();
-            toggleBatteryStorage();
-            handleStateFieldLogic();
-        } else {
-            console.error('Required elements for reinitialization not found.');
-        }
+        initializeTinyMCE();
+        toggleLeaseFields();
+        toggleBatteryStorage();
+        handleStateFieldLogic();
     }
 
     $(document).ready(function() {
-        console.log('Document is ready');
-        if (document.getElementById('id_property_type')) {
-            document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
-        }
+        document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
         $('#id_categories').change(toggleBatteryStorage);
 
         toggleLeaseFields();
@@ -294,31 +282,97 @@
         $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
 
         function submitForm() {
-            var form = $('#listingForm');
+            var formData = new FormData($('#listing-edit-form')[0]);
+
+            $('#submit-button').prop('disabled', true).html('Updating...');
+
             $.ajax({
-                type: "POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                success: function (response) {
+                type: 'POST',
+                url: '{% url "edit_listing" form.instance.slug %}',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
                     if (response.success) {
-                        window.location.href = response.redirect_url;
+                        $('#popup-title').text('Success');
+                        $('#popup-message').text(response.message);
+                        $('#success-popup').show();
                     } else {
-                        console.error('Form submission failed:', response);
-                        scrollToFirstError();
-                        reinitializeFormElements();
+                        $('#popup-title').text(response.message_type);
+                        $('#popup-message').text(response.message);
+                        $('#success-popup').show();
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error('Form submission error:', textStatus, errorThrown);
-                    reinitializeFormElements();
+                error: function(xhr) {
+                    console.log("Form submission failed:", xhr.responseJSON);
+                    $('#form-content').html(xhr.responseJSON.form_html || '');
+                    var errors = xhr.responseJSON.errors || {};
+                    var firstErrorElement = null;
+
+                    $.each(errors, function(field, messages) {
+                        var fieldElement = $('[name="' + field + '"]').closest('.listing-create-form-group');
+                        if (fieldElement.length) {
+                            fieldElement.addClass('is-invalid');
+                            fieldElement.find('.invalid-feedback').html(messages.join(', '));
+                            if (!firstErrorElement) {
+                                firstErrorElement = fieldElement[0];
+                            }
+                        } else {
+                            if (!firstErrorElement && field === '__all__') {
+                                var nonFieldErrors = messages.join(', ');
+                                $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
+                                firstErrorElement = $('.non-field-error')[0];
+                            }
+                        }
+                    });
+
+                    $.alert({
+                        title: 'Error',
+                        content: 'Please fix the highlighted errors and try again.',
+                        onClose: function () {
+                            setTimeout(function() {
+                                scrollToFirstError();
+                                reinitializeFormElements();
+                            }, 0);
+                        }
+                    });
+
+                    $('#submit-button').prop('disabled', false).html('Update Listing');
                 }
             });
         }
 
-        $('#listingForm').on('submit', function (e) {
+        var formSubmitting = false;
+
+        $('#listing-edit-form').submit(function(e) {
             e.preventDefault();
+            tinymce.triggerSave();
+
+            if (!formSubmitting && $('#id_status').val() === 'inactive') {
+                $('#confirmation-popup').show();
+                return;
+            }
+
+            formSubmitting = true;
             submitForm();
         });
+
+        $('#popup-close-btn').click(function() {
+            $('#success-popup').hide();
+            location.reload();
+        });
+
+        $('#confirm-yes-btn').click(function() {
+            $('#confirmation-popup').hide();
+            formSubmitting = true;
+            submitForm();
+        });
+
+        $('#confirm-no-btn').click(function() {
+            $('#confirmation-popup').hide();
+        });
+
+        reinitializeFormElements();
     });
 </script>
 
