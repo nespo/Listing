@@ -427,9 +427,17 @@ def listing_load_states(request):
 @login_required
 def create_listing(request):
     seller = request.user.seller
+
+    # Check if the seller has no package and no individual listings left
     if not seller.package and not (seller.normal_post_count > 0 or seller.featured_post_count > 0):
         messages.error(request, 'You must buy packages or listings to post a listing.')
         return redirect('buy_package_listing')
+
+    # Check if the seller has used all their allowed listings
+    if seller.normal_post_used >= seller.normal_post_count and seller.featured_post_used >= seller.featured_post_count:
+        all_listings_used = True
+    else:
+        all_listings_used = False
 
     form_name = 'ListingForm'
     field_settings = FormFieldSetting.objects.filter(form_name=form_name).order_by('order')
@@ -495,7 +503,7 @@ def create_listing(request):
     else:
         form = ListingForm(user=request.user, is_creation=True)
 
-    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order})
+    return render(request, 'create_listing.html', {'form': form, 'field_order': field_order, 'all_listings_used': all_listings_used})
 
 @login_required
 def edit_listing(request, slug):
