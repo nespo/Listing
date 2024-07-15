@@ -195,8 +195,14 @@
     }
 
     function toggleLeaseFields() {
+        var propertyTypeElement = document.getElementById('id_property_type');
+        if (!propertyTypeElement) {
+            console.error('Element with ID id_property_type not found.');
+            return;
+        }
         var leaseFields = document.querySelectorAll('.lease-field');
-        var propertyType = document.getElementById('id_property_type').value;
+        var propertyType = propertyTypeElement.value;
+        console.log('Property Type:', propertyType);  // Add this line for debugging
         leaseFields.forEach(function (fieldElement) {
             if (propertyType === 'lease') {
                 fieldElement.style.display = 'block';
@@ -253,6 +259,7 @@
     }
 
     function reinitializeFormElements() {
+        console.log('Reinitializing form elements');  // Add this line for debugging
         initializeTinyMCE();
         toggleLeaseFields();
         toggleBatteryStorage();
@@ -260,6 +267,7 @@
     }
 
     $(document).ready(function() {
+        console.log('Document is ready');  // Add this line for debugging
         document.getElementById('id_property_type').addEventListener('change', toggleLeaseFields);
         $('#id_categories').change(toggleBatteryStorage);
 
@@ -368,4 +376,5 @@
         reinitializeFormElements();
     });
 </script>
+
 {% endblock %}
