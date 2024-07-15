@@ -241,8 +241,8 @@
                     stateSelect.html('<option value="">Select a state</option>');
                     $.each(data, function (key, value) {
                         stateSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                        stateSelect.val('{{ form.instance.project_state.id }}');
                     });
-                    stateSelect.val('{{ form.instance.project_state.id }}');
                 }
             });
         } else {
@@ -262,10 +262,15 @@
 
     function reinitializeFormElements() {
         console.log('Reinitializing form elements');
-        initializeTinyMCE();
-        toggleLeaseFields();
-        toggleBatteryStorage();
-        handleStateFieldLogic();
+
+        if (document.getElementById('id_property_type')) {
+            initializeTinyMCE();
+            toggleLeaseFields();
+            toggleBatteryStorage();
+            handleStateFieldLogic();
+        } else {
+            console.error('Required elements for reinitialization not found.');
+        }
     }
 
     $(document).ready(function() {
@@ -289,100 +294,31 @@
         $('#id_project_country').val('{{ form.instance.project_country.id }}').trigger('change');
 
         function submitForm() {
-            var formData = new FormData($('#listing-edit-form')[0]);
-
-            $('#submit-button').prop('disabled', true).html('Updating...');
-
+            var form = $('#listingForm');
             $.ajax({
-                type: 'POST',
-                url: '{% url "edit_listing" form.instance.slug %}',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
+                type: "POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function (response) {
                     if (response.success) {
-                        $('#popup-title').text('Success');
-                        $('#popup-message').text(response.message);
-                        $('#success-popup').show();
+                        window.location.href = response.redirect_url;
                     } else {
-                        $('#popup-title').text(response.message_type);
-                        $('#popup-message').text(response.message);
-                        $('#success-popup').show();
+                        console.error('Form submission failed:', response);
+                        scrollToFirstError();
+                        reinitializeFormElements();
                     }
                 },
-                error: function(xhr) {
-                    console.log("Form submission failed:", xhr.responseJSON);
-                    $('#form-content').html(xhr.responseJSON.form_html || '');
-                    var errors = xhr.responseJSON.errors || {};
-                    var firstErrorElement = null;
-
-                    $.each(errors, function(field, messages) {
-                        var fieldElement = $('[name="' + field + '"]').closest('.listing-create-form-group');
-                        if (fieldElement.length) {
-                            fieldElement.addClass('is-invalid');
-                            fieldElement.find('.invalid-feedback').html(messages.join(', '));
-                            if (!firstErrorElement) {
-                                firstErrorElement = fieldElement[0];
-                            }
-                        } else {
-                            if (!firstErrorElement && field === '__all__') {
-                                var nonFieldErrors = messages.join(', ');
-                                $('#form-content').prepend('<div class="alert alert-danger non-field-error">' + nonFieldErrors + '</div>');
-                                firstErrorElement = $('.non-field-error')[0];
-                            }
-                        }
-                    });
-
-                    $.alert({
-                        title: 'Error',
-                        content: 'Please fix the highlighted errors and try again.',
-                        onClose: function () {
-                            scrollToFirstError();
-                            reinitializeFormElements();
-                        }
-                    });
-
-                    $('#submit-button').prop('disabled', false).html('Update Listing');
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Form submission error:', textStatus, errorThrown);
+                    reinitializeFormElements();
                 }
             });
         }
 
-        var formSubmitting = false;
-
-        $('#listing-edit-form').submit(function(e) {
+        $('#listingForm').on('submit', function (e) {
             e.preventDefault();
-            tinymce.triggerSave();
-
-            if (!formSubmitting && $('#id_status').val() === 'inactive') {
-                $('#confirmation-popup').show();
-                return;
-            }
-
-            formSubmitting = true;
             submitForm();
         });
-
-        $('#popup-close-btn').click(function() {
-            $('#success-popup').hide();
-            location.reload();
-        });
-
-        $('#confirm-yes-btn').click(function() {
-            $('#confirmation-popup').hide();
-            formSubmitting = true;
-            submitForm();
-        });
-
-        $('#confirm-no-btn').click(function() {
-            $('#confirmation-popup').hide();
-        });
-
-        // Ensure reinitializeFormElements is called after content is replaced
-        $(document).ajaxComplete(function() {
-            reinitializeFormElements();
-        });
-
-        reinitializeFormElements();
     });
 </script>
 
