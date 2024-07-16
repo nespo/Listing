@@ -24,6 +24,7 @@
     </p>
     {% endif %}
     {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size }}</p>{% endif %}
+   <strong>Project City (MW):</strong> {{ listing.project_city }}
     {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected Annual Income:</strong> $ {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
     {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
     {% if listing.project_cod_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project COD Date:</strong> {{ listing.project_cod_date }}</p>{% endif %}
