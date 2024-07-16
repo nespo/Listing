@@ -76,9 +76,7 @@
                 <hr class="section-divider">
                 {% if listing.project_address %}<p><i class="fas fa-map-marker-alt"></i> <strong>Project Address:</strong> {{ listing.project_address }}</p>{% endif %}
                 <!-- {% if listing.project_city %}<p><i class="fas fa-city"></i> <strong>Project City:</strong> {{ listing.project_city.name }}</p>{% endif %} -->
-                {% if listing.project_city %}<p><i class="fas fa-city"></i> <strong>Project City:</strong> {{ listing.project_city.name }}</p>{% endif %}
-                <strong>Project City (MW):</strong> {{ listing.project_city }}
-            
+                {% if listing.project_city %}<p><i class="fas fa-city"></i> <strong>Project City:</strong> {{ listing.project_city }}</p>{% endif %}
                 {% if listing.project_state %}<p><i class="fas fa-flag"></i> <strong>Project State:</strong> {{ listing.project_state.name }}</p>{% endif %}
                 {% if listing.latitude and listing.longitude %}<p><i class="fas fa-map-pin"></i> <strong>Project GPS Coordinate:</strong> {{ listing.latitude }}, {{ listing.longitude }}</p>{% endif %}
                 {% if listing.lot_size %}<p><i class="fas fa-tree"></i> <strong>Lot Size (acres):</strong> {{ listing.lot_size }}</p>{% endif %}
@@ -147,7 +145,7 @@
     {% if listing.latitude and listing.longitude %}
         <iframe src="https://maps.google.com/maps?q={{ listing.latitude }},{{ listing.longitude }}&hl=es;z=14&output=embed"></iframe>
     {% else %}
-        <iframe src="https://maps.google.com/maps?q={{ listing.project_city.name }}&hl=es;z=14&output=embed"></iframe>
+        <iframe src="https://maps.google.com/maps?q={{ listing.project_city }}&hl=es;z=14&output=embed"></iframe>
     {% endif %}
 </div>
 
