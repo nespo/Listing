@@ -962,6 +962,7 @@ def cancel_auto_renew(request):
 
 @login_required
 def transaction_history(request):
+    seller = request.user.seller
     transactions = Transaction.objects.filter(seller=request.user.seller).select_related('seller').order_by('-id')
     
     paginator = Paginator(transactions, 5)  # Show 5 transactions per page
@@ -970,7 +971,7 @@ def transaction_history(request):
     
     for transaction in page_obj:
         if transaction.transaction_type == 'Package':
-            transaction.auto_renew_display = 'Yes' if transaction.seller.is_auto_renew else 'No'
+            transaction.auto_renew_display = 'Yes' if seller.auto_renew#if transaction.seller.is_auto_renew else 'No'
         else:
             transaction.auto_renew_display = 'No'
     
