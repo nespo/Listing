@@ -852,7 +852,7 @@ def buy_package_listing(request):
         'normal_posts_used': normal_posts_used,
         'featured_posts_used': featured_posts_used,
         'show_package_container': seller.package or seller.new_package,
-        'show_available_packages': not seller.is_auto_renew and (not seller.package or not seller.new_package),
+        'show_available_packages': True, #not seller.is_auto_renew and (not seller.package or not seller.new_package),
         'show_individual_listings': False,
         'all_listings_used': all_listings_used
     }
