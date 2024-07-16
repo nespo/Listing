@@ -116,7 +116,10 @@ def dashboard(request):
         package_status = "You have zero active Membership"
     else:
         package_status = package_renew_date
-        package_name = seller.package.name
+        if seller.package:
+            package_name = seller.package.name
+        else:
+            package_name = "You don't Have Any package"
 
     listings = seller.listing_set.all()
     views_data = {
