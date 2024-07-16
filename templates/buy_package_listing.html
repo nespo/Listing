@@ -120,8 +120,8 @@
             <h2 class="available-packages__title" style="color: #fff !important;">Membership Plans</h2>
             <div class="packages-grid">
                 {% for package in packages %}
-                    {% if not user.seller.package or user.seller.package.id != package.id %}
-                        {% if package.normal_post_limit|gte:user.seller.normal_post_used and package.featured_post_limit|gte:user.seller.featured_post_used %}
+                    <!-- {% if not user.seller.package or user.seller.package.id != package.id %}
+                        {% if package.normal_post_limit|gte:user.seller.normal_post_used and package.featured_post_limit|gte:user.seller.featured_post_used %} -->
                             <div class="planItem planItem--pro">
                                 <div class="card">
                                     <div class="card__top-bar"></div>
@@ -152,8 +152,8 @@
                                     </button>                                                                   
                                 </div>
                             </div>
-                        {% endif %}
-                    {% endif %}
+                       <!--  {% endif %}
+                    {% endif %}-->
                 {% endfor %}
             </div>
         </div>
