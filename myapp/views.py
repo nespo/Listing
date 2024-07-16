@@ -113,7 +113,7 @@ def dashboard(request):
     package_renew_date = seller.membership_expiry
 
     if not package_renew_date:
-        package_status = "You have zero active Membership"
+        package_status = "You have no active Membership"
         package_name = "You don't have Any Membership"
     else:
         package_status = package_renew_date
