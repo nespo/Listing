@@ -62,6 +62,7 @@
             <label for="id_images">Upload Images</label>
             <input type="file" id="id_images" name="images" multiple>
             <small class="form-text text-muted">You can select multiple images or drag and drop them here.</small>
+            <div id="selected-images"></div>
         </div>
 
         <button id="submit-button" type="submit" class="listing-create-btn btn btn-primary">Create Listing</button>
@@ -73,6 +74,8 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
 <script>
+    let selectedFiles = [];
+
     function initializeTinyMCE() {
         tinymce.remove(); // Removes all existing TinyMCE instances
         tinymce.init({
@@ -187,6 +190,39 @@
         }
     }
 
+    function updateSelectedImagesDisplay() {
+        const selectedImagesDiv = document.getElementById('selected-images');
+        selectedImagesDiv.innerHTML = '';
+
+        selectedFiles.forEach((file, index) => {
+            const imagePreview = document.createElement('div');
+            imagePreview.style.margin = '10px';
+            imagePreview.style.display = 'inline-block';
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.style.maxWidth = '100px';
+            img.style.maxHeight = '100px';
+            imagePreview.appendChild(img);
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.dataset.index = index;
+            removeButton.onclick = function() {
+                selectedFiles.splice(this.dataset.index, 1);
+                updateSelectedImagesDisplay();
+            };
+            imagePreview.appendChild(removeButton);
+            selectedImagesDiv.appendChild(imagePreview);
+        });
+    }
+
+    document.getElementById('id_images').addEventListener('change', function(event) {
+        Array.from(event.target.files).forEach(file => {
+            selectedFiles.push(file);
+        });
+        updateSelectedImagesDisplay();
+    });
+
     $(document).ready(function() {
         $('#id_project_country').select2();
         $('#id_project_state').select2();
@@ -227,6 +263,10 @@
             });
 
             var formData = new FormData(this);
+
+            selectedFiles.forEach(file => {
+                formData.append('images', file);
+            });
 
             $('#submit-button').prop('disabled', true).html('Creating...');
 
