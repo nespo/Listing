@@ -149,8 +149,6 @@
     <h3><i class="fas fa-map-marked-alt"></i> Location</h3>
     {% if listing.latitude and listing.longitude %}
         <iframe src="https://maps.google.com/maps?q={{ listing.latitude }},{{ listing.longitude }}&hl=es;z=14&output=embed"></iframe>
-    {% elif listing.project_address %}
-        <iframe src="https://maps.google.com/maps?q={{ listing.project_address|urlencode }}&hl=es;z=14&output=embed"></iframe>
     {% else %}
         <iframe src="https://maps.google.com/maps?q={{ listing.project_city.name }}&hl=es;z=14&output=embed"></iframe>
     {% endif %}
