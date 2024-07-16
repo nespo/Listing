@@ -727,6 +727,7 @@ def buy_package_listing(request):
                     if package.price < current_package_price:
                         seller.new_package = package
                         seller.membership_expiry = seller.membership_expiry
+                        seller.is_auto_renew = False  # Ensure auto-renewal is set to False
                         seller.save()
                     else:
                         current_package_duration = current_package.get_duration_in_days()
@@ -745,6 +746,7 @@ def buy_package_listing(request):
                         print(f"Adjusted amount: {adjusted_amount}")
                         amount_in_cents = int(adjusted_amount * 100)
                         seller.new_package = package
+                        seller.is_auto_renew = False  # Ensure auto-renewal is set to False
 
             payment_intent = stripe.PaymentIntent.create(
                 customer=seller.stripe_customer_id,
@@ -857,6 +859,7 @@ def buy_package_listing(request):
         'all_listings_used': all_listings_used
     }
     return render(request, 'buy_package_listing.html', context)
+
 
 
 

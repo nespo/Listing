@@ -93,11 +93,11 @@ class SellerRegistrationForm(forms.ModelForm):
             raise forms.ValidationError("This email is already registered.")
         return email
 
-    def clean_company_name(self):
+    '''def clean_company_name(self):
         company_name = self.cleaned_data.get('company_name')
         if Seller.objects.filter(company_name=company_name).exists():
             raise forms.ValidationError("This company name is already registered.")
-        return company_name
+        return company_name'''
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
