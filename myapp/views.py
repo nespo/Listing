@@ -693,15 +693,6 @@ def buy_package_listing(request):
 
         amount_in_cents = int(amount * 100)
 
-        original_seller_data = {
-            "package": seller.package,
-            "new_package": seller.new_package,
-            "normal_post_count": seller.normal_post_count,
-            "featured_post_count": seller.featured_post_count,
-            "membership_expiry": seller.membership_expiry,
-            "is_auto_renew": seller.is_auto_renew
-        }
-
         try:
             if stripe_token:
                 customer = stripe.Customer.retrieve(seller.stripe_customer_id)
@@ -722,31 +713,21 @@ def buy_package_listing(request):
                 if seller.package:
                     current_package = seller.package
                     current_package_price = current_package.price
+                    current_package_duration = current_package.get_duration_in_days()
+                    current_package_per_day_cost = current_package_price / Decimal(current_package_duration)
 
-                    # Check if the new package price is less than the current package price
-                    if package.price < current_package_price:
-                        seller.new_package = package
-                        seller.membership_expiry = seller.membership_expiry
-                        seller.is_auto_renew = False  # Ensure auto-renewal is set to False
-                        seller.save()
-                    else:
-                        current_package_duration = current_package.get_duration_in_days()
-                        current_package_per_day_cost = current_package_price / Decimal(current_package_duration)
+                    # Calculate days left until package expiry
+                    current_time = timezone.now()
+                    expiry_time = seller.membership_expiry
+                    days_left = (expiry_time - current_time).days
 
-                        # Calculate days left until package expiry
-                        current_time = timezone.now()
-                        expiry_time = seller.membership_expiry
-                        days_left = (expiry_time - current_time).days
+                    # Ensure days_left is a positive integer or zero
+                    days_left = max(days_left, 0)
 
-                        # Ensure days_left is a positive integer or zero
-                        days_left = max(days_left, 0)
-
-                        # Calculate the new chargeable amount based on remaining days
-                        adjusted_amount = amount - (current_package_per_day_cost * Decimal(days_left))
-                        print(f"Adjusted amount: {adjusted_amount}")
-                        amount_in_cents = int(adjusted_amount * 100)
-                        seller.new_package = package
-                        seller.is_auto_renew = False  # Ensure auto-renewal is set to False
+                    # Calculate the new chargeable amount based on remaining days
+                    adjusted_amount = amount - (current_package_per_day_cost * Decimal(days_left))
+                    print(f"Adjusted amount: {adjusted_amount}")
+                    amount_in_cents = int(adjusted_amount * 100)
 
             payment_intent = stripe.PaymentIntent.create(
                 customer=seller.stripe_customer_id,
@@ -757,30 +738,31 @@ def buy_package_listing(request):
                 confirm=True,
                 description=description,
             )
+        except stripe.error.StripeError as e:
+            print(f"Stripe Error: {e}")
+            messages.error(request, f'Error processing payment: {str(e)}')
+            return redirect('buy_package_listing')
 
-            # Payment is successful, update seller's data accordingly
-            if package_id:
-                if not seller.package:
-                    seller.package = package
-                    seller.normal_post_count = package.normal_post_limit
-                    seller.featured_post_count = package.featured_post_limit
-                    seller.membership_expiry = timezone.now() + timedelta(minutes=package.get_duration_in_minutes())
-                    seller.is_auto_renew = True
+        transaction = None
+        if package_id:
+            package = get_object_or_404(Package, id=package_id)
+            if seller.package:
+                seller.new_package = package
+                seller.save()
+                seller.apply_new_package()
+            else:
+                seller.package = package
+                seller.normal_post_count = package.normal_post_limit
+                seller.featured_post_count = package.featured_post_limit
+                seller.membership_expiry = timezone.now() + timedelta(minutes=package.get_duration_in_minutes())
+                seller.is_auto_renew = True
                 seller.save()
 
-            elif normal_listings > 0 or featured_listings > 0:
-                if normal_listings > 0:
-                    seller.normal_post_count += normal_listings
-                if featured_listings > 0:
-                    seller.featured_post_count += featured_listings
-                seller.save()
-
-            # Create transaction
             transaction = Transaction.objects.create(
                 seller=seller,
                 amount=amount,
-                description=f'{package.name if package_id else description}',
-                transaction_type='Membership' if package_id else 'Individual Listing',
+                description=f'{package.name}',
+                transaction_type='Membership',
                 transaction_id=payment_intent.id
             )
 
@@ -789,7 +771,7 @@ def buy_package_listing(request):
                 invoice_pdf = generate_invoice_pdf({
                     'invoice_id': transaction.transaction_id,
                     'invoice_date': timezone.now(),
-                    'package': package if package_id else None,
+                    'package': package,
                     'amount': amount,
                     'user': request.user,
                     'first_name': seller.first_name,
@@ -802,41 +784,63 @@ def buy_package_listing(request):
                 })
                 send_custom_email(
                     subject='Membership Purchase Confirmation',
-                    template_name='emails/package_purchase_email.html' if package_id else 'emails/listings_purchase_email.html',
+                    template_name='emails/package_purchase_email.html',
                     context={
                         'user': {
                             'first_name': seller.first_name,
                         },
-                        'package': package if package_id else None,
+                        'package': package,
                         'membership_expiry': seller.membership_expiry,
                         'auto_renew': 'Yes' if seller.is_auto_renew else 'No'
-                    } if package_id else {
-                        'user': {
-                            'first_name': seller.first_name,
-                        },
-                        'description': description
                     },
                     recipient_list=[request.user.email],
                     attachment={
                         'filename': invoice_pdf['filename'],
                         'content': invoice_pdf['content'],
                         'mimetype': invoice_pdf['mimetype']
-                    } if package_id else None
+                    }
                 )
             except Exception as e:
                 print(f"Email sending error: {e}")
 
-            messages.success(request, 'Purchase successful')
-            return redirect('dashboard')
-
-        except stripe.error.StripeError as e:
-            print(f"Stripe Error: {e}")
-            # Reset seller's data to original state if payment fails
-            for key, value in original_seller_data.items():
-                setattr(seller, key, value)
+        elif normal_listings > 0 or featured_listings > 0:
+            if normal_listings > 0:
+                seller.normal_post_count += normal_listings
+            if featured_listings > 0:
+                seller.featured_post_count += featured_listings
             seller.save()
-            messages.error(request, f'Error processing payment: {str(e)}')
-            return redirect('buy_package_listing')
+
+            transaction = Transaction.objects.create(
+                seller=seller,
+                amount=amount,
+                description=f'{description}',
+                transaction_type='Individual Listing',
+                transaction_id=payment_intent.id
+            )
+
+            user = request.user
+            if isinstance(user, SimpleLazyObject):
+                user = user._wrapped
+
+            context = {
+                'user': {
+                    'first_name': seller.first_name,
+                },
+                'description': description
+            }
+
+            try:
+                send_custom_email(
+                    subject='Listings Purchased',
+                    template_name='emails/listings_purchase_email.html',
+                    context=context,
+                    recipient_list=[request.user.email]
+                )
+            except Exception as e:
+                print(f"Email sending error: {e}")
+
+        messages.success(request, 'Purchase successful')
+        return redirect('dashboard')
 
     total_normal_posts = seller.normal_post_count + seller.normal_post_used
     total_featured_posts = seller.featured_post_count + seller.featured_post_used
@@ -854,12 +858,11 @@ def buy_package_listing(request):
         'normal_posts_used': normal_posts_used,
         'featured_posts_used': featured_posts_used,
         'show_package_container': seller.package or seller.new_package,
-        'show_available_packages': True, #not seller.is_auto_renew and (not seller.package or not seller.new_package),
+        'show_available_packages': not seller.is_auto_renew and (not seller.package or not seller.new_package),
         'show_individual_listings': False,
         'all_listings_used': all_listings_used
     }
     return render(request, 'buy_package_listing.html', context)
-
 
 
 
