@@ -114,6 +114,7 @@ def dashboard(request):
 
     if not package_renew_date:
         package_status = "You have zero active Membership"
+        package_name = "You don't Have Any package"
     else:
         package_status = package_renew_date
         if seller.package:
@@ -130,11 +131,12 @@ def dashboard(request):
     context = {
         'messages_count': messages_count,
         'package_status': package_status,
-        'package_name' : package_name,
+        'package_name': package_name,
         'views_data': views_data,
         'has_payment_method': bool(seller.stripe_payment_method_id),
     }
     return render(request, 'dashboard.html', context)
+
 
 @login_required
 def remove_payment_method(request):
