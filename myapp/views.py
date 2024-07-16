@@ -116,6 +116,7 @@ def dashboard(request):
         package_status = "You have zero active Membership"
     else:
         package_status = package_renew_date
+        package_name = seller.package.name
 
     listings = seller.listing_set.all()
     views_data = {
@@ -126,6 +127,7 @@ def dashboard(request):
     context = {
         'messages_count': messages_count,
         'package_status': package_status,
+        'package_name' : package_name,
         'views_data': views_data,
         'has_payment_method': bool(seller.stripe_payment_method_id),
     }
