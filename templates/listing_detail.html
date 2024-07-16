@@ -55,7 +55,7 @@
                 {% if listing.project_ntp_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project NTP Date:</strong> {{ listing.project_ntp_date }}</p>{% endif %}
                 {% if listing.project_cod_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project COD Date:</strong> {{ listing.project_cod_date }}</p>{% endif %}
                 {% if listing.project_pto_date %}<p><i class="fas fa-calendar-alt"></i> <strong>Project PTO Date:</strong> {{ listing.project_pto_date }}</p>{% endif %}
-                {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size|floatformat:0|intcomma }}</p>{% endif %}
+                {% if listing.project_size %}<p><i class="fas fa-ruler-combined"></i> <strong>Project Size (MW):</strong> {{ listing.project_size }}</p>{% endif %}
                 {% if listing.battery_storage %}<p><i class="fas fa-battery-full"></i> <strong>Battery Storage (mWh):</strong> {{ listing.battery_storage }}</p>{% endif %}
                 {% if listing.projected_annual_income %}<p><i class="fas fa-chart-line"></i> <strong>Projected EBITDA:</strong> $ {{ listing.projected_annual_income|floatformat:0|intcomma }}</p>{% endif %}
                 {% if listing.epc_name %}<p><i class="fas fa-tools"></i> <strong>EPC Name:</strong> {{ listing.epc_name }}</p>{% endif %}
