@@ -63,6 +63,17 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ('footer_menu_items', 'footer_widgets')
 
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
@@ -83,6 +94,18 @@ class PackageAdmin(admin.ModelAdmin):
 @admin.register(ListingPrice)
 class ListingPriceAdmin(admin.ModelAdmin):
     list_display = ('normal_listing_price', 'featured_listing_price')
+
+class Seller(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=255)
+    is_approved = models.BooleanField(default=False)
+    normal_post_count = models.IntegerField(default=0)
+    featured_post_count = models.IntegerField(default=0)
+    membership_expiry = models.DateTimeField(null=True, blank=True)
+    is_auto_renew = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.company_name
 
 @admin.register(Seller)
 class SellerAdmin(admin.ModelAdmin):
@@ -172,6 +195,18 @@ class ListingImageInline(admin.TabularInline):
     model = ListingImage
     extra = 1
 
+class Listing(models.Model):
+    project_name = models.CharField(max_length=255)
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category)
+    sales_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50)
+    views = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.project_name
+
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
     list_display = ('project_name', 'seller', 'get_categories', 'sales_price', 'status', 'views', 'created_at')
@@ -183,23 +218,71 @@ class ListingAdmin(admin.ModelAdmin):
         return ", ".join([category.name for category in obj.categories.all()])
     get_categories.short_description = 'Categories'
 
+class Transaction(models.Model):
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+    transaction_type = models.CharField(max_length=50)
+    transaction_id = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"Transaction {self.transaction_id} by {self.seller}"
+
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('seller', 'amount', 'transaction_date', 'description', 'transaction_type', 'transaction_id')
+
+class FAQ(models.Model):
+    question = models.TextField()
+    answer = models.TextField()
+
+    def __str__(self):
+        return self.question
 
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
     form = FAQForm
     list_display = ('question',)
 
+class Page(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.title
+
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageForm
     list_display = ('title', 'slug')
 
+class ContactUs(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    message = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Contact Us"
+        verbose_name_plural = "Contact Us"
+
+    def __str__(self):
+        return f"Message from {self.name}"
+
 @admin.register(ContactUs)
 class ContactUsAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'sent_at')
+
+class FormFieldSetting(models.Model):
+    form_name = models.CharField(max_length=255)
+    field_name = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.form_name} - {self.field_name}"
 
 class FormFieldSettingForm(forms.ModelForm):
     class Meta:
