@@ -1199,9 +1199,36 @@ class ContactUsView(FormView):
         return context
 
     def form_valid(self, form):
+        # Save the form data
         form.save()
+
+        # Compose email content
+        subject = 'New Contact Us Form Submission'
+        message = (
+            f"New contact form submission:\n\n"
+            f"Name: {form.cleaned_data['name']}\n"
+            f"Email: {form.cleaned_data['email']}\n"
+            f"Phone Number: {form.cleaned_data['phone_number']}\n"
+            f"Message: {form.cleaned_data['message']}"
+        )
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+        # Fetch admin user emails
+        admin_emails = User.objects.filter(is_superuser=True).values_list('email', flat=True)
+        
+        # List of recipients (Admin and Kevin)
+        recipient_list = list(admin_emails) + ['kevin@greenenergyconnection.com']
+
+        # Send the email to the admin and Kevin
+        try:
+            send_mail(subject, message, from_email, recipient_list)
+        except Exception as e:
+            print(f"Error sending email: {e}")  # You can also log this error in production
+
+        # If the request is an AJAX request, return a JSON response
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'message': 'Success'})
+        
         return super().form_valid(form)
 
 def faq_list(request):
