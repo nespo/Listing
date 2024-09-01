@@ -77,6 +77,10 @@ class Category(models.Model):
     icon = models.ImageField(upload_to='category_icons/', null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
 
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
     def __str__(self):
         return self.name
 
@@ -87,6 +91,7 @@ class Category(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
 
 class Package(models.Model):
     PACKAGE_TYPE_CHOICES = [
@@ -444,12 +449,16 @@ class ContactUs(models.Model):
     message = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Contact Us"
+        verbose_name_plural = "Contact Us"
+
     def __str__(self):
         return f"Message from {self.name} ({self.email})"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        try:
+        '''try:
             send_mail(
                 subject='New Contact Us Message',
                 message=self.message,
@@ -457,7 +466,7 @@ class ContactUs(models.Model):
                 recipient_list=[settings.ADMIN_EMAIL],
             )
         except:
-            pass
+            pass'''
 
 
 class FormFieldSetting(models.Model):

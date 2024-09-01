@@ -67,16 +67,6 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
-    
-    def get_changelist(self, request, **kwargs):
-        from django.contrib.admin.views.main import ChangeList
-
-        class CustomChangeList(ChangeList):
-            def get_results(self, request):
-                super().get_results(request)
-                self.title = "Categories"  # Override the title
-
-        return CustomChangeList
 
 class PackageForm(forms.ModelForm):
     class Meta:
@@ -210,16 +200,6 @@ class PageAdmin(admin.ModelAdmin):
 @admin.register(ContactUs)
 class ContactUsAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'sent_at')
-
-    def get_changelist(self, request, **kwargs):
-        from django.contrib.admin.views.main import ChangeList
-
-        class CustomChangeList(ChangeList):
-            def get_results(self, request):
-                super().get_results(request)
-                self.title = "Contact Us"  # Override the title
-
-        return CustomChangeList
 
 class FormFieldSettingForm(forms.ModelForm):
     class Meta:
